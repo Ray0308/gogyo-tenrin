@@ -1,0 +1,1 @@
+export const APP_TITLE = "五行転輪 MVP 起動確認";
