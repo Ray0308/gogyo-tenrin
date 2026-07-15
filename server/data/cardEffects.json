@@ -1,0 +1,32 @@
+[
+  {
+    "cardId": "card_reidan_wood",
+    "target": "opponent_player",
+    "baseDamage": 2,
+    "attributeMatchEffect": { "type": "apply_curse", "curseId": "curse_poison", "stacks": 1 }
+  },
+  {
+    "cardId": "card_reidan_fire",
+    "target": "opponent_player",
+    "baseDamage": 2,
+    "attributeMatchEffect": { "type": "apply_curse", "curseId": "curse_burn", "stacks": 1 }
+  },
+  {
+    "cardId": "card_reidan_earth",
+    "target": "opponent_player",
+    "baseDamage": 2,
+    "attributeMatchEffect": { "type": "next_damage_reduction", "amount": 1 }
+  },
+  {
+    "cardId": "card_reidan_metal",
+    "target": "opponent_player",
+    "baseDamage": 2,
+    "attributeMatchEffect": { "type": "ignore_damage_reduction", "amount": 1 }
+  },
+  {
+    "cardId": "card_reidan_water",
+    "target": "opponent_player",
+    "baseDamage": 2,
+    "attributeMatchEffect": { "type": "gain_mp", "amount": 1 }
+  }
+]

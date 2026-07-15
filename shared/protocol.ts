@@ -1,6 +1,7 @@
 ﻿export const FIVE_ELEMENTS = ["wood", "fire", "earth", "metal", "water"] as const;
 export type FiveElement = (typeof FIVE_ELEMENTS)[number];
 export type GamePhase = "title" | "attribute_selection" | "attribute_reveal" | "battle";
+export type CardTarget = "cpu_player";
 
 export interface CardView {
   instanceId: string;
@@ -16,20 +17,33 @@ export interface CardView {
   effectText: string;
   description: string;
   flavorText: string;
+  playable: boolean;
+  unusableReason?: string;
+}
+
+export interface CurseState {
+  id: string;
+  name: string;
+  stacks: number;
+  remainingTriggers?: number;
 }
 
 export interface BattlePlayerState {
   hp: number;
   mp: number;
   cost: number;
+  curses: CurseState[];
+  nextDamageReduction: number;
 }
 
 export interface BattleState {
   turnNumber: number;
   activePlayer: "player" | "cpu";
-  phase: "card_use";
-  player: BattlePlayerState & { hand: CardView[] };
+  phase: "card_use" | "finished";
+  winner?: "player" | "cpu";
+  player: BattlePlayerState & { hand: CardView[]; discard: CardView[] };
   cpu: BattlePlayerState & { handCount: number };
+  log: string[];
 }
 
 export interface SessionState {
@@ -52,6 +66,7 @@ export interface ClientToServerEvents {
   "cpu:start": (payload: { playerName: string }, callback: (result: ActionResult) => void) => void;
   "attribute:select": (payload: { attribute: FiveElement }, callback: (result: ActionResult) => void) => void;
   "match:enter": (callback: (result: ActionResult) => void) => void;
+  "card:use": (payload: { instanceId: string; target: CardTarget }, callback: (result: ActionResult) => void) => void;
   "session:reset": (callback: (result: ActionResult) => void) => void;
 }
 
