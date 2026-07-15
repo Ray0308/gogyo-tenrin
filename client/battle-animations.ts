@@ -11,6 +11,7 @@ export type BattleVisualChange =
       side: BattleSide;
       text: string;
       kind: "attack" | "defense" | "counter" | "effect";
+      system?: string;
       actorUnitId?: string;
       targetUnitId?: string;
     };
@@ -48,9 +49,14 @@ function actionSide(text: string): BattleSide {
 
 function actionKind(text: string): "attack" | "defense" | "counter" | "effect" {
   if (/反撃|countered/.test(text)) return "counter";
-  if (/^(?:プレイヤー|CPU|自分|相手)が.+を使用した。$/.test(text)) return "defense";
+  if (/防御札.+を使用した。$/.test(text)) return "defense";
   if (/ダメージ|攻撃|使用し、/.test(text)) return "attack";
   return "effect";
+}
+
+function actionSystem(text: string): string | undefined {
+  return ["占事略决", "霊符術", "陰陽秘術", "使役術", "結界術", "地脈術", "禁術"]
+    .find((system) => text.includes(`${system}：`));
 }
 
 function actionUnit(
@@ -100,6 +106,7 @@ export function deriveBattleVisualChanges(previous: SessionState, next: SessionS
       side,
       text,
       kind: actionKind(text),
+      system: actionSystem(text),
       actorUnitId: unit?.instanceId,
       targetUnitId: damagedTargets.length === 1 ? damagedTargets[0].instanceId : undefined,
     });

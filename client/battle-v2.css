@@ -417,11 +417,11 @@ body:has(.battle-v2) {
 }
 
 .battle-v2 .unit-slot[data-unit-side="player"].is-attacking .unit-portrait {
-  animation: shikigami-lunge-up .56s cubic-bezier(.18, .78, .24, 1) both;
+  animation: shikigami-lunge-up .72s cubic-bezier(.18, .78, .24, 1) both;
 }
 
 .battle-v2 .unit-slot[data-unit-side="cpu"].is-attacking .unit-portrait {
-  animation: shikigami-lunge-down .56s cubic-bezier(.18, .78, .24, 1) both;
+  animation: shikigami-lunge-down .72s cubic-bezier(.18, .78, .24, 1) both;
 }
 
 .reidan-projectile {
@@ -447,6 +447,78 @@ body:has(.battle-v2) {
   border-radius: 50%;
   background: linear-gradient(90deg, transparent, rgba(141, 218, 255, .72));
   filter: blur(4px);
+}
+
+.card-effect-layer {
+  --effect-color: 220, 230, 255;
+  position: fixed;
+  z-index: 72;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(var(--effect-color), .16), transparent 42%);
+  animation: card-effect-fade var(--effect-duration, 900ms) ease-out both;
+}
+
+.card-effect-sigil {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(42vw, 210px);
+  aspect-ratio: 1;
+  color: rgb(var(--effect-color));
+}
+
+.card-effect-sigil::before,
+.card-effect-sigil::after,
+.card-effect-sigil i {
+  content: "";
+  position: absolute;
+  inset: 5%;
+  border: 1px solid rgba(var(--effect-color), .76);
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(var(--effect-color), .28), inset 0 0 18px rgba(var(--effect-color), .16);
+  animation: card-effect-ring var(--effect-duration, 900ms) cubic-bezier(.16, .76, .28, 1) both;
+}
+
+.card-effect-sigil::after { inset: 20%; animation-direction: reverse; }
+.card-effect-sigil i { inset: 33%; border-style: dashed; }
+.card-effect-sigil b { font: 500 clamp(2rem, 10vw, 4rem) serif; text-shadow: 0 0 18px rgba(var(--effect-color), .8); }
+.card-effect-sigil span { position: absolute; bottom: -8%; font: 700 .72rem system-ui, sans-serif; letter-spacing: .24em; }
+.card-effect-layer.cycle { --effect-color: 235, 210, 107; }
+.card-effect-layer.talisman { --effect-color: 223, 235, 255; }
+.card-effect-layer.mystic { --effect-color: 231, 231, 245; }
+.card-effect-layer.summoning { --effect-color: 142, 221, 164; }
+.card-effect-layer.barrier { --effect-color: 245, 213, 110; }
+.card-effect-layer.terrain { --effect-color: 195, 154, 94; }
+.card-effect-layer.forbidden { --effect-color: 203, 78, 99; background: radial-gradient(circle, rgba(72, 0, 18, .42), rgba(0, 0, 0, .18) 48%, transparent 72%); }
+.card-effect-layer.forbidden .card-effect-sigil::before,
+.card-effect-layer.forbidden .card-effect-sigil::after,
+.card-effect-layer.forbidden .card-effect-sigil i { animation-name: forbidden-effect-ring; }
+.is-casting { animation: card-caster-pulse var(--effect-duration, 900ms) ease-out both; }
+
+@keyframes card-effect-fade {
+  0% { opacity: 0; transform: scale(.72); }
+  22%, 70% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.12); }
+}
+
+@keyframes card-effect-ring {
+  from { transform: rotate(-22deg) scale(.42); opacity: 0; }
+  35% { opacity: 1; }
+  to { transform: rotate(78deg) scale(1.08); opacity: 0; }
+}
+
+@keyframes forbidden-effect-ring {
+  0% { transform: rotate(36deg) scale(.38); opacity: 0; }
+  42% { transform: rotate(-24deg) scale(1); opacity: 1; }
+  100% { transform: rotate(-74deg) scale(1.14); opacity: 0; }
+}
+
+@keyframes card-caster-pulse {
+  0%, 100% { filter: none; }
+  38% { filter: brightness(1.45) drop-shadow(0 0 12px rgba(245, 213, 110, .65)); }
 }
 
 @keyframes selectable-target-pulse {

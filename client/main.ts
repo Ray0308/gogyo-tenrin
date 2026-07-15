@@ -52,14 +52,14 @@ let state: SessionState = { phase: "title" };
 let busy = false;
 let errorMessage = "";
 let settings: Settings = loadSettings();
-interface BattleCue { title: string; detail?: string; side?: BattleSide; key?: string }
+interface BattleCue { title: string; detail?: string; side?: BattleSide; key?: string; onShow?: () => void }
 const battleCueQueue: BattleCue[] = [];
 let battleCuePlaying = false;
 let activeBattleCueKey: string | undefined;
 
 function animationDuration(): number {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return 80;
-  return settings.speed === "fast" ? 420 : settings.speed === "slow" ? 950 : 650;
+  return settings.speed === "fast" ? 600 : settings.speed === "slow" ? 1250 : 900;
 }
 function enqueueBattleCue(cue: BattleCue): void {
   if (cue.key && (activeBattleCueKey === cue.key || battleCueQueue.some((queued) => queued.key === cue.key))) return;
@@ -80,6 +80,7 @@ function playNextBattleCue(): void {
   panel.append(title);
   if (cue.detail) { const detail = document.createElement("span"); detail.textContent = cue.detail; panel.append(detail); }
   layer.append(panel);document.body.append(layer);
+  cue.onShow?.();
   const duration = animationDuration();
   window.setTimeout(() => layer.classList.add("leaving"), Math.max(40, duration - 160));
   window.setTimeout(() => { layer.remove();battleCuePlaying = false;activeBattleCueKey = undefined;playNextBattleCue(); }, duration);
@@ -120,6 +121,33 @@ function showReidanProjectile(change: Extract<BattleVisualChange, { type: "actio
   ], { duration: Math.max(420, animationDuration() * .86), easing: "cubic-bezier(.2,.72,.25,1)" });
   flight.finished.finally(() => orb.remove());
 }
+const systemEffects: Record<string, { className: string; glyph: string; title: string }> = {
+  "占事略决": { className: "cycle", glyph: "転", title: "五行転輪" },
+  "霊符術": { className: "talisman", glyph: "符", title: "霊符発動" },
+  "陰陽秘術": { className: "mystic", glyph: "陰", title: "秘術発動" },
+  "使役術": { className: "summoning", glyph: "契", title: "使役術発動" },
+  "結界術": { className: "barrier", glyph: "界", title: "結界展開" },
+  "地脈術": { className: "terrain", glyph: "脈", title: "地脈変転" },
+  "禁術": { className: "forbidden", glyph: "禁", title: "禁術発動" },
+};
+function showSystemEffect(change: Extract<BattleVisualChange, { type: "action" }>): void {
+  if (!change.system) return;
+  const effect = systemEffects[change.system];
+  if (!effect) return;
+  const duration = Math.max(700, animationDuration());
+  const layer = document.createElement("div");
+  layer.className = `card-effect-layer ${effect.className} ${change.side}`;
+  layer.style.setProperty("--effect-duration", `${duration}ms`);
+  layer.innerHTML = `<div class="card-effect-sigil"><i></i><b>${effect.glyph}</b><span>${effect.title}</span></div>`;
+  document.body.append(layer);
+  window.setTimeout(() => layer.remove(), duration + 80);
+}
+function actionCueTitle(change: Extract<BattleVisualChange, { type: "action" }>): string {
+  if (change.kind === "defense") return "防御発動";
+  if (change.kind === "counter") return "反撃";
+  if (change.kind === "attack") return change.side === "player" ? "攻撃" : "相手の攻撃";
+  return change.system ? systemEffects[change.system]?.title ?? "術式発動" : "効果発動";
+}
 function replayAnimation(target: HTMLElement, className: string): void {
   target.classList.remove(className);
   void target.offsetWidth;
@@ -141,12 +169,13 @@ function animateBattleChanges(changes: BattleVisualChange[]): void {
     if (change.type === "battle_start") enqueueBattleCue({ title: "対戦開始", detail: change.side === "player" ? "自分のターン" : "相手のターン", side: change.side, key: "battle-start" });
     else if (change.type === "turn") enqueueBattleCue({ title: change.side === "player" ? "自分のターン" : "相手のターン", detail: `第${change.turnNumber}ターン・手札更新`, side: change.side, key: `turn:${change.turnNumber}:${change.side}` });
     else if (change.type === "action") {
-      const title = change.kind === "defense" ? "防御発動" : change.kind === "counter" ? "反撃" : change.side === "player" ? "攻撃" : "相手の攻撃";
-      enqueueBattleCue({ title, detail: change.text, side: change.side });
-      requestAnimationFrame(() => {
-        const actor = actionElement(change);
-        if (actor) replayAnimation(actor, change.kind === "defense" ? "is-defending" : change.kind === "counter" ? "is-countering" : "is-attacking");
-        if (change.kind === "attack" && /霊弾/.test(change.text)) showReidanProjectile(change);
+      const title = actionCueTitle(change);
+      enqueueBattleCue({ title, detail: change.text, side: change.side, onShow: () => requestAnimationFrame(() => {
+          const actor = actionElement(change);
+          if (actor) replayAnimation(actor, change.kind === "defense" ? "is-defending" : change.kind === "counter" ? "is-countering" : change.kind === "attack" ? "is-attacking" : "is-casting");
+          showSystemEffect(change);
+          if (change.kind === "attack" && /霊弾/.test(change.text)) showReidanProjectile(change);
+        }),
       });
     }
     else if (change.type === "retire") enqueueBattleCue({ title: `${change.name} 退場`, side: change.side });
@@ -365,12 +394,6 @@ app.addEventListener("click", (event) => {
     busy = true; render(); socket.emit("reaction:respond", { instanceId: reactionCard, target: reactionTarget }, applyResult); return;
   }  if (targetType && pendingCardId && !busy) {
     const instanceId = pendingCardId;
-    const usedCard = state.battle?.player.hand.find((card) => card.instanceId === instanceId);
-    enqueueBattleCue({ title: "術式発動", detail: usedCard?.name, side: "player" });
-    requestAnimationFrame(() => {
-      const actor = document.querySelector<HTMLElement>('[data-combatant="player"]');
-      if (actor) replayAnimation(actor, "is-attacking");
-    });
     busy = true;
     render();
     socket.emit("card:use", { instanceId, target: targetType, choice: selectedChoice }, (result) => {

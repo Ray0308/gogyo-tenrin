@@ -40,3 +40,19 @@ test("turn labels use the local player perspective", async () => {
   assert.match(source, /battle\.activePlayer === "player" \? "自分" : "相手"/);
   assert.match(source, /state\.mode === "cpu"/);
 });
+
+test("all card systems have a shared presentation effect", async () => {
+  const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
+  const css = await readFile(path.join(repositoryRoot, "client", "battle-v2.css"), "utf8");
+  for (const system of ["占事略决", "霊符術", "陰陽秘術", "使役術", "結界術", "地脈術", "禁術"]) {
+    assert.match(source, new RegExp(`"${system}"`));
+  }
+  assert.match(source, /showSystemEffect/);
+  assert.match(css, /\.card-effect-layer/);
+  assert.match(css, /forbidden-effect-ring/);
+});
+
+test("battle presentation uses a more readable default pace", async () => {
+  const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
+  assert.match(source, /settings\.speed === "fast" \? 600 : settings\.speed === "slow" \? 1250 : 900/);
+});

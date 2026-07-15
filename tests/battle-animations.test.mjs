@@ -42,7 +42,7 @@ test("battle animation changes distinguish defense and counter actions", () => {
     playerUnits: [unit("白猿")],
     log: [
       "反応受付を開始した。",
-      "プレイヤーが霊符術：守符を使用した。",
+      "プレイヤーが防御札 霊符術：守符を使用した。",
       "白猿の反撃により敵へ1ダメージ。",
     ],
   });
@@ -74,4 +74,20 @@ test("online perspective labels identify self and opponent actions", () => {
   const opponentAction = battleState({ playerHp: 27, log: ["相手が霊符術：霊弾を使用し、自分へ3ダメージ。"] });
   assert.ok(deriveBattleVisualChanges(previous, selfAction).some((change) => change.type === "action" && change.side === "player"));
   assert.ok(deriveBattleVisualChanges(previous, opponentAction).some((change) => change.type === "action" && change.side === "cpu"));
+});
+
+test("utility cards expose their system for a generic card animation", () => {
+  const previous = battleState();
+  const next = battleState({ log: ["プレイヤーが占事略决：転輪を使用した。"] });
+  const action = deriveBattleVisualChanges(previous, next).find((change) => change.type === "action");
+  assert.equal(action?.kind, "effect");
+  assert.equal(action?.system, "占事略决");
+});
+
+test("only explicit defense-card logs use the defense animation", () => {
+  const previous = battleState();
+  const defense = battleState({ log: ["CPUが防御札 霊符術：守符を使用した。"] });
+  const utility = battleState({ log: ["CPUが陰陽秘術：浄化を使用した。"] });
+  assert.ok(deriveBattleVisualChanges(previous, defense).some((change) => change.type === "action" && change.kind === "defense"));
+  assert.ok(deriveBattleVisualChanges(previous, utility).some((change) => change.type === "action" && change.kind === "effect"));
 });
