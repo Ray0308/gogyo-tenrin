@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gogyo-tenrin.invalid/schema/manifest.schema.json",
+  "title": "五行転輪 マスターデータ・マニフェスト",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "dataVersion",
+    "files"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "dataVersion": {
+      "const": "0.1.0"
+    },
+    "files": {
+      "type": "object",
+      "required": [
+        "cards",
+        "cardTemplates",
+        "shikigami",
+        "barriers",
+        "terrains",
+        "forbiddenArts",
+        "keywords",
+        "curses",
+        "aiScores"
+      ],
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-zA-Z]+$": {
+          "type": "object",
+          "required": [
+            "filename",
+            "count"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "filename": {
+              "type": "string",
+              "pattern": "^[a-zA-Z]+\\\\.json$"
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
-﻿param(
+param(
   [Parameter(Mandatory = $true)][string]$WorkbookPath,
-  [string]$OutputDirectory = "server/data"
+  [string]$OutputDirectory = "master/data"
 )
 
 $ErrorActionPreference = "Stop"
@@ -85,10 +85,10 @@ $maps = [ordered]@{
   '式神一覧' = @{ file='shikigami.json'; columns=[ordered]@{'式神ID'='id';'名称'='name';'属性'='attribute';'最大HP'='maxHp';'攻撃力'='attack';'固有AI'='aiProfile';'キーワード能力'='keywords';'固有能力'='ability';'説明'='description';'画像ID'='imageId'} }
   '結界一覧' = @{ file='barriers.json'; columns=[ordered]@{'結界ID'='id';'名称'='name';'属性'='attribute';'術体系'='system';'発動タイミング'='timing';'対象'='target';'効果'='effectText';'耐久値'='durability';'発動回数'='triggerCount';'説明'='description'} }
   '地形一覧' = @{ file='terrains.json'; columns=[ordered]@{'地形ID'='id';'名称'='name';'属性'='attribute';'術体系'='system';'発動タイミング'='timing';'対象'='target';'効果'='effectText';'説明'='description'} }
-  '禁術一覧' = @{ file='forbiddenTechniques.json'; columns=[ordered]@{'禁術ID'='id';'名称'='name';'属性'='attribute';'カテゴリ'='category';'術体系'='system';'コスト'='cost';'MP消費量'='mpCost';'weight'='weight';'対象'='target';'効果'='effectText';'説明'='description'} }
+  '禁術一覧' = @{ file='forbiddenArts.json'; columns=[ordered]@{'禁術ID'='id';'名称'='name';'属性'='attribute';'カテゴリ'='category';'術体系'='system';'コスト'='cost';'MP消費量'='mpCost';'weight'='weight';'対象'='target';'効果'='effectText';'説明'='description'} }
   'キーワード能力一覧' = @{ file='keywords.json'; columns=[ordered]@{'能力ID'='id';'名称'='name';'分類'='classification';'効果'='effectText';'説明'='description'} }
   '呪い一覧' = @{ file='curses.json'; columns=[ordered]@{'呪いID'='id';'名称'='name';'効果'='effectText';'解除条件'='removalCondition';'重複可否'='stacking';'説明'='description'} }
-  'AI評価値一覧' = @{ file='cpuEvaluations.json'; columns=[ordered]@{'評価ID'='id';'対象'='target';'評価値'='score';'備考'='notes'} }
+  'AI評価値一覧' = @{ file='aiScores.json'; columns=[ordered]@{'評価ID'='id';'対象'='target';'評価値'='score';'備考'='notes'} }
 }
 
 $zip = [IO.Compression.ZipFile]::OpenRead((Resolve-Path $WorkbookPath))
@@ -121,3 +121,15 @@ try {
   }
 }
 finally { $zip.Dispose() }
+$nodeCommand = Get-Command node -ErrorAction SilentlyContinue
+if ($null -ne $nodeCommand) {
+  $nodeExecutable = $nodeCommand.Source
+} elseif (Test-Path 'C:\Program Files\nodejs\node.exe') {
+  $nodeExecutable = 'C:\Program Files\nodejs\node.exe'
+} else {
+  throw 'Node.js が見つかりません。マスターJSONの生成を続行できません。'
+}
+
+& $nodeExecutable 'scripts/build-data.mjs'
+if ($LASTEXITCODE -ne 0) { throw 'マスターJSONの生成に失敗しました。' }
+Write-Host 'server/data の生成と検証が完了しました。'

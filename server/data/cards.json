@@ -1,1442 +1,2497 @@
 [
-    {
-        "id":  "card_reidan_wood",
-        "name":  "霊符術：霊弾",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "木",
-        "templateId":  "template_reidan",
-        "cost":  1,
-        "mpCost":  0,
-        "weight":  9,
-        "target":  "相手プレイヤーまたは相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "2ダメージ。属性一致時、対象へ毒を1スタック付与。",
-        "description":  "霊弾の木属性版。",
-        "flavorText":  "掌に集めた気が、静かな光となって夜を裂く。 青き息吹が脈打ち、静かに命の輪を広げていく。"
-    },
-    {
-        "id":  "card_reidan_fire",
-        "name":  "霊符術：霊弾",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "火",
-        "templateId":  "template_reidan",
-        "cost":  1,
-        "mpCost":  0,
-        "weight":  9,
-        "target":  "相手プレイヤーまたは相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "2ダメージ。属性一致時、対象へ火傷を付与。",
-        "description":  "霊弾の火属性版。",
-        "flavorText":  "掌に集めた気が、静かな光となって夜を裂く。 赤き残光が揺らめき、触れた気配を焦がしていく。"
-    },
-    {
-        "id":  "card_reidan_earth",
-        "name":  "霊符術：霊弾",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "土",
-        "templateId":  "template_reidan",
-        "cost":  1,
-        "mpCost":  0,
-        "weight":  9,
-        "target":  "相手プレイヤーまたは相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "2ダメージ。属性一致時、自分が次に受けるダメージを1軽減。",
-        "description":  "霊弾の土属性版。",
-        "flavorText":  "掌に集めた気が、静かな光となって夜を裂く。 揺るがぬ気が沈み、足元から守りを築き上げる。"
-    },
-    {
-        "id":  "card_reidan_metal",
-        "name":  "霊符術：霊弾",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "金",
-        "templateId":  "template_reidan",
-        "cost":  1,
-        "mpCost":  0,
-        "weight":  9,
-        "target":  "相手プレイヤーまたは相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "2ダメージ。属性一致時、この攻撃は軽減を1無視。",
-        "description":  "霊弾の金属性版。",
-        "flavorText":  "掌に集めた気が、静かな光となって夜を裂く。 白き閃きが走り、曇りなき軌跡だけを残していく。"
-    },
-    {
-        "id":  "card_reidan_water",
-        "name":  "霊符術：霊弾",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "水",
-        "templateId":  "template_reidan",
-        "cost":  1,
-        "mpCost":  0,
-        "weight":  9,
-        "target":  "相手プレイヤーまたは相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "2ダメージ。属性一致時、自分のMPを1回復。",
-        "description":  "霊弾の水属性版。",
-        "flavorText":  "掌に集めた気が、静かな光となって夜を裂く。 澄んだ流れが巡り、絶えず力の形を変えていく。"
-    },
-    {
-        "id":  "card_zanfu_wood",
-        "name":  "霊符術：斬符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "木",
-        "templateId":  "template_zanfu",
-        "cost":  1,
-        "mpCost":  1,
-        "weight":  7,
-        "target":  "相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "3ダメージ。属性一致時、対象へ毒を1スタック付与。",
-        "description":  "斬符の木属性版。",
-        "flavorText":  "一筆の軌跡が刃となり、迷いごと断ち切ってゆく。 青き息吹が脈打ち、静かに命の輪を広げていく。"
-    },
-    {
-        "id":  "card_zanfu_fire",
-        "name":  "霊符術：斬符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "火",
-        "templateId":  "template_zanfu",
-        "cost":  1,
-        "mpCost":  1,
-        "weight":  7,
-        "target":  "相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "3ダメージ。属性一致時、対象へ火傷を付与。",
-        "description":  "斬符の火属性版。",
-        "flavorText":  "一筆の軌跡が刃となり、迷いごと断ち切ってゆく。 赤き残光が揺らめき、触れた気配を焦がしていく。"
-    },
-    {
-        "id":  "card_zanfu_earth",
-        "name":  "霊符術：斬符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "土",
-        "templateId":  "template_zanfu",
-        "cost":  1,
-        "mpCost":  1,
-        "weight":  7,
-        "target":  "相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "3ダメージ。属性一致時、自分が次に受けるダメージを1軽減。",
-        "description":  "斬符の土属性版。",
-        "flavorText":  "一筆の軌跡が刃となり、迷いごと断ち切ってゆく。 揺るがぬ気が沈み、足元から守りを築き上げる。"
-    },
-    {
-        "id":  "card_zanfu_metal",
-        "name":  "霊符術：斬符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "金",
-        "templateId":  "template_zanfu",
-        "cost":  1,
-        "mpCost":  1,
-        "weight":  7,
-        "target":  "相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "3ダメージ。属性一致時、この攻撃は軽減を1無視。",
-        "description":  "斬符の金属性版。",
-        "flavorText":  "一筆の軌跡が刃となり、迷いごと断ち切ってゆく。 白き閃きが走り、曇りなき軌跡だけを残していく。"
-    },
-    {
-        "id":  "card_zanfu_water",
-        "name":  "霊符術：斬符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "水",
-        "templateId":  "template_zanfu",
-        "cost":  1,
-        "mpCost":  1,
-        "weight":  7,
-        "target":  "相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "3ダメージ。属性一致時、自分のMPを1回復。",
-        "description":  "斬符の水属性版。",
-        "flavorText":  "一筆の軌跡が刃となり、迷いごと断ち切ってゆく。 澄んだ流れが巡り、絶えず力の形を変えていく。"
-    },
-    {
-        "id":  "card_senfu_wood",
-        "name":  "霊符術：穿符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "木",
-        "templateId":  "template_senfu",
-        "cost":  2,
-        "mpCost":  1,
-        "weight":  6,
-        "target":  "相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "2ダメージ。この攻撃は挑発を無視して対象を選べる。属性一致時、対象へ毒を1スタック付与。",
-        "description":  "穿符の木属性版。",
-        "flavorText":  "細き一線は守りの隙を見抜き、深く標を刻む。 青き息吹が脈打ち、静かに命の輪を広げていく。"
-    },
-    {
-        "id":  "card_senfu_fire",
-        "name":  "霊符術：穿符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "火",
-        "templateId":  "template_senfu",
-        "cost":  2,
-        "mpCost":  1,
-        "weight":  6,
-        "target":  "相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "2ダメージ。この攻撃は挑発を無視して対象を選べる。属性一致時、対象へ火傷を付与。",
-        "description":  "穿符の火属性版。",
-        "flavorText":  "細き一線は守りの隙を見抜き、深く標を刻む。 赤き残光が揺らめき、触れた気配を焦がしていく。"
-    },
-    {
-        "id":  "card_senfu_earth",
-        "name":  "霊符術：穿符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "土",
-        "templateId":  "template_senfu",
-        "cost":  2,
-        "mpCost":  1,
-        "weight":  6,
-        "target":  "相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "2ダメージ。この攻撃は挑発を無視して対象を選べる。属性一致時、自分が次に受けるダメージを1軽減。",
-        "description":  "穿符の土属性版。",
-        "flavorText":  "細き一線は守りの隙を見抜き、深く標を刻む。 揺るがぬ気が沈み、足元から守りを築き上げる。"
-    },
-    {
-        "id":  "card_senfu_metal",
-        "name":  "霊符術：穿符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "金",
-        "templateId":  "template_senfu",
-        "cost":  2,
-        "mpCost":  1,
-        "weight":  6,
-        "target":  "相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "2ダメージ。この攻撃は挑発を無視して対象を選べる。属性一致時、この攻撃は軽減を1無視。",
-        "description":  "穿符の金属性版。",
-        "flavorText":  "細き一線は守りの隙を見抜き、深く標を刻む。 白き閃きが走り、曇りなき軌跡だけを残していく。"
-    },
-    {
-        "id":  "card_senfu_water",
-        "name":  "霊符術：穿符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "水",
-        "templateId":  "template_senfu",
-        "cost":  2,
-        "mpCost":  1,
-        "weight":  6,
-        "target":  "相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "2ダメージ。この攻撃は挑発を無視して対象を選べる。属性一致時、自分のMPを1回復。",
-        "description":  "穿符の水属性版。",
-        "flavorText":  "細き一線は守りの隙を見抜き、深く標を刻む。 澄んだ流れが巡り、絶えず力の形を変えていく。"
-    },
-    {
-        "id":  "card_bakufu_wood",
-        "name":  "霊符術：爆符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "木",
-        "templateId":  "template_bakufu",
-        "cost":  3,
-        "mpCost":  3,
-        "weight":  4,
-        "target":  "相手式神すべて",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "各対象へ2ダメージ。属性一致時、対象へ毒を1スタック付与。",
-        "description":  "爆符の木属性版。",
-        "flavorText":  "描かれた紋が弾け、封じた気配が一斉に解き放たれる。 青き息吹が脈打ち、静かに命の輪を広げていく。"
-    },
-    {
-        "id":  "card_bakufu_fire",
-        "name":  "霊符術：爆符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "火",
-        "templateId":  "template_bakufu",
-        "cost":  3,
-        "mpCost":  3,
-        "weight":  4,
-        "target":  "相手式神すべて",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "各対象へ2ダメージ。属性一致時、対象へ火傷を付与。",
-        "description":  "爆符の火属性版。",
-        "flavorText":  "描かれた紋が弾け、封じた気配が一斉に解き放たれる。 赤き残光が揺らめき、触れた気配を焦がしていく。"
-    },
-    {
-        "id":  "card_bakufu_earth",
-        "name":  "霊符術：爆符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "土",
-        "templateId":  "template_bakufu",
-        "cost":  3,
-        "mpCost":  3,
-        "weight":  4,
-        "target":  "相手式神すべて",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "各対象へ2ダメージ。属性一致時、自分が次に受けるダメージを1軽減。",
-        "description":  "爆符の土属性版。",
-        "flavorText":  "描かれた紋が弾け、封じた気配が一斉に解き放たれる。 揺るがぬ気が沈み、足元から守りを築き上げる。"
-    },
-    {
-        "id":  "card_bakufu_metal",
-        "name":  "霊符術：爆符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "金",
-        "templateId":  "template_bakufu",
-        "cost":  3,
-        "mpCost":  3,
-        "weight":  4,
-        "target":  "相手式神すべて",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "各対象へ2ダメージ。属性一致時、この攻撃は軽減を1無視。",
-        "description":  "爆符の金属性版。",
-        "flavorText":  "描かれた紋が弾け、封じた気配が一斉に解き放たれる。 白き閃きが走り、曇りなき軌跡だけを残していく。"
-    },
-    {
-        "id":  "card_bakufu_water",
-        "name":  "霊符術：爆符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "水",
-        "templateId":  "template_bakufu",
-        "cost":  3,
-        "mpCost":  3,
-        "weight":  4,
-        "target":  "相手式神すべて",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "各対象へ2ダメージ。属性一致時、自分のMPを1回復。",
-        "description":  "爆符の水属性版。",
-        "flavorText":  "描かれた紋が弾け、封じた気配が一斉に解き放たれる。 澄んだ流れが巡り、絶えず力の形を変えていく。"
-    },
-    {
-        "id":  "card_shokufu_wood",
-        "name":  "霊符術：喰符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "木",
-        "templateId":  "template_shokufu",
-        "cost":  2,
-        "mpCost":  2,
-        "weight":  5,
-        "target":  "相手プレイヤーまたは相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "2ダメージ。その後、自分プレイヤーのHPを1回復。属性一致時、対象へ毒を1スタック付与。",
-        "description":  "喰符の木属性版。",
-        "flavorText":  "奪うほどに満ち、満ちるほどに次の一手が研ぎ澄まされる。 青き息吹が脈打ち、静かに命の輪を広げていく。"
-    },
-    {
-        "id":  "card_shokufu_fire",
-        "name":  "霊符術：喰符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "火",
-        "templateId":  "template_shokufu",
-        "cost":  2,
-        "mpCost":  2,
-        "weight":  5,
-        "target":  "相手プレイヤーまたは相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "2ダメージ。その後、自分プレイヤーのHPを1回復。属性一致時、対象へ火傷を付与。",
-        "description":  "喰符の火属性版。",
-        "flavorText":  "奪うほどに満ち、満ちるほどに次の一手が研ぎ澄まされる。 赤き残光が揺らめき、触れた気配を焦がしていく。"
-    },
-    {
-        "id":  "card_shokufu_earth",
-        "name":  "霊符術：喰符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "土",
-        "templateId":  "template_shokufu",
-        "cost":  2,
-        "mpCost":  2,
-        "weight":  5,
-        "target":  "相手プレイヤーまたは相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "2ダメージ。その後、自分プレイヤーのHPを1回復。属性一致時、自分が次に受けるダメージを1軽減。",
-        "description":  "喰符の土属性版。",
-        "flavorText":  "奪うほどに満ち、満ちるほどに次の一手が研ぎ澄まされる。 揺るがぬ気が沈み、足元から守りを築き上げる。"
-    },
-    {
-        "id":  "card_shokufu_metal",
-        "name":  "霊符術：喰符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "金",
-        "templateId":  "template_shokufu",
-        "cost":  2,
-        "mpCost":  2,
-        "weight":  5,
-        "target":  "相手プレイヤーまたは相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "2ダメージ。その後、自分プレイヤーのHPを1回復。属性一致時、この攻撃は軽減を1無視。",
-        "description":  "喰符の金属性版。",
-        "flavorText":  "奪うほどに満ち、満ちるほどに次の一手が研ぎ澄まされる。 白き閃きが走り、曇りなき軌跡だけを残していく。"
-    },
-    {
-        "id":  "card_shokufu_water",
-        "name":  "霊符術：喰符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "attribute":  "水",
-        "templateId":  "template_shokufu",
-        "cost":  2,
-        "mpCost":  2,
-        "weight":  5,
-        "target":  "相手プレイヤーまたは相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "2ダメージ。その後、自分プレイヤーのHPを1回復。属性一致時、自分のMPを1回復。",
-        "description":  "喰符の水属性版。",
-        "flavorText":  "奪うほどに満ち、満ちるほどに次の一手が研ぎ澄まされる。 澄んだ流れが巡り、絶えず力の形を変えていく。"
-    },
-    {
-        "id":  "card_shufu_wood",
-        "name":  "霊符術：守符",
-        "category":  "防御札",
-        "system":  "霊符術",
-        "attribute":  "木",
-        "templateId":  "template_shufu",
-        "cost":  0,
-        "mpCost":  0,
-        "weight":  8,
-        "target":  "自分または味方式神1体",
-        "timing":  "防御受付中",
-        "effectText":  "今回受けるダメージを3軽減。使用後、対象のHPを1回復。",
-        "description":  "守符の木属性版。",
-        "flavorText":  "薄き紙に宿る祈りが、迫る災いの前に立ちはだかる。 青き息吹が脈打ち、静かに命の輪を広げていく。"
-    },
-    {
-        "id":  "card_shufu_fire",
-        "name":  "霊符術：守符",
-        "category":  "防御札",
-        "system":  "霊符術",
-        "attribute":  "火",
-        "templateId":  "template_shufu",
-        "cost":  0,
-        "mpCost":  0,
-        "weight":  8,
-        "target":  "自分または味方式神1体",
-        "timing":  "防御受付中",
-        "effectText":  "今回受けるダメージを3軽減。軽減または無効化に成功した場合、攻撃主体へ1ダメージ。",
-        "description":  "守符の火属性版。",
-        "flavorText":  "薄き紙に宿る祈りが、迫る災いの前に立ちはだかる。 赤き残光が揺らめき、触れた気配を焦がしていく。"
-    },
-    {
-        "id":  "card_shufu_earth",
-        "name":  "霊符術：守符",
-        "category":  "防御札",
-        "system":  "霊符術",
-        "attribute":  "土",
-        "templateId":  "template_shufu",
-        "cost":  0,
-        "mpCost":  0,
-        "weight":  8,
-        "target":  "自分または味方式神1体",
-        "timing":  "防御受付中",
-        "effectText":  "今回受けるダメージを3軽減。軽減量をさらに1増加。",
-        "description":  "守符の土属性版。",
-        "flavorText":  "薄き紙に宿る祈りが、迫る災いの前に立ちはだかる。 揺るがぬ気が沈み、足元から守りを築き上げる。"
-    },
-    {
-        "id":  "card_shufu_metal",
-        "name":  "霊符術：守符",
-        "category":  "防御札",
-        "system":  "霊符術",
-        "attribute":  "金",
-        "templateId":  "template_shufu",
-        "cost":  0,
-        "mpCost":  0,
-        "weight":  8,
-        "target":  "自分または味方式神1体",
-        "timing":  "防御受付中",
-        "effectText":  "今回受けるダメージを3軽減。効果ダメージにも使用できる。",
-        "description":  "守符の金属性版。",
-        "flavorText":  "薄き紙に宿る祈りが、迫る災いの前に立ちはだかる。 白き閃きが走り、曇りなき軌跡だけを残していく。"
-    },
-    {
-        "id":  "card_shufu_water",
-        "name":  "霊符術：守符",
-        "category":  "防御札",
-        "system":  "霊符術",
-        "attribute":  "水",
-        "templateId":  "template_shufu",
-        "cost":  0,
-        "mpCost":  0,
-        "weight":  8,
-        "target":  "自分または味方式神1体",
-        "timing":  "防御受付中",
-        "effectText":  "今回受けるダメージを3軽減。使用後、自分のMPを1回復。",
-        "description":  "守符の水属性版。",
-        "flavorText":  "薄き紙に宿る祈りが、迫る災いの前に立ちはだかる。 澄んだ流れが巡り、絶えず力の形を変えていく。"
-    },
-    {
-        "id":  "card_utsusemi_wood",
-        "name":  "霊符術：空蝉",
-        "category":  "防御札",
-        "system":  "霊符術",
-        "attribute":  "木",
-        "templateId":  "template_utsusemi",
-        "cost":  0,
-        "mpCost":  2,
-        "weight":  4,
-        "target":  "自分または味方式神1体",
-        "timing":  "防御受付中",
-        "effectText":  "今回の単体攻撃によるダメージを無効化。使用後、対象のHPを1回復。",
-        "description":  "空蝉の木属性版。",
-        "flavorText":  "残された影だけが砕け、本体はすでに遠くへ消えている。 青き息吹が脈打ち、静かに命の輪を広げていく。"
-    },
-    {
-        "id":  "card_utsusemi_fire",
-        "name":  "霊符術：空蝉",
-        "category":  "防御札",
-        "system":  "霊符術",
-        "attribute":  "火",
-        "templateId":  "template_utsusemi",
-        "cost":  0,
-        "mpCost":  2,
-        "weight":  4,
-        "target":  "自分または味方式神1体",
-        "timing":  "防御受付中",
-        "effectText":  "今回の単体攻撃によるダメージを無効化。軽減または無効化に成功した場合、攻撃主体へ1ダメージ。",
-        "description":  "空蝉の火属性版。",
-        "flavorText":  "残された影だけが砕け、本体はすでに遠くへ消えている。 赤き残光が揺らめき、触れた気配を焦がしていく。"
-    },
-    {
-        "id":  "card_utsusemi_earth",
-        "name":  "霊符術：空蝉",
-        "category":  "防御札",
-        "system":  "霊符術",
-        "attribute":  "土",
-        "templateId":  "template_utsusemi",
-        "cost":  0,
-        "mpCost":  2,
-        "weight":  4,
-        "target":  "自分または味方式神1体",
-        "timing":  "防御受付中",
-        "effectText":  "今回の単体攻撃によるダメージを無効化する。その後、対象が次に受けるダメージを1軽減する。この軽減は1回で解除する。",
-        "description":  "空蝉の土属性版。",
-        "flavorText":  "残された影だけが砕け、本体はすでに遠くへ消えている。 揺るがぬ気が沈み、足元から守りを築き上げる。"
-    },
-    {
-        "id":  "card_utsusemi_metal",
-        "name":  "霊符術：空蝉",
-        "category":  "防御札",
-        "system":  "霊符術",
-        "attribute":  "金",
-        "templateId":  "template_utsusemi",
-        "cost":  0,
-        "mpCost":  2,
-        "weight":  4,
-        "target":  "自分または味方式神1体",
-        "timing":  "防御受付中",
-        "effectText":  "今回の単体攻撃によるダメージを無効化。効果ダメージにも使用できる。",
-        "description":  "空蝉の金属性版。",
-        "flavorText":  "残された影だけが砕け、本体はすでに遠くへ消えている。 白き閃きが走り、曇りなき軌跡だけを残していく。"
-    },
-    {
-        "id":  "card_utsusemi_water",
-        "name":  "霊符術：空蝉",
-        "category":  "防御札",
-        "system":  "霊符術",
-        "attribute":  "水",
-        "templateId":  "template_utsusemi",
-        "cost":  0,
-        "mpCost":  2,
-        "weight":  4,
-        "target":  "自分または味方式神1体",
-        "timing":  "防御受付中",
-        "effectText":  "今回の単体攻撃によるダメージを無効化。使用後、自分のMPを1回復。",
-        "description":  "空蝉の水属性版。",
-        "flavorText":  "残された影だけが砕け、本体はすでに遠くへ消えている。 澄んだ流れが巡り、絶えず力の形を変えていく。"
-    },
-    {
-        "id":  "card_kekkaifu_wood",
-        "name":  "霊符術：結界符",
-        "category":  "防御札",
-        "system":  "霊符術",
-        "attribute":  "木",
-        "templateId":  "template_kekkaifu",
-        "cost":  0,
-        "mpCost":  1,
-        "weight":  5,
-        "target":  "自分側全体",
-        "timing":  "防御受付中",
-        "effectText":  "今回の攻撃で自分側が受けるダメージを各対象1軽減する。その後、今回ダメージを受けた自分側対象のうち現在HP割合が最も低い1体を1回復する。同率は自分プレイヤー、次に召喚が古い式神を優先する。",
-        "description":  "結界符の木属性版。",
-        "flavorText":  "重なる札が円を描き、そこだけ時の流れを拒む。 青き息吹が脈打ち、静かに命の輪を広げていく。"
-    },
-    {
-        "id":  "card_kekkaifu_fire",
-        "name":  "霊符術：結界符",
-        "category":  "防御札",
-        "system":  "霊符術",
-        "attribute":  "火",
-        "templateId":  "template_kekkaifu",
-        "cost":  0,
-        "mpCost":  1,
-        "weight":  5,
-        "target":  "自分側全体",
-        "timing":  "防御受付中",
-        "effectText":  "今回の攻撃で自分側が受けるダメージを各対象1軽減。軽減または無効化に成功した場合、攻撃主体へ1ダメージ。",
-        "description":  "結界符の火属性版。",
-        "flavorText":  "重なる札が円を描き、そこだけ時の流れを拒む。 赤き残光が揺らめき、触れた気配を焦がしていく。"
-    },
-    {
-        "id":  "card_kekkaifu_earth",
-        "name":  "霊符術：結界符",
-        "category":  "防御札",
-        "system":  "霊符術",
-        "attribute":  "土",
-        "templateId":  "template_kekkaifu",
-        "cost":  0,
-        "mpCost":  1,
-        "weight":  5,
-        "target":  "自分側全体",
-        "timing":  "防御受付中",
-        "effectText":  "今回の攻撃で自分側が受けるダメージを各対象1軽減。軽減量をさらに1増加。",
-        "description":  "結界符の土属性版。",
-        "flavorText":  "重なる札が円を描き、そこだけ時の流れを拒む。 揺るがぬ気が沈み、足元から守りを築き上げる。"
-    },
-    {
-        "id":  "card_kekkaifu_metal",
-        "name":  "霊符術：結界符",
-        "category":  "防御札",
-        "system":  "霊符術",
-        "attribute":  "金",
-        "templateId":  "template_kekkaifu",
-        "cost":  0,
-        "mpCost":  1,
-        "weight":  5,
-        "target":  "自分側全体",
-        "timing":  "防御受付中",
-        "effectText":  "今回の攻撃で自分側が受けるダメージを各対象1軽減。効果ダメージにも使用できる。",
-        "description":  "結界符の金属性版。",
-        "flavorText":  "重なる札が円を描き、そこだけ時の流れを拒む。 白き閃きが走り、曇りなき軌跡だけを残していく。"
-    },
-    {
-        "id":  "card_kekkaifu_water",
-        "name":  "霊符術：結界符",
-        "category":  "防御札",
-        "system":  "霊符術",
-        "attribute":  "水",
-        "templateId":  "template_kekkaifu",
-        "cost":  0,
-        "mpCost":  1,
-        "weight":  5,
-        "target":  "自分側全体",
-        "timing":  "防御受付中",
-        "effectText":  "今回の攻撃で自分側が受けるダメージを各対象1軽減。使用後、自分のMPを1回復。",
-        "description":  "結界符の水属性版。",
-        "flavorText":  "重なる札が円を描き、そこだけ時の流れを拒む。 澄んだ流れが巡り、絶えず力の形を変えていく。"
-    },
-    {
-        "id":  "card_joka",
-        "name":  "陰陽秘術：浄化",
-        "category":  "術札",
-        "system":  "陰陽秘術",
-        "attribute":  "無属性",
-        "templateId":  "template_purification",
-        "cost":  2,
-        "mpCost":  1,
-        "weight":  6,
-        "target":  "自分または味方式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "対象の呪いを1つ解除する。",
-        "description":  "呪い対策の基本術。",
-        "flavorText":  "澄みきった言葉が穢れをほどき、静かな気だけを残す。"
-    },
-    {
-        "id":  "card_kassei",
-        "name":  "陰陽秘術：活性",
-        "category":  "術札",
-        "system":  "陰陽秘術",
-        "attribute":  "無属性",
-        "templateId":  "template_activation",
-        "cost":  2,
-        "mpCost":  1,
-        "weight":  6,
-        "target":  "自分プレイヤー",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "HPを3回復し、MPを1回復する。",
-        "description":  "小回復と霊気補給を同時に行う。",
-        "flavorText":  "眠っていた霊脈が目を覚まし、全身を温かな気が巡る。"
-    },
-    {
-        "id":  "card_fuin",
-        "name":  "陰陽秘術：封印",
-        "category":  "術札",
-        "system":  "陰陽秘術",
-        "attribute":  "無属性",
-        "templateId":  "template_seal",
-        "cost":  3,
-        "mpCost":  2,
-        "weight":  4,
-        "target":  "相手式神1体または相手結界1つ",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "式神を選んだ場合、固有能力を次の相手ターン終了まで無効化。結界を選んだ場合、次の発動を1回無効化。",
-        "description":  "能力や結界を一時的に封じる。",
-        "flavorText":  "結ばれた印は音もなく閉じ、術の流れを深く沈める。"
-    },
-    {
-        "id":  "card_haraekotoba",
-        "name":  "陰陽秘術：祓詞",
-        "category":  "術札",
-        "system":  "陰陽秘術",
-        "attribute":  "無属性",
-        "templateId":  "template_exorcism",
-        "cost":  3,
-        "mpCost":  2,
-        "weight":  4,
-        "target":  "全体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "場のすべての式神から呪いを1スタックずつ解除する。",
-        "description":  "広範囲の呪いを祓う。",
-        "flavorText":  "重なる詞が場を渡り、絡みついた災いを遠くへ祓う。"
-    },
-    {
-        "id":  "card_tenrin_wood",
-        "name":  "占事略决：転輪",
-        "category":  "術札",
-        "system":  "占事略决",
-        "attribute":  "木",
-        "templateId":  "template_tenrin",
-        "cost":  1,
-        "mpCost":  0,
-        "weight":  7,
-        "target":  "自分プレイヤー",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "自分の現在属性を五行循環の正方向へ1段階転輪する。無属性には使用できない。",
-        "description":  "転輪の木属性版。",
-        "flavorText":  "巡る理に指を添え、運命の輪を次の座へ進める。 青き息吹が脈打ち、静かに命の輪を広げていく。"
-    },
-    {
-        "id":  "card_tenrin_fire",
-        "name":  "占事略决：転輪",
-        "category":  "術札",
-        "system":  "占事略决",
-        "attribute":  "火",
-        "templateId":  "template_tenrin",
-        "cost":  1,
-        "mpCost":  0,
-        "weight":  7,
-        "target":  "自分プレイヤー",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "自分の現在属性を五行循環の逆方向へ1段階転輪する。無属性には使用できない。",
-        "description":  "転輪の火属性版。",
-        "flavorText":  "巡る理に指を添え、運命の輪を次の座へ進める。 赤き残光が揺らめき、触れた気配を焦がしていく。"
-    },
-    {
-        "id":  "card_tenrin_earth",
-        "name":  "占事略决：転輪",
-        "category":  "術札",
-        "system":  "占事略决",
-        "attribute":  "土",
-        "templateId":  "template_tenrin",
-        "cost":  1,
-        "mpCost":  0,
-        "weight":  7,
-        "target":  "自分プレイヤー",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "自分の現在属性を五行循環の正方向へ2段階転輪する。無属性には使用できない。",
-        "description":  "転輪の土属性版。",
-        "flavorText":  "巡る理に指を添え、運命の輪を次の座へ進める。 揺るがぬ気が沈み、足元から守りを築き上げる。"
-    },
-    {
-        "id":  "card_tenrin_metal",
-        "name":  "占事略决：転輪",
-        "category":  "術札",
-        "system":  "占事略决",
-        "attribute":  "金",
-        "templateId":  "template_tenrin",
-        "cost":  1,
-        "mpCost":  0,
-        "weight":  7,
-        "target":  "自分プレイヤー",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "自分の現在属性を五行循環の逆方向へ2段階転輪する。無属性には使用できない。",
-        "description":  "転輪の金属性版。",
-        "flavorText":  "巡る理に指を添え、運命の輪を次の座へ進める。 白き閃きが走り、曇りなき軌跡だけを残していく。"
-    },
-    {
-        "id":  "card_tenrin_water",
-        "name":  "占事略决：転輪",
-        "category":  "術札",
-        "system":  "占事略决",
-        "attribute":  "水",
-        "templateId":  "template_tenrin",
-        "cost":  1,
-        "mpCost":  0,
-        "weight":  7,
-        "target":  "自分プレイヤー",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "正方向1段階または逆方向1段階を選び、自分の現在属性を転輪する。無属性には使用できない。",
-        "description":  "転輪の水属性版。",
-        "flavorText":  "巡る理に指を添え、運命の輪を次の座へ進める。 澄んだ流れが巡り、絶えず力の形を変えていく。"
-    },
-    {
-        "id":  "card_sosei_wood",
-        "name":  "占事略决：相生",
-        "category":  "術札",
-        "system":  "占事略决",
-        "attribute":  "木",
-        "templateId":  "template_sosei",
-        "cost":  2,
-        "mpCost":  1,
-        "weight":  5,
-        "target":  "自分プレイヤー",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "自分の現在属性が水の場合、MPを3回復し、正方向へ1段階転輪する。それ以外はMPを1回復し、属性は変化しない。",
-        "description":  "相生の木属性版。",
-        "flavorText":  "生み育てる理が結ばれ、次なる力へ穏やかに受け継がれる。 青き息吹が脈打ち、静かに命の輪を広げていく。"
-    },
-    {
-        "id":  "card_sosei_fire",
-        "name":  "占事略决：相生",
-        "category":  "術札",
-        "system":  "占事略决",
-        "attribute":  "火",
-        "templateId":  "template_sosei",
-        "cost":  2,
-        "mpCost":  1,
-        "weight":  5,
-        "target":  "自分プレイヤー",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "自分の現在属性が木の場合、MPを3回復し、正方向へ1段階転輪する。それ以外はMPを1回復し、属性は変化しない。",
-        "description":  "相生の火属性版。",
-        "flavorText":  "生み育てる理が結ばれ、次なる力へ穏やかに受け継がれる。 赤き残光が揺らめき、触れた気配を焦がしていく。"
-    },
-    {
-        "id":  "card_sosei_earth",
-        "name":  "占事略决：相生",
-        "category":  "術札",
-        "system":  "占事略决",
-        "attribute":  "土",
-        "templateId":  "template_sosei",
-        "cost":  2,
-        "mpCost":  1,
-        "weight":  5,
-        "target":  "自分プレイヤー",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "自分の現在属性が火の場合、MPを3回復し、正方向へ1段階転輪する。それ以外はMPを1回復し、属性は変化しない。",
-        "description":  "相生の土属性版。",
-        "flavorText":  "生み育てる理が結ばれ、次なる力へ穏やかに受け継がれる。 揺るがぬ気が沈み、足元から守りを築き上げる。"
-    },
-    {
-        "id":  "card_sosei_metal",
-        "name":  "占事略决：相生",
-        "category":  "術札",
-        "system":  "占事略决",
-        "attribute":  "金",
-        "templateId":  "template_sosei",
-        "cost":  2,
-        "mpCost":  1,
-        "weight":  5,
-        "target":  "自分プレイヤー",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "自分の現在属性が土の場合、MPを3回復し、正方向へ1段階転輪する。それ以外はMPを1回復し、属性は変化しない。",
-        "description":  "相生の金属性版。",
-        "flavorText":  "生み育てる理が結ばれ、次なる力へ穏やかに受け継がれる。 白き閃きが走り、曇りなき軌跡だけを残していく。"
-    },
-    {
-        "id":  "card_sosei_water",
-        "name":  "占事略决：相生",
-        "category":  "術札",
-        "system":  "占事略决",
-        "attribute":  "水",
-        "templateId":  "template_sosei",
-        "cost":  2,
-        "mpCost":  1,
-        "weight":  5,
-        "target":  "自分プレイヤー",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "自分の現在属性が金の場合、MPを3回復し、正方向へ1段階転輪する。それ以外はMPを1回復し、属性は変化しない。",
-        "description":  "相生の水属性版。",
-        "flavorText":  "生み育てる理が結ばれ、次なる力へ穏やかに受け継がれる。 澄んだ流れが巡り、絶えず力の形を変えていく。"
-    },
-    {
-        "id":  "card_sokoku_wood",
-        "name":  "占事略决：相剋",
-        "category":  "術札",
-        "system":  "占事略决",
-        "attribute":  "木",
-        "templateId":  "template_sokoku",
-        "cost":  2,
-        "mpCost":  2,
-        "weight":  5,
-        "target":  "相手プレイヤーまたは相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "基本1ダメージ。木が土を剋す関係が成立する場合、共通相剋補正＋2を1回適用し、最終3ダメージとする。カード固有の追加加算は行わない。",
-        "description":  "相剋の木属性版。",
-        "flavorText":  "相反する理が噛み合い、崩れるべき一点を鋭く示す。 青き息吹が脈打ち、静かに命の輪を広げていく。"
-    },
-    {
-        "id":  "card_sokoku_fire",
-        "name":  "占事略决：相剋",
-        "category":  "術札",
-        "system":  "占事略决",
-        "attribute":  "火",
-        "templateId":  "template_sokoku",
-        "cost":  2,
-        "mpCost":  2,
-        "weight":  5,
-        "target":  "相手プレイヤーまたは相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "基本1ダメージ。火が金を剋す関係が成立する場合、共通相剋補正＋2を1回適用し、最終3ダメージとする。カード固有の追加加算は行わない。",
-        "description":  "相剋の火属性版。",
-        "flavorText":  "相反する理が噛み合い、崩れるべき一点を鋭く示す。 赤き残光が揺らめき、触れた気配を焦がしていく。"
-    },
-    {
-        "id":  "card_sokoku_earth",
-        "name":  "占事略决：相剋",
-        "category":  "術札",
-        "system":  "占事略决",
-        "attribute":  "土",
-        "templateId":  "template_sokoku",
-        "cost":  2,
-        "mpCost":  2,
-        "weight":  5,
-        "target":  "相手プレイヤーまたは相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "基本1ダメージ。土が水を剋す関係が成立する場合、共通相剋補正＋2を1回適用し、最終3ダメージとする。カード固有の追加加算は行わない。",
-        "description":  "相剋の土属性版。",
-        "flavorText":  "相反する理が噛み合い、崩れるべき一点を鋭く示す。 揺るがぬ気が沈み、足元から守りを築き上げる。"
-    },
-    {
-        "id":  "card_sokoku_metal",
-        "name":  "占事略决：相剋",
-        "category":  "術札",
-        "system":  "占事略决",
-        "attribute":  "金",
-        "templateId":  "template_sokoku",
-        "cost":  2,
-        "mpCost":  2,
-        "weight":  5,
-        "target":  "相手プレイヤーまたは相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "基本1ダメージ。金が木を剋す関係が成立する場合、共通相剋補正＋2を1回適用し、最終3ダメージとする。カード固有の追加加算は行わない。",
-        "description":  "相剋の金属性版。",
-        "flavorText":  "相反する理が噛み合い、崩れるべき一点を鋭く示す。 白き閃きが走り、曇りなき軌跡だけを残していく。"
-    },
-    {
-        "id":  "card_sokoku_water",
-        "name":  "占事略决：相剋",
-        "category":  "術札",
-        "system":  "占事略决",
-        "attribute":  "水",
-        "templateId":  "template_sokoku",
-        "cost":  2,
-        "mpCost":  2,
-        "weight":  5,
-        "target":  "相手プレイヤーまたは相手式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "基本1ダメージ。水が火を剋す関係が成立する場合、共通相剋補正＋2を1回適用し、最終3ダメージとする。カード固有の追加加算は行わない。",
-        "description":  "相剋の水属性版。",
-        "flavorText":  "相反する理が噛み合い、崩れるべき一点を鋭く示す。 澄んだ流れが巡り、絶えず力の形を変えていく。"
-    },
-    {
-        "id":  "card_junkan_wood",
-        "name":  "占事略决：循環",
-        "category":  "術札",
-        "system":  "占事略决",
-        "attribute":  "木",
-        "templateId":  "template_junkan",
-        "cost":  3,
-        "mpCost":  2,
-        "weight":  4,
-        "target":  "自分プレイヤー",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "自分の現在属性を正方向へ1段階転輪する。その後、カードを2枚引き、手札を1枚選んで捨てる。無属性には使用できない。",
-        "description":  "循環の木属性版。",
-        "flavorText":  "始まりと終わりが輪を描き、失われた道を再びつなぐ。 青き息吹が脈打ち、静かに命の輪を広げていく。"
-    },
-    {
-        "id":  "card_junkan_fire",
-        "name":  "占事略决：循環",
-        "category":  "術札",
-        "system":  "占事略决",
-        "attribute":  "火",
-        "templateId":  "template_junkan",
-        "cost":  3,
-        "mpCost":  2,
-        "weight":  4,
-        "target":  "自分プレイヤー",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "自分の現在属性を逆方向へ1段階転輪する。その後、カードを2枚引き、手札を1枚選んで捨てる。無属性には使用できない。",
-        "description":  "循環の火属性版。",
-        "flavorText":  "始まりと終わりが輪を描き、失われた道を再びつなぐ。 赤き残光が揺らめき、触れた気配を焦がしていく。"
-    },
-    {
-        "id":  "card_junkan_earth",
-        "name":  "占事略决：循環",
-        "category":  "術札",
-        "system":  "占事略决",
-        "attribute":  "土",
-        "templateId":  "template_junkan",
-        "cost":  3,
-        "mpCost":  2,
-        "weight":  4,
-        "target":  "自分プレイヤー",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "自分の現在属性を正方向へ2段階転輪する。その後、カードを2枚引き、手札を1枚選んで捨てる。無属性には使用できない。",
-        "description":  "循環の土属性版。",
-        "flavorText":  "始まりと終わりが輪を描き、失われた道を再びつなぐ。 揺るがぬ気が沈み、足元から守りを築き上げる。"
-    },
-    {
-        "id":  "card_junkan_metal",
-        "name":  "占事略决：循環",
-        "category":  "術札",
-        "system":  "占事略决",
-        "attribute":  "金",
-        "templateId":  "template_junkan",
-        "cost":  3,
-        "mpCost":  2,
-        "weight":  4,
-        "target":  "自分プレイヤー",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "自分の現在属性を逆方向へ2段階転輪する。その後、カードを2枚引き、手札を1枚選んで捨てる。無属性には使用できない。",
-        "description":  "循環の金属性版。",
-        "flavorText":  "始まりと終わりが輪を描き、失われた道を再びつなぐ。 白き閃きが走り、曇りなき軌跡だけを残していく。"
-    },
-    {
-        "id":  "card_junkan_water",
-        "name":  "占事略决：循環",
-        "category":  "術札",
-        "system":  "占事略决",
-        "attribute":  "水",
-        "templateId":  "template_junkan",
-        "cost":  3,
-        "mpCost":  2,
-        "weight":  4,
-        "target":  "自分プレイヤー",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "正方向1段階または逆方向1段階を選んで転輪する。その後、カードを2枚引き、手札を1枚選んで捨てる。無属性には使用できない。",
-        "description":  "循環の水属性版。",
-        "flavorText":  "始まりと終わりが輪を描き、失われた道を再びつなぐ。 澄んだ流れが巡り、絶えず力の形を変えていく。"
-    },
-    {
-        "id":  "card_summon_kanko",
-        "name":  "使役術：管狐",
-        "category":  "式神札",
-        "system":  "使役術",
-        "attribute":  "木",
-        "templateId":  null,
-        "cost":  2,
-        "mpCost":  0,
-        "weight":  5,
-        "target":  "自分の場",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "式神「管狐」を召喚する。",
-        "description":  "管狐を召喚する式神札。",
-        "flavorText":  "細き尾の狐が袖口から覗き、主の気配にそっと寄り添う。"
-    },
-    {
-        "id":  "card_summon_hakuro",
-        "name":  "使役術：白狼",
-        "category":  "式神札",
-        "system":  "使役術",
-        "attribute":  "金",
-        "templateId":  null,
-        "cost":  3,
-        "mpCost":  0,
-        "weight":  4,
-        "target":  "自分の場",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "式神「白狼」を召喚する。",
-        "description":  "白狼を召喚する式神札。",
-        "flavorText":  "白銀の毛並みが風を裂き、獲物を追う眼だけが鋭く光る。"
-    },
-    {
-        "id":  "card_summon_orochi",
-        "name":  "使役術：大蛇",
-        "category":  "式神札",
-        "system":  "使役術",
-        "attribute":  "水",
-        "templateId":  null,
-        "cost":  3,
-        "mpCost":  1,
-        "weight":  3,
-        "target":  "自分の場",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "式神「大蛇」を召喚する。",
-        "description":  "大蛇を召喚する式神札。",
-        "flavorText":  "深き水底より巨躯がうねり、静かな毒気をまとって現れる。"
-    },
-    {
-        "id":  "card_summon_kappa",
-        "name":  "使役術：河童",
-        "category":  "式神札",
-        "system":  "使役術",
-        "attribute":  "水",
-        "templateId":  null,
-        "cost":  3,
-        "mpCost":  1,
-        "weight":  3,
-        "target":  "自分の場",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "式神「河童」を召喚する。",
-        "description":  "河童を召喚する式神札。",
-        "flavorText":  "水音とともに小さな影が跳ね、丸い瞳で戦場を見渡す。"
-    },
-    {
-        "id":  "card_summon_karasutengu",
-        "name":  "使役術：鴉天狗",
-        "category":  "式神札",
-        "system":  "使役術",
-        "attribute":  "火",
-        "templateId":  null,
-        "cost":  4,
-        "mpCost":  1,
-        "weight":  2.5,
-        "target":  "自分の場",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "式神「鴉天狗」を召喚する。",
-        "description":  "鴉天狗を召喚する式神札。",
-        "flavorText":  "黒き翼が月を隠し、山風を従えた異形が空より舞い降りる。"
-    },
-    {
-        "id":  "card_summon_kamaitachi",
-        "name":  "使役術：鎌鼬",
-        "category":  "式神札",
-        "system":  "使役術",
-        "attribute":  "木",
-        "templateId":  null,
-        "cost":  3,
-        "mpCost":  1,
-        "weight":  3,
-        "target":  "自分の場",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "式神「鎌鼬」を召喚する。",
-        "description":  "鎌鼬を召喚する式神札。",
-        "flavorText":  "三筋の風が駆け抜けた後、笑う獣の影だけが残される。"
-    },
-    {
-        "id":  "card_summon_komainu",
-        "name":  "使役術：狛犬",
-        "category":  "式神札",
-        "system":  "使役術",
-        "attribute":  "土",
-        "templateId":  null,
-        "cost":  4,
-        "mpCost":  0,
-        "weight":  3,
-        "target":  "自分の場",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "式神「狛犬」を召喚する。",
-        "description":  "狛犬を召喚する式神札。",
-        "flavorText":  "社の守り手が石畳を踏み、低い唸りとともに前へ出る。"
-    },
-    {
-        "id":  "card_summon_shirozaru",
-        "name":  "使役術：白猿",
-        "category":  "式神札",
-        "system":  "使役術",
-        "attribute":  "金",
-        "templateId":  null,
-        "cost":  3,
-        "mpCost":  1,
-        "weight":  3,
-        "target":  "自分の場",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "式神「白猿」を召喚する。",
-        "description":  "白猿を召喚する式神札。",
-        "flavorText":  "白き猿が器用に印を真似、次の瞬間には敵意を映し返す。"
-    },
-    {
-        "id":  "card_summon_genki",
-        "name":  "使役術：玄亀",
-        "category":  "式神札",
-        "system":  "使役術",
-        "attribute":  "土",
-        "templateId":  null,
-        "cost":  5,
-        "mpCost":  2,
-        "weight":  1.5,
-        "target":  "自分の場",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "式神「玄亀」を召喚する。",
-        "description":  "玄亀を召喚する式神札。",
-        "flavorText":  "古き甲羅が地を擦り、積み重ねた歳月そのものが壁となる。"
-    },
-    {
-        "id":  "card_summon_hinotori",
-        "name":  "使役術：火鳥",
-        "category":  "式神札",
-        "system":  "使役術",
-        "attribute":  "火",
-        "templateId":  null,
-        "cost":  5,
-        "mpCost":  3,
-        "weight":  1,
-        "target":  "自分の場",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "式神「火鳥」を召喚する。",
-        "description":  "火鳥を召喚する式神札。",
-        "flavorText":  "燃える羽根が闇を照らし、灰の中から新たな翼が広がる。"
-    },
-    {
-        "id":  "card_barrier_guardian",
-        "name":  "結界術：守護結界",
-        "category":  "結界札",
-        "system":  "結界術",
-        "attribute":  "土",
-        "templateId":  null,
-        "cost":  3,
-        "mpCost":  2,
-        "weight":  3,
-        "target":  "自分の場",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "結界「守護結界」を設置する。",
-        "description":  "守護結界を設置する結界札。",
-        "flavorText":  "大地の祈りが四方を固め、侵すものを静かに退ける。"
-    },
-    {
-        "id":  "card_barrier_spirit_vein",
-        "name":  "結界術：霊脈結界",
-        "category":  "結界札",
-        "system":  "結界術",
-        "attribute":  "水",
-        "templateId":  null,
-        "cost":  3,
-        "mpCost":  2,
-        "weight":  3,
-        "target":  "自分の場",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "結界「霊脈結界」を設置する。",
-        "description":  "霊脈結界を設置する結界札。",
-        "flavorText":  "見えぬ流れが場を巡り、尽きかけた霊気を再び呼び戻す。"
-    },
-    {
-        "id":  "card_barrier_purification",
-        "name":  "結界術：浄化結界",
-        "category":  "結界札",
-        "system":  "結界術",
-        "attribute":  "金",
-        "templateId":  null,
-        "cost":  3,
-        "mpCost":  2,
-        "weight":  3,
-        "target":  "自分の場",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "結界「浄化結界」を設置する。",
-        "description":  "浄化結界を設置する結界札。",
-        "flavorText":  "白き光が穢れを照らし、触れた災いをひとつずつほどく。"
-    },
-    {
-        "id":  "card_barrier_binding",
-        "name":  "結界術：呪縛結界",
-        "category":  "結界札",
-        "system":  "結界術",
-        "attribute":  "木",
-        "templateId":  null,
-        "cost":  3,
-        "mpCost":  3,
-        "weight":  2.5,
-        "target":  "自分の場",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "結界「呪縛結界」を設置する。",
-        "description":  "呪縛結界を設置する結界札。",
-        "flavorText":  "絡む蔦のような印が広がり、命じる声を深い霧へ閉ざす。"
-    },
-    {
-        "id":  "card_terrain_chinju_forest",
-        "name":  "地脈術：鎮守の森",
-        "category":  "地形札",
-        "system":  "地脈術",
-        "attribute":  "木",
-        "templateId":  null,
-        "cost":  4,
-        "mpCost":  3,
-        "weight":  2,
-        "target":  "共有地形",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "地形「鎮守の森」を展開する。",
-        "description":  "鎮守の森を展開する地形札。",
-        "flavorText":  "木々のざわめきが重なり、戦場はいつしか古き森へ変わる。"
-    },
-    {
-        "id":  "card_terrain_scorched_earth",
-        "name":  "地脈術：焦土",
-        "category":  "地形札",
-        "system":  "地脈術",
-        "attribute":  "火",
-        "templateId":  null,
-        "cost":  4,
-        "mpCost":  3,
-        "weight":  2,
-        "target":  "共有地形",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "地形「焦土」を展開する。",
-        "description":  "焦土を展開する地形札。",
-        "flavorText":  "熱を失った大地が赤く割れ、残るものすべてを試し始める。"
-    },
-    {
-        "id":  "card_terrain_clear_stream",
-        "name":  "地脈術：清流",
-        "category":  "地形札",
-        "system":  "地脈術",
-        "attribute":  "水",
-        "templateId":  null,
-        "cost":  4,
-        "mpCost":  3,
-        "weight":  2,
-        "target":  "共有地形",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "地形「清流」を展開する。",
-        "description":  "清流を展開する地形札。",
-        "flavorText":  "澄んだ流れが足元を巡り、滞った気をゆるやかに運び去る。"
-    },
-    {
-        "id":  "card_terrain_mineral_vein",
-        "name":  "地脈術：鉱脈",
-        "category":  "地形札",
-        "system":  "地脈術",
-        "attribute":  "金",
-        "templateId":  null,
-        "cost":  4,
-        "mpCost":  3,
-        "weight":  2,
-        "target":  "共有地形",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "地形「鉱脈」を展開する。",
-        "description":  "鉱脈を展開する地形札。",
-        "flavorText":  "岩肌の奥で金気が鳴り、眠れる力が地上へ押し上げられる。"
-    },
-    {
-        "id":  "card_terrain_sacred_domain",
-        "name":  "地脈術：神域",
-        "category":  "地形札",
-        "system":  "地脈術",
-        "attribute":  "土",
-        "templateId":  null,
-        "cost":  4,
-        "mpCost":  3,
-        "weight":  2,
-        "target":  "共有地形",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "地形「神域」を展開する。",
-        "description":  "神域を展開する地形札。",
-        "flavorText":  "清らかな静寂が降り、争いの場さえ神前の庭へ変わる。"
-    },
-    {
-        "id":  "card_terrain_yomi_road",
-        "name":  "地脈術：黄泉路",
-        "category":  "地形札",
-        "system":  "地脈術",
-        "attribute":  "無属性",
-        "templateId":  null,
-        "cost":  4,
-        "mpCost":  4,
-        "weight":  1.5,
-        "target":  "共有地形",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "地形「黄泉路」を展開する。",
-        "description":  "黄泉路を展開する地形札。",
-        "flavorText":  "薄闇の道が口を開き、去りしものの気配を彼方へ導く。"
-    },
-    {
-        "id":  "card_forbidden_yomigaeshi",
-        "name":  "禁術：黄泉返し",
-        "category":  "術札",
-        "system":  "禁術",
-        "attribute":  "水",
-        "templateId":  null,
-        "cost":  5,
-        "mpCost":  7,
-        "weight":  1,
-        "target":  "自分の退場した式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "最大HP50％（端数切上げ）で復活。復活ターン行動不可。",
-        "description":  "禁術タグあり。",
-        "flavorText":  "死者の名を呼ぶ声が境を越え、消えた足音を再び近づける。"
-    },
-    {
-        "id":  "card_forbidden_tenchigaeshi",
-        "name":  "禁術：天地返し",
-        "category":  "術札",
-        "system":  "禁術",
-        "attribute":  "土",
-        "templateId":  null,
-        "cost":  5,
-        "mpCost":  6,
-        "weight":  1,
-        "target":  "全体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "地形および結界をすべて消滅させる。",
-        "description":  "禁術タグあり。",
-        "flavorText":  "天と地の座が反転し、築かれた理は根元から崩れ落ちる。"
-    },
-    {
-        "id":  "card_forbidden_tamashii_gui",
-        "name":  "禁術：魂喰",
-        "category":  "術札",
-        "system":  "禁術",
-        "attribute":  "金",
-        "templateId":  null,
-        "cost":  5,
-        "mpCost":  6,
-        "weight":  1,
-        "target":  "自分の式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "対象を消滅させ、自分プレイヤーのHPを5回復しMPを3回復する。",
-        "description":  "禁術タグあり。",
-        "flavorText":  "捧げられた魂は消えず、術者の内で異なる力へ姿を変える。"
-    },
-    {
-        "id":  "card_forbidden_tenpenchii",
-        "name":  "禁術：天変地異",
-        "category":  "術札",
-        "system":  "禁術",
-        "attribute":  "火",
-        "templateId":  null,
-        "cost":  5,
-        "mpCost":  7,
-        "weight":  1,
-        "target":  "共有地形",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "現在の地形を消滅させ、任意の地形1つを選んで展開する。",
-        "description":  "禁術タグあり。",
-        "flavorText":  "雲が裂け、大地が鳴り、定められた景色さえ塗り替えられる。"
-    },
-    {
-        "id":  "card_forbidden_kamioroshi",
-        "name":  "禁術：神降ろし",
-        "category":  "術札",
-        "system":  "禁術",
-        "attribute":  "木",
-        "templateId":  null,
-        "cost":  5,
-        "mpCost":  7,
-        "weight":  1,
-        "target":  "味方式神1体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "対象の最大HPと現在HPを4増加し、攻撃力を2増加する。",
-        "description":  "禁術タグあり。",
-        "flavorText":  "遠き御霊が一時の器を得て、戦場へ大いなる影を落とす。"
-    },
-    {
-        "id":  "card_forbidden_mekkai",
-        "name":  "禁術：滅界",
-        "category":  "術札",
-        "system":  "禁術",
-        "attribute":  "無属性",
-        "templateId":  null,
-        "cost":  5,
-        "mpCost":  5,
-        "weight":  1,
-        "target":  "全体",
-        "timing":  "自分のカード使用フェーズ",
-        "effectText":  "すべての結界を消滅させる。",
-        "description":  "禁術タグあり。",
-        "flavorText":  "境を形づくる線が消え、守りも誓いも等しく虚空へ還る。"
-    }
+  {
+    "id": "card_reidan_wood",
+    "name": "霊符術：霊弾",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "木",
+    "templateId": "template_reidan",
+    "cost": 1,
+    "mpCost": 0,
+    "weight": 9,
+    "target": "相手プレイヤーまたは相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "2ダメージ。属性一致時、対象へ毒を1スタック付与。",
+    "description": "霊弾の木属性版。",
+    "flavorText": "掌に集めた気が、静かな光となって夜を裂く。 青き息吹が脈打ち、静かに命の輪を広げていく。",
+    "imageId": "img_card_reidan",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_reidan_wood",
+        "target": "opponent_any",
+        "baseDamage": 2,
+        "attributeMatchEffect": {
+          "type": "apply_curse",
+          "curseId": "curse_poison",
+          "stacks": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_reidan_fire",
+    "name": "霊符術：霊弾",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "火",
+    "templateId": "template_reidan",
+    "cost": 1,
+    "mpCost": 0,
+    "weight": 9,
+    "target": "相手プレイヤーまたは相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "2ダメージ。属性一致時、対象へ火傷を付与。",
+    "description": "霊弾の火属性版。",
+    "flavorText": "掌に集めた気が、静かな光となって夜を裂く。 赤き残光が揺らめき、触れた気配を焦がしていく。",
+    "imageId": "img_card_reidan",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_reidan_fire",
+        "target": "opponent_any",
+        "baseDamage": 2,
+        "attributeMatchEffect": {
+          "type": "apply_curse",
+          "curseId": "curse_burn",
+          "stacks": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_reidan_earth",
+    "name": "霊符術：霊弾",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "土",
+    "templateId": "template_reidan",
+    "cost": 1,
+    "mpCost": 0,
+    "weight": 9,
+    "target": "相手プレイヤーまたは相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "2ダメージ。属性一致時、自分が次に受けるダメージを1軽減。",
+    "description": "霊弾の土属性版。",
+    "flavorText": "掌に集めた気が、静かな光となって夜を裂く。 揺るがぬ気が沈み、足元から守りを築き上げる。",
+    "imageId": "img_card_reidan",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_reidan_earth",
+        "target": "opponent_any",
+        "baseDamage": 2,
+        "attributeMatchEffect": {
+          "type": "next_damage_reduction",
+          "amount": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_reidan_metal",
+    "name": "霊符術：霊弾",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "金",
+    "templateId": "template_reidan",
+    "cost": 1,
+    "mpCost": 0,
+    "weight": 9,
+    "target": "相手プレイヤーまたは相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "2ダメージ。属性一致時、この攻撃は軽減を1無視。",
+    "description": "霊弾の金属性版。",
+    "flavorText": "掌に集めた気が、静かな光となって夜を裂く。 白き閃きが走り、曇りなき軌跡だけを残していく。",
+    "imageId": "img_card_reidan",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_reidan_metal",
+        "target": "opponent_any",
+        "baseDamage": 2,
+        "attributeMatchEffect": {
+          "type": "ignore_damage_reduction",
+          "amount": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_reidan_water",
+    "name": "霊符術：霊弾",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "水",
+    "templateId": "template_reidan",
+    "cost": 1,
+    "mpCost": 0,
+    "weight": 9,
+    "target": "相手プレイヤーまたは相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "2ダメージ。属性一致時、自分のMPを1回復。",
+    "description": "霊弾の水属性版。",
+    "flavorText": "掌に集めた気が、静かな光となって夜を裂く。 澄んだ流れが巡り、絶えず力の形を変えていく。",
+    "imageId": "img_card_reidan",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_reidan_water",
+        "target": "opponent_any",
+        "baseDamage": 2,
+        "attributeMatchEffect": {
+          "type": "gain_mp",
+          "amount": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_zanfu_wood",
+    "name": "霊符術：斬符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "木",
+    "templateId": "template_zanfu",
+    "cost": 1,
+    "mpCost": 1,
+    "weight": 7,
+    "target": "相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "3ダメージ。属性一致時、対象へ毒を1スタック付与。",
+    "description": "斬符の木属性版。",
+    "flavorText": "一筆の軌跡が刃となり、迷いごと断ち切ってゆく。 青き息吹が脈打ち、静かに命の輪を広げていく。",
+    "imageId": "img_card_zanfu",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_zanfu_wood",
+        "target": "opponent_unit",
+        "baseDamage": 3,
+        "attributeMatchEffect": {
+          "type": "apply_curse",
+          "curseId": "curse_poison",
+          "stacks": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_zanfu_fire",
+    "name": "霊符術：斬符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "火",
+    "templateId": "template_zanfu",
+    "cost": 1,
+    "mpCost": 1,
+    "weight": 7,
+    "target": "相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "3ダメージ。属性一致時、対象へ火傷を付与。",
+    "description": "斬符の火属性版。",
+    "flavorText": "一筆の軌跡が刃となり、迷いごと断ち切ってゆく。 赤き残光が揺らめき、触れた気配を焦がしていく。",
+    "imageId": "img_card_zanfu",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_zanfu_fire",
+        "target": "opponent_unit",
+        "baseDamage": 3,
+        "attributeMatchEffect": {
+          "type": "apply_curse",
+          "curseId": "curse_burn",
+          "stacks": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_zanfu_earth",
+    "name": "霊符術：斬符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "土",
+    "templateId": "template_zanfu",
+    "cost": 1,
+    "mpCost": 1,
+    "weight": 7,
+    "target": "相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "3ダメージ。属性一致時、自分が次に受けるダメージを1軽減。",
+    "description": "斬符の土属性版。",
+    "flavorText": "一筆の軌跡が刃となり、迷いごと断ち切ってゆく。 揺るがぬ気が沈み、足元から守りを築き上げる。",
+    "imageId": "img_card_zanfu",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_zanfu_earth",
+        "target": "opponent_unit",
+        "baseDamage": 3,
+        "attributeMatchEffect": {
+          "type": "next_damage_reduction",
+          "amount": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_zanfu_metal",
+    "name": "霊符術：斬符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "金",
+    "templateId": "template_zanfu",
+    "cost": 1,
+    "mpCost": 1,
+    "weight": 7,
+    "target": "相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "3ダメージ。属性一致時、この攻撃は軽減を1無視。",
+    "description": "斬符の金属性版。",
+    "flavorText": "一筆の軌跡が刃となり、迷いごと断ち切ってゆく。 白き閃きが走り、曇りなき軌跡だけを残していく。",
+    "imageId": "img_card_zanfu",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_zanfu_metal",
+        "target": "opponent_unit",
+        "baseDamage": 3,
+        "attributeMatchEffect": {
+          "type": "ignore_damage_reduction",
+          "amount": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_zanfu_water",
+    "name": "霊符術：斬符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "水",
+    "templateId": "template_zanfu",
+    "cost": 1,
+    "mpCost": 1,
+    "weight": 7,
+    "target": "相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "3ダメージ。属性一致時、自分のMPを1回復。",
+    "description": "斬符の水属性版。",
+    "flavorText": "一筆の軌跡が刃となり、迷いごと断ち切ってゆく。 澄んだ流れが巡り、絶えず力の形を変えていく。",
+    "imageId": "img_card_zanfu",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_zanfu_water",
+        "target": "opponent_unit",
+        "baseDamage": 3,
+        "attributeMatchEffect": {
+          "type": "gain_mp",
+          "amount": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_senfu_wood",
+    "name": "霊符術：穿符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "木",
+    "templateId": "template_senfu",
+    "cost": 2,
+    "mpCost": 1,
+    "weight": 6,
+    "target": "相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "2ダメージ。この攻撃は挑発を無視して対象を選べる。属性一致時、対象へ毒を1スタック付与。",
+    "description": "穿符の木属性版。",
+    "flavorText": "細き一線は守りの隙を見抜き、深く標を刻む。 青き息吹が脈打ち、静かに命の輪を広げていく。",
+    "imageId": "img_card_senfu",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_senfu_wood",
+        "target": "opponent_unit",
+        "baseDamage": 2,
+        "ignoreTaunt": true,
+        "attributeMatchEffect": {
+          "type": "apply_curse",
+          "curseId": "curse_poison",
+          "stacks": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_senfu_fire",
+    "name": "霊符術：穿符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "火",
+    "templateId": "template_senfu",
+    "cost": 2,
+    "mpCost": 1,
+    "weight": 6,
+    "target": "相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "2ダメージ。この攻撃は挑発を無視して対象を選べる。属性一致時、対象へ火傷を付与。",
+    "description": "穿符の火属性版。",
+    "flavorText": "細き一線は守りの隙を見抜き、深く標を刻む。 赤き残光が揺らめき、触れた気配を焦がしていく。",
+    "imageId": "img_card_senfu",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_senfu_fire",
+        "target": "opponent_unit",
+        "baseDamage": 2,
+        "ignoreTaunt": true,
+        "attributeMatchEffect": {
+          "type": "apply_curse",
+          "curseId": "curse_burn",
+          "stacks": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_senfu_earth",
+    "name": "霊符術：穿符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "土",
+    "templateId": "template_senfu",
+    "cost": 2,
+    "mpCost": 1,
+    "weight": 6,
+    "target": "相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "2ダメージ。この攻撃は挑発を無視して対象を選べる。属性一致時、自分が次に受けるダメージを1軽減。",
+    "description": "穿符の土属性版。",
+    "flavorText": "細き一線は守りの隙を見抜き、深く標を刻む。 揺るがぬ気が沈み、足元から守りを築き上げる。",
+    "imageId": "img_card_senfu",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_senfu_earth",
+        "target": "opponent_unit",
+        "baseDamage": 2,
+        "ignoreTaunt": true,
+        "attributeMatchEffect": {
+          "type": "next_damage_reduction",
+          "amount": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_senfu_metal",
+    "name": "霊符術：穿符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "金",
+    "templateId": "template_senfu",
+    "cost": 2,
+    "mpCost": 1,
+    "weight": 6,
+    "target": "相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "2ダメージ。この攻撃は挑発を無視して対象を選べる。属性一致時、この攻撃は軽減を1無視。",
+    "description": "穿符の金属性版。",
+    "flavorText": "細き一線は守りの隙を見抜き、深く標を刻む。 白き閃きが走り、曇りなき軌跡だけを残していく。",
+    "imageId": "img_card_senfu",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_senfu_metal",
+        "target": "opponent_unit",
+        "baseDamage": 2,
+        "ignoreTaunt": true,
+        "attributeMatchEffect": {
+          "type": "ignore_damage_reduction",
+          "amount": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_senfu_water",
+    "name": "霊符術：穿符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "水",
+    "templateId": "template_senfu",
+    "cost": 2,
+    "mpCost": 1,
+    "weight": 6,
+    "target": "相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "2ダメージ。この攻撃は挑発を無視して対象を選べる。属性一致時、自分のMPを1回復。",
+    "description": "穿符の水属性版。",
+    "flavorText": "細き一線は守りの隙を見抜き、深く標を刻む。 澄んだ流れが巡り、絶えず力の形を変えていく。",
+    "imageId": "img_card_senfu",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_senfu_water",
+        "target": "opponent_unit",
+        "baseDamage": 2,
+        "ignoreTaunt": true,
+        "attributeMatchEffect": {
+          "type": "gain_mp",
+          "amount": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_bakufu_wood",
+    "name": "霊符術：爆符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "木",
+    "templateId": "template_bakufu",
+    "cost": 3,
+    "mpCost": 3,
+    "weight": 4,
+    "target": "相手式神すべて",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "各対象へ2ダメージ。属性一致時、対象へ毒を1スタック付与。",
+    "description": "爆符の木属性版。",
+    "flavorText": "描かれた紋が弾け、封じた気配が一斉に解き放たれる。 青き息吹が脈打ち、静かに命の輪を広げていく。",
+    "imageId": "img_card_bakufu",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_bakufu_wood",
+        "target": "opponent_units",
+        "baseDamage": 2,
+        "attributeMatchEffect": {
+          "type": "apply_curse",
+          "curseId": "curse_poison",
+          "stacks": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_bakufu_fire",
+    "name": "霊符術：爆符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "火",
+    "templateId": "template_bakufu",
+    "cost": 3,
+    "mpCost": 3,
+    "weight": 4,
+    "target": "相手式神すべて",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "各対象へ2ダメージ。属性一致時、対象へ火傷を付与。",
+    "description": "爆符の火属性版。",
+    "flavorText": "描かれた紋が弾け、封じた気配が一斉に解き放たれる。 赤き残光が揺らめき、触れた気配を焦がしていく。",
+    "imageId": "img_card_bakufu",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_bakufu_fire",
+        "target": "opponent_units",
+        "baseDamage": 2,
+        "attributeMatchEffect": {
+          "type": "apply_curse",
+          "curseId": "curse_burn",
+          "stacks": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_bakufu_earth",
+    "name": "霊符術：爆符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "土",
+    "templateId": "template_bakufu",
+    "cost": 3,
+    "mpCost": 3,
+    "weight": 4,
+    "target": "相手式神すべて",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "各対象へ2ダメージ。属性一致時、自分が次に受けるダメージを1軽減。",
+    "description": "爆符の土属性版。",
+    "flavorText": "描かれた紋が弾け、封じた気配が一斉に解き放たれる。 揺るがぬ気が沈み、足元から守りを築き上げる。",
+    "imageId": "img_card_bakufu",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_bakufu_earth",
+        "target": "opponent_units",
+        "baseDamage": 2,
+        "attributeMatchEffect": {
+          "type": "next_damage_reduction",
+          "amount": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_bakufu_metal",
+    "name": "霊符術：爆符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "金",
+    "templateId": "template_bakufu",
+    "cost": 3,
+    "mpCost": 3,
+    "weight": 4,
+    "target": "相手式神すべて",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "各対象へ2ダメージ。属性一致時、この攻撃は軽減を1無視。",
+    "description": "爆符の金属性版。",
+    "flavorText": "描かれた紋が弾け、封じた気配が一斉に解き放たれる。 白き閃きが走り、曇りなき軌跡だけを残していく。",
+    "imageId": "img_card_bakufu",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_bakufu_metal",
+        "target": "opponent_units",
+        "baseDamage": 2,
+        "attributeMatchEffect": {
+          "type": "ignore_damage_reduction",
+          "amount": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_bakufu_water",
+    "name": "霊符術：爆符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "水",
+    "templateId": "template_bakufu",
+    "cost": 3,
+    "mpCost": 3,
+    "weight": 4,
+    "target": "相手式神すべて",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "各対象へ2ダメージ。属性一致時、自分のMPを1回復。",
+    "description": "爆符の水属性版。",
+    "flavorText": "描かれた紋が弾け、封じた気配が一斉に解き放たれる。 澄んだ流れが巡り、絶えず力の形を変えていく。",
+    "imageId": "img_card_bakufu",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_bakufu_water",
+        "target": "opponent_units",
+        "baseDamage": 2,
+        "attributeMatchEffect": {
+          "type": "gain_mp",
+          "amount": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_shokufu_wood",
+    "name": "霊符術：喰符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "木",
+    "templateId": "template_shokufu",
+    "cost": 2,
+    "mpCost": 2,
+    "weight": 5,
+    "target": "相手プレイヤーまたは相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "2ダメージ。その後、自分プレイヤーのHPを1回復。属性一致時、対象へ毒を1スタック付与。",
+    "description": "喰符の木属性版。",
+    "flavorText": "奪うほどに満ち、満ちるほどに次の一手が研ぎ澄まされる。 青き息吹が脈打ち、静かに命の輪を広げていく。",
+    "imageId": "img_card_shokufu",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_shokufu_wood",
+        "target": "opponent_any",
+        "baseDamage": 2,
+        "healSelf": 1,
+        "attributeMatchEffect": {
+          "type": "apply_curse",
+          "curseId": "curse_poison",
+          "stacks": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_shokufu_fire",
+    "name": "霊符術：喰符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "火",
+    "templateId": "template_shokufu",
+    "cost": 2,
+    "mpCost": 2,
+    "weight": 5,
+    "target": "相手プレイヤーまたは相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "2ダメージ。その後、自分プレイヤーのHPを1回復。属性一致時、対象へ火傷を付与。",
+    "description": "喰符の火属性版。",
+    "flavorText": "奪うほどに満ち、満ちるほどに次の一手が研ぎ澄まされる。 赤き残光が揺らめき、触れた気配を焦がしていく。",
+    "imageId": "img_card_shokufu",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_shokufu_fire",
+        "target": "opponent_any",
+        "baseDamage": 2,
+        "healSelf": 1,
+        "attributeMatchEffect": {
+          "type": "apply_curse",
+          "curseId": "curse_burn",
+          "stacks": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_shokufu_earth",
+    "name": "霊符術：喰符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "土",
+    "templateId": "template_shokufu",
+    "cost": 2,
+    "mpCost": 2,
+    "weight": 5,
+    "target": "相手プレイヤーまたは相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "2ダメージ。その後、自分プレイヤーのHPを1回復。属性一致時、自分が次に受けるダメージを1軽減。",
+    "description": "喰符の土属性版。",
+    "flavorText": "奪うほどに満ち、満ちるほどに次の一手が研ぎ澄まされる。 揺るがぬ気が沈み、足元から守りを築き上げる。",
+    "imageId": "img_card_shokufu",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_shokufu_earth",
+        "target": "opponent_any",
+        "baseDamage": 2,
+        "healSelf": 1,
+        "attributeMatchEffect": {
+          "type": "next_damage_reduction",
+          "amount": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_shokufu_metal",
+    "name": "霊符術：喰符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "金",
+    "templateId": "template_shokufu",
+    "cost": 2,
+    "mpCost": 2,
+    "weight": 5,
+    "target": "相手プレイヤーまたは相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "2ダメージ。その後、自分プレイヤーのHPを1回復。属性一致時、この攻撃は軽減を1無視。",
+    "description": "喰符の金属性版。",
+    "flavorText": "奪うほどに満ち、満ちるほどに次の一手が研ぎ澄まされる。 白き閃きが走り、曇りなき軌跡だけを残していく。",
+    "imageId": "img_card_shokufu",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_shokufu_metal",
+        "target": "opponent_any",
+        "baseDamage": 2,
+        "healSelf": 1,
+        "attributeMatchEffect": {
+          "type": "ignore_damage_reduction",
+          "amount": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_shokufu_water",
+    "name": "霊符術：喰符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "attribute": "水",
+    "templateId": "template_shokufu",
+    "cost": 2,
+    "mpCost": 2,
+    "weight": 5,
+    "target": "相手プレイヤーまたは相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "2ダメージ。その後、自分プレイヤーのHPを1回復。属性一致時、自分のMPを1回復。",
+    "description": "喰符の水属性版。",
+    "flavorText": "奪うほどに満ち、満ちるほどに次の一手が研ぎ澄まされる。 澄んだ流れが巡り、絶えず力の形を変えていく。",
+    "imageId": "img_card_shokufu",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_shokufu_water",
+        "target": "opponent_any",
+        "baseDamage": 2,
+        "healSelf": 1,
+        "attributeMatchEffect": {
+          "type": "gain_mp",
+          "amount": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "card_shufu_wood",
+    "name": "霊符術：守符",
+    "category": "防御札",
+    "system": "霊符術",
+    "attribute": "木",
+    "templateId": "template_shufu",
+    "cost": 0,
+    "mpCost": 0,
+    "weight": 8,
+    "target": "自分または味方式神1体",
+    "timing": "防御受付中",
+    "effectText": "今回受けるダメージを3軽減。使用後、対象のHPを1回復。",
+    "description": "守符の木属性版。",
+    "flavorText": "薄き紙に宿る祈りが、迫る災いの前に立ちはだかる。 青き息吹が脈打ち、静かに命の輪を広げていく。",
+    "imageId": "img_card_shufu",
+    "timings": [
+      "防御受付中"
+    ],
+    "effects": [
+      {
+        "type": "defense",
+        "cardId": "card_shufu_wood",
+        "scope": "single",
+        "mode": "reduce",
+        "amount": 3,
+        "postEffect": "heal"
+      }
+    ]
+  },
+  {
+    "id": "card_shufu_fire",
+    "name": "霊符術：守符",
+    "category": "防御札",
+    "system": "霊符術",
+    "attribute": "火",
+    "templateId": "template_shufu",
+    "cost": 0,
+    "mpCost": 0,
+    "weight": 8,
+    "target": "自分または味方式神1体",
+    "timing": "防御受付中",
+    "effectText": "今回受けるダメージを3軽減。軽減または無効化に成功した場合、攻撃主体へ1ダメージ。",
+    "description": "守符の火属性版。",
+    "flavorText": "薄き紙に宿る祈りが、迫る災いの前に立ちはだかる。 赤き残光が揺らめき、触れた気配を焦がしていく。",
+    "imageId": "img_card_shufu",
+    "timings": [
+      "防御受付中"
+    ],
+    "effects": [
+      {
+        "type": "defense",
+        "cardId": "card_shufu_fire",
+        "scope": "single",
+        "mode": "reduce",
+        "amount": 3,
+        "postEffect": "retaliate"
+      }
+    ]
+  },
+  {
+    "id": "card_shufu_earth",
+    "name": "霊符術：守符",
+    "category": "防御札",
+    "system": "霊符術",
+    "attribute": "土",
+    "templateId": "template_shufu",
+    "cost": 0,
+    "mpCost": 0,
+    "weight": 8,
+    "target": "自分または味方式神1体",
+    "timing": "防御受付中",
+    "effectText": "今回受けるダメージを3軽減。軽減量をさらに1増加。",
+    "description": "守符の土属性版。",
+    "flavorText": "薄き紙に宿る祈りが、迫る災いの前に立ちはだかる。 揺るがぬ気が沈み、足元から守りを築き上げる。",
+    "imageId": "img_card_shufu",
+    "timings": [
+      "防御受付中"
+    ],
+    "effects": [
+      {
+        "type": "defense",
+        "cardId": "card_shufu_earth",
+        "scope": "single",
+        "mode": "reduce",
+        "amount": 4
+      }
+    ]
+  },
+  {
+    "id": "card_shufu_metal",
+    "name": "霊符術：守符",
+    "category": "防御札",
+    "system": "霊符術",
+    "attribute": "金",
+    "templateId": "template_shufu",
+    "cost": 0,
+    "mpCost": 0,
+    "weight": 8,
+    "target": "自分または味方式神1体",
+    "timing": "防御受付中",
+    "effectText": "今回受けるダメージを3軽減。効果ダメージにも使用できる。",
+    "description": "守符の金属性版。",
+    "flavorText": "薄き紙に宿る祈りが、迫る災いの前に立ちはだかる。 白き閃きが走り、曇りなき軌跡だけを残していく。",
+    "imageId": "img_card_shufu",
+    "timings": [
+      "防御受付中"
+    ],
+    "effects": [
+      {
+        "type": "defense",
+        "cardId": "card_shufu_metal",
+        "scope": "single",
+        "mode": "reduce",
+        "amount": 3,
+        "allowEffectDamage": true
+      }
+    ]
+  },
+  {
+    "id": "card_shufu_water",
+    "name": "霊符術：守符",
+    "category": "防御札",
+    "system": "霊符術",
+    "attribute": "水",
+    "templateId": "template_shufu",
+    "cost": 0,
+    "mpCost": 0,
+    "weight": 8,
+    "target": "自分または味方式神1体",
+    "timing": "防御受付中",
+    "effectText": "今回受けるダメージを3軽減。使用後、自分のMPを1回復。",
+    "description": "守符の水属性版。",
+    "flavorText": "薄き紙に宿る祈りが、迫る災いの前に立ちはだかる。 澄んだ流れが巡り、絶えず力の形を変えていく。",
+    "imageId": "img_card_shufu",
+    "timings": [
+      "防御受付中"
+    ],
+    "effects": [
+      {
+        "type": "defense",
+        "cardId": "card_shufu_water",
+        "scope": "single",
+        "mode": "reduce",
+        "amount": 3,
+        "postEffect": "gain_mp"
+      }
+    ]
+  },
+  {
+    "id": "card_utsusemi_wood",
+    "name": "霊符術：空蝉",
+    "category": "防御札",
+    "system": "霊符術",
+    "attribute": "木",
+    "templateId": "template_utsusemi",
+    "cost": 0,
+    "mpCost": 2,
+    "weight": 4,
+    "target": "自分または味方式神1体",
+    "timing": "防御受付中",
+    "effectText": "今回の単体攻撃によるダメージを無効化。使用後、対象のHPを1回復。",
+    "description": "空蝉の木属性版。",
+    "flavorText": "残された影だけが砕け、本体はすでに遠くへ消えている。 青き息吹が脈打ち、静かに命の輪を広げていく。",
+    "imageId": "img_card_utsusemi",
+    "timings": [
+      "防御受付中"
+    ],
+    "effects": [
+      {
+        "type": "defense",
+        "cardId": "card_utsusemi_wood",
+        "scope": "single",
+        "mode": "nullify",
+        "amount": 0,
+        "postEffect": "heal"
+      }
+    ]
+  },
+  {
+    "id": "card_utsusemi_fire",
+    "name": "霊符術：空蝉",
+    "category": "防御札",
+    "system": "霊符術",
+    "attribute": "火",
+    "templateId": "template_utsusemi",
+    "cost": 0,
+    "mpCost": 2,
+    "weight": 4,
+    "target": "自分または味方式神1体",
+    "timing": "防御受付中",
+    "effectText": "今回の単体攻撃によるダメージを無効化。軽減または無効化に成功した場合、攻撃主体へ1ダメージ。",
+    "description": "空蝉の火属性版。",
+    "flavorText": "残された影だけが砕け、本体はすでに遠くへ消えている。 赤き残光が揺らめき、触れた気配を焦がしていく。",
+    "imageId": "img_card_utsusemi",
+    "timings": [
+      "防御受付中"
+    ],
+    "effects": [
+      {
+        "type": "defense",
+        "cardId": "card_utsusemi_fire",
+        "scope": "single",
+        "mode": "nullify",
+        "amount": 0,
+        "postEffect": "retaliate"
+      }
+    ]
+  },
+  {
+    "id": "card_utsusemi_earth",
+    "name": "霊符術：空蝉",
+    "category": "防御札",
+    "system": "霊符術",
+    "attribute": "土",
+    "templateId": "template_utsusemi",
+    "cost": 0,
+    "mpCost": 2,
+    "weight": 4,
+    "target": "自分または味方式神1体",
+    "timing": "防御受付中",
+    "effectText": "今回の単体攻撃によるダメージを無効化する。その後、対象が次に受けるダメージを1軽減する。この軽減は1回で解除する。",
+    "description": "空蝉の土属性版。",
+    "flavorText": "残された影だけが砕け、本体はすでに遠くへ消えている。 揺るがぬ気が沈み、足元から守りを築き上げる。",
+    "imageId": "img_card_utsusemi",
+    "timings": [
+      "防御受付中"
+    ],
+    "effects": [
+      {
+        "type": "defense",
+        "cardId": "card_utsusemi_earth",
+        "scope": "single",
+        "mode": "nullify",
+        "amount": 0,
+        "postEffect": "next_reduction"
+      }
+    ]
+  },
+  {
+    "id": "card_utsusemi_metal",
+    "name": "霊符術：空蝉",
+    "category": "防御札",
+    "system": "霊符術",
+    "attribute": "金",
+    "templateId": "template_utsusemi",
+    "cost": 0,
+    "mpCost": 2,
+    "weight": 4,
+    "target": "自分または味方式神1体",
+    "timing": "防御受付中",
+    "effectText": "今回の単体攻撃によるダメージを無効化。効果ダメージにも使用できる。",
+    "description": "空蝉の金属性版。",
+    "flavorText": "残された影だけが砕け、本体はすでに遠くへ消えている。 白き閃きが走り、曇りなき軌跡だけを残していく。",
+    "imageId": "img_card_utsusemi",
+    "timings": [
+      "防御受付中"
+    ],
+    "effects": [
+      {
+        "type": "defense",
+        "cardId": "card_utsusemi_metal",
+        "scope": "single",
+        "mode": "nullify",
+        "amount": 0,
+        "allowEffectDamage": true
+      }
+    ]
+  },
+  {
+    "id": "card_utsusemi_water",
+    "name": "霊符術：空蝉",
+    "category": "防御札",
+    "system": "霊符術",
+    "attribute": "水",
+    "templateId": "template_utsusemi",
+    "cost": 0,
+    "mpCost": 2,
+    "weight": 4,
+    "target": "自分または味方式神1体",
+    "timing": "防御受付中",
+    "effectText": "今回の単体攻撃によるダメージを無効化。使用後、自分のMPを1回復。",
+    "description": "空蝉の水属性版。",
+    "flavorText": "残された影だけが砕け、本体はすでに遠くへ消えている。 澄んだ流れが巡り、絶えず力の形を変えていく。",
+    "imageId": "img_card_utsusemi",
+    "timings": [
+      "防御受付中"
+    ],
+    "effects": [
+      {
+        "type": "defense",
+        "cardId": "card_utsusemi_water",
+        "scope": "single",
+        "mode": "nullify",
+        "amount": 0,
+        "postEffect": "gain_mp"
+      }
+    ]
+  },
+  {
+    "id": "card_kekkaifu_wood",
+    "name": "霊符術：結界符",
+    "category": "防御札",
+    "system": "霊符術",
+    "attribute": "木",
+    "templateId": "template_kekkaifu",
+    "cost": 0,
+    "mpCost": 1,
+    "weight": 5,
+    "target": "自分側全体",
+    "timing": "防御受付中",
+    "effectText": "今回の攻撃で自分側が受けるダメージを各対象1軽減する。その後、今回ダメージを受けた自分側対象のうち現在HP割合が最も低い1体を1回復する。同率は自分プレイヤー、次に召喚が古い式神を優先する。",
+    "description": "結界符の木属性版。",
+    "flavorText": "重なる札が円を描き、そこだけ時の流れを拒む。 青き息吹が脈打ち、静かに命の輪を広げていく。",
+    "imageId": "img_card_kekkaifu",
+    "timings": [
+      "防御受付中"
+    ],
+    "effects": [
+      {
+        "type": "defense",
+        "cardId": "card_kekkaifu_wood",
+        "scope": "all",
+        "mode": "reduce",
+        "amount": 1,
+        "postEffect": "heal_lowest_damaged"
+      }
+    ]
+  },
+  {
+    "id": "card_kekkaifu_fire",
+    "name": "霊符術：結界符",
+    "category": "防御札",
+    "system": "霊符術",
+    "attribute": "火",
+    "templateId": "template_kekkaifu",
+    "cost": 0,
+    "mpCost": 1,
+    "weight": 5,
+    "target": "自分側全体",
+    "timing": "防御受付中",
+    "effectText": "今回の攻撃で自分側が受けるダメージを各対象1軽減。軽減または無効化に成功した場合、攻撃主体へ1ダメージ。",
+    "description": "結界符の火属性版。",
+    "flavorText": "重なる札が円を描き、そこだけ時の流れを拒む。 赤き残光が揺らめき、触れた気配を焦がしていく。",
+    "imageId": "img_card_kekkaifu",
+    "timings": [
+      "防御受付中"
+    ],
+    "effects": [
+      {
+        "type": "defense",
+        "cardId": "card_kekkaifu_fire",
+        "scope": "all",
+        "mode": "reduce",
+        "amount": 1,
+        "postEffect": "retaliate"
+      }
+    ]
+  },
+  {
+    "id": "card_kekkaifu_earth",
+    "name": "霊符術：結界符",
+    "category": "防御札",
+    "system": "霊符術",
+    "attribute": "土",
+    "templateId": "template_kekkaifu",
+    "cost": 0,
+    "mpCost": 1,
+    "weight": 5,
+    "target": "自分側全体",
+    "timing": "防御受付中",
+    "effectText": "今回の攻撃で自分側が受けるダメージを各対象1軽減。軽減量をさらに1増加。",
+    "description": "結界符の土属性版。",
+    "flavorText": "重なる札が円を描き、そこだけ時の流れを拒む。 揺るがぬ気が沈み、足元から守りを築き上げる。",
+    "imageId": "img_card_kekkaifu",
+    "timings": [
+      "防御受付中"
+    ],
+    "effects": [
+      {
+        "type": "defense",
+        "cardId": "card_kekkaifu_earth",
+        "scope": "all",
+        "mode": "reduce",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "id": "card_kekkaifu_metal",
+    "name": "霊符術：結界符",
+    "category": "防御札",
+    "system": "霊符術",
+    "attribute": "金",
+    "templateId": "template_kekkaifu",
+    "cost": 0,
+    "mpCost": 1,
+    "weight": 5,
+    "target": "自分側全体",
+    "timing": "防御受付中",
+    "effectText": "今回の攻撃で自分側が受けるダメージを各対象1軽減。効果ダメージにも使用できる。",
+    "description": "結界符の金属性版。",
+    "flavorText": "重なる札が円を描き、そこだけ時の流れを拒む。 白き閃きが走り、曇りなき軌跡だけを残していく。",
+    "imageId": "img_card_kekkaifu",
+    "timings": [
+      "防御受付中"
+    ],
+    "effects": [
+      {
+        "type": "defense",
+        "cardId": "card_kekkaifu_metal",
+        "scope": "all",
+        "mode": "reduce",
+        "amount": 1,
+        "allowEffectDamage": true
+      }
+    ]
+  },
+  {
+    "id": "card_kekkaifu_water",
+    "name": "霊符術：結界符",
+    "category": "防御札",
+    "system": "霊符術",
+    "attribute": "水",
+    "templateId": "template_kekkaifu",
+    "cost": 0,
+    "mpCost": 1,
+    "weight": 5,
+    "target": "自分側全体",
+    "timing": "防御受付中",
+    "effectText": "今回の攻撃で自分側が受けるダメージを各対象1軽減。使用後、自分のMPを1回復。",
+    "description": "結界符の水属性版。",
+    "flavorText": "重なる札が円を描き、そこだけ時の流れを拒む。 澄んだ流れが巡り、絶えず力の形を変えていく。",
+    "imageId": "img_card_kekkaifu",
+    "timings": [
+      "防御受付中"
+    ],
+    "effects": [
+      {
+        "type": "defense",
+        "cardId": "card_kekkaifu_water",
+        "scope": "all",
+        "mode": "reduce",
+        "amount": 1,
+        "postEffect": "gain_mp"
+      }
+    ]
+  },
+  {
+    "id": "card_joka",
+    "name": "陰陽秘術：浄化",
+    "category": "術札",
+    "system": "陰陽秘術",
+    "attribute": "無属性",
+    "templateId": "template_purification",
+    "cost": 2,
+    "mpCost": 1,
+    "weight": 6,
+    "target": "自分または味方式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "対象の呪いを1つ解除する。",
+    "description": "呪い対策の基本術。",
+    "flavorText": "澄みきった言葉が穢れをほどき、静かな気だけを残す。",
+    "imageId": "img_card_joka",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": []
+  },
+  {
+    "id": "card_kassei",
+    "name": "陰陽秘術：活性",
+    "category": "術札",
+    "system": "陰陽秘術",
+    "attribute": "無属性",
+    "templateId": "template_activation",
+    "cost": 2,
+    "mpCost": 1,
+    "weight": 6,
+    "target": "自分プレイヤー",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "HPを3回復し、MPを1回復する。",
+    "description": "小回復と霊気補給を同時に行う。",
+    "flavorText": "眠っていた霊脈が目を覚まし、全身を温かな気が巡る。",
+    "imageId": "img_card_kassei",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": []
+  },
+  {
+    "id": "card_fuin",
+    "name": "陰陽秘術：封印",
+    "category": "術札",
+    "system": "陰陽秘術",
+    "attribute": "無属性",
+    "templateId": "template_seal",
+    "cost": 3,
+    "mpCost": 2,
+    "weight": 4,
+    "target": "相手式神1体または相手結界1つ",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "式神を選んだ場合、固有能力を次の相手ターン終了まで無効化。結界を選んだ場合、次の発動を1回無効化。",
+    "description": "能力や結界を一時的に封じる。",
+    "flavorText": "結ばれた印は音もなく閉じ、術の流れを深く沈める。",
+    "imageId": "img_card_fuin",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": []
+  },
+  {
+    "id": "card_haraekotoba",
+    "name": "陰陽秘術：祓詞",
+    "category": "術札",
+    "system": "陰陽秘術",
+    "attribute": "無属性",
+    "templateId": "template_exorcism",
+    "cost": 3,
+    "mpCost": 2,
+    "weight": 4,
+    "target": "全体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "場のすべての式神から呪いを1スタックずつ解除する。",
+    "description": "広範囲の呪いを祓う。",
+    "flavorText": "重なる詞が場を渡り、絡みついた災いを遠くへ祓う。",
+    "imageId": "img_card_haraekotoba",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": []
+  },
+  {
+    "id": "card_tenrin_wood",
+    "name": "占事略决：転輪",
+    "category": "術札",
+    "system": "占事略决",
+    "attribute": "木",
+    "templateId": "template_tenrin",
+    "cost": 1,
+    "mpCost": 0,
+    "weight": 7,
+    "target": "自分プレイヤー",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "自分の現在属性を五行循環の正方向へ1段階転輪する。無属性には使用できない。",
+    "description": "転輪の木属性版。",
+    "flavorText": "巡る理に指を添え、運命の輪を次の座へ進める。 青き息吹が脈打ち、静かに命の輪を広げていく。",
+    "imageId": "img_card_tenrin",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "turn",
+        "cardId": "card_tenrin_wood",
+        "target": "self_player",
+        "steps": 1
+      }
+    ]
+  },
+  {
+    "id": "card_tenrin_fire",
+    "name": "占事略决：転輪",
+    "category": "術札",
+    "system": "占事略决",
+    "attribute": "火",
+    "templateId": "template_tenrin",
+    "cost": 1,
+    "mpCost": 0,
+    "weight": 7,
+    "target": "自分プレイヤー",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "自分の現在属性を五行循環の逆方向へ1段階転輪する。無属性には使用できない。",
+    "description": "転輪の火属性版。",
+    "flavorText": "巡る理に指を添え、運命の輪を次の座へ進める。 赤き残光が揺らめき、触れた気配を焦がしていく。",
+    "imageId": "img_card_tenrin",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "turn",
+        "cardId": "card_tenrin_fire",
+        "target": "self_player",
+        "steps": -1
+      }
+    ]
+  },
+  {
+    "id": "card_tenrin_earth",
+    "name": "占事略决：転輪",
+    "category": "術札",
+    "system": "占事略决",
+    "attribute": "土",
+    "templateId": "template_tenrin",
+    "cost": 1,
+    "mpCost": 0,
+    "weight": 7,
+    "target": "自分プレイヤー",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "自分の現在属性を五行循環の正方向へ2段階転輪する。無属性には使用できない。",
+    "description": "転輪の土属性版。",
+    "flavorText": "巡る理に指を添え、運命の輪を次の座へ進める。 揺るがぬ気が沈み、足元から守りを築き上げる。",
+    "imageId": "img_card_tenrin",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "turn",
+        "cardId": "card_tenrin_earth",
+        "target": "self_player",
+        "steps": 2
+      }
+    ]
+  },
+  {
+    "id": "card_tenrin_metal",
+    "name": "占事略决：転輪",
+    "category": "術札",
+    "system": "占事略决",
+    "attribute": "金",
+    "templateId": "template_tenrin",
+    "cost": 1,
+    "mpCost": 0,
+    "weight": 7,
+    "target": "自分プレイヤー",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "自分の現在属性を五行循環の逆方向へ2段階転輪する。無属性には使用できない。",
+    "description": "転輪の金属性版。",
+    "flavorText": "巡る理に指を添え、運命の輪を次の座へ進める。 白き閃きが走り、曇りなき軌跡だけを残していく。",
+    "imageId": "img_card_tenrin",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "turn",
+        "cardId": "card_tenrin_metal",
+        "target": "self_player",
+        "steps": -2
+      }
+    ]
+  },
+  {
+    "id": "card_tenrin_water",
+    "name": "占事略决：転輪",
+    "category": "術札",
+    "system": "占事略决",
+    "attribute": "水",
+    "templateId": "template_tenrin",
+    "cost": 1,
+    "mpCost": 0,
+    "weight": 7,
+    "target": "自分プレイヤー",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "正方向1段階または逆方向1段階を選び、自分の現在属性を転輪する。無属性には使用できない。",
+    "description": "転輪の水属性版。",
+    "flavorText": "巡る理に指を添え、運命の輪を次の座へ進める。 澄んだ流れが巡り、絶えず力の形を変えていく。",
+    "imageId": "img_card_tenrin",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": []
+  },
+  {
+    "id": "card_sosei_wood",
+    "name": "占事略决：相生",
+    "category": "術札",
+    "system": "占事略决",
+    "attribute": "木",
+    "templateId": "template_sosei",
+    "cost": 2,
+    "mpCost": 1,
+    "weight": 5,
+    "target": "自分プレイヤー",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "自分の現在属性が水の場合、MPを3回復し、正方向へ1段階転輪する。それ以外はMPを1回復し、属性は変化しない。",
+    "description": "相生の木属性版。",
+    "flavorText": "生み育てる理が結ばれ、次なる力へ穏やかに受け継がれる。 青き息吹が脈打ち、静かに命の輪を広げていく。",
+    "imageId": "img_card_sosei",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": []
+  },
+  {
+    "id": "card_sosei_fire",
+    "name": "占事略决：相生",
+    "category": "術札",
+    "system": "占事略决",
+    "attribute": "火",
+    "templateId": "template_sosei",
+    "cost": 2,
+    "mpCost": 1,
+    "weight": 5,
+    "target": "自分プレイヤー",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "自分の現在属性が木の場合、MPを3回復し、正方向へ1段階転輪する。それ以外はMPを1回復し、属性は変化しない。",
+    "description": "相生の火属性版。",
+    "flavorText": "生み育てる理が結ばれ、次なる力へ穏やかに受け継がれる。 赤き残光が揺らめき、触れた気配を焦がしていく。",
+    "imageId": "img_card_sosei",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": []
+  },
+  {
+    "id": "card_sosei_earth",
+    "name": "占事略决：相生",
+    "category": "術札",
+    "system": "占事略决",
+    "attribute": "土",
+    "templateId": "template_sosei",
+    "cost": 2,
+    "mpCost": 1,
+    "weight": 5,
+    "target": "自分プレイヤー",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "自分の現在属性が火の場合、MPを3回復し、正方向へ1段階転輪する。それ以外はMPを1回復し、属性は変化しない。",
+    "description": "相生の土属性版。",
+    "flavorText": "生み育てる理が結ばれ、次なる力へ穏やかに受け継がれる。 揺るがぬ気が沈み、足元から守りを築き上げる。",
+    "imageId": "img_card_sosei",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": []
+  },
+  {
+    "id": "card_sosei_metal",
+    "name": "占事略决：相生",
+    "category": "術札",
+    "system": "占事略决",
+    "attribute": "金",
+    "templateId": "template_sosei",
+    "cost": 2,
+    "mpCost": 1,
+    "weight": 5,
+    "target": "自分プレイヤー",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "自分の現在属性が土の場合、MPを3回復し、正方向へ1段階転輪する。それ以外はMPを1回復し、属性は変化しない。",
+    "description": "相生の金属性版。",
+    "flavorText": "生み育てる理が結ばれ、次なる力へ穏やかに受け継がれる。 白き閃きが走り、曇りなき軌跡だけを残していく。",
+    "imageId": "img_card_sosei",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": []
+  },
+  {
+    "id": "card_sosei_water",
+    "name": "占事略决：相生",
+    "category": "術札",
+    "system": "占事略决",
+    "attribute": "水",
+    "templateId": "template_sosei",
+    "cost": 2,
+    "mpCost": 1,
+    "weight": 5,
+    "target": "自分プレイヤー",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "自分の現在属性が金の場合、MPを3回復し、正方向へ1段階転輪する。それ以外はMPを1回復し、属性は変化しない。",
+    "description": "相生の水属性版。",
+    "flavorText": "生み育てる理が結ばれ、次なる力へ穏やかに受け継がれる。 澄んだ流れが巡り、絶えず力の形を変えていく。",
+    "imageId": "img_card_sosei",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": []
+  },
+  {
+    "id": "card_sokoku_wood",
+    "name": "占事略决：相剋",
+    "category": "術札",
+    "system": "占事略决",
+    "attribute": "木",
+    "templateId": "template_sokoku",
+    "cost": 2,
+    "mpCost": 2,
+    "weight": 5,
+    "target": "相手プレイヤーまたは相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "基本1ダメージ。木が土を剋す関係が成立する場合、共通相剋補正＋2を1回適用し、最終3ダメージとする。カード固有の追加加算は行わない。",
+    "description": "相剋の木属性版。",
+    "flavorText": "相反する理が噛み合い、崩れるべき一点を鋭く示す。 青き息吹が脈打ち、静かに命の輪を広げていく。",
+    "imageId": "img_card_sokoku",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_sokoku_wood",
+        "target": "opponent_any",
+        "baseDamage": 1
+      }
+    ]
+  },
+  {
+    "id": "card_sokoku_fire",
+    "name": "占事略决：相剋",
+    "category": "術札",
+    "system": "占事略决",
+    "attribute": "火",
+    "templateId": "template_sokoku",
+    "cost": 2,
+    "mpCost": 2,
+    "weight": 5,
+    "target": "相手プレイヤーまたは相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "基本1ダメージ。火が金を剋す関係が成立する場合、共通相剋補正＋2を1回適用し、最終3ダメージとする。カード固有の追加加算は行わない。",
+    "description": "相剋の火属性版。",
+    "flavorText": "相反する理が噛み合い、崩れるべき一点を鋭く示す。 赤き残光が揺らめき、触れた気配を焦がしていく。",
+    "imageId": "img_card_sokoku",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_sokoku_fire",
+        "target": "opponent_any",
+        "baseDamage": 1
+      }
+    ]
+  },
+  {
+    "id": "card_sokoku_earth",
+    "name": "占事略决：相剋",
+    "category": "術札",
+    "system": "占事略决",
+    "attribute": "土",
+    "templateId": "template_sokoku",
+    "cost": 2,
+    "mpCost": 2,
+    "weight": 5,
+    "target": "相手プレイヤーまたは相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "基本1ダメージ。土が水を剋す関係が成立する場合、共通相剋補正＋2を1回適用し、最終3ダメージとする。カード固有の追加加算は行わない。",
+    "description": "相剋の土属性版。",
+    "flavorText": "相反する理が噛み合い、崩れるべき一点を鋭く示す。 揺るがぬ気が沈み、足元から守りを築き上げる。",
+    "imageId": "img_card_sokoku",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_sokoku_earth",
+        "target": "opponent_any",
+        "baseDamage": 1
+      }
+    ]
+  },
+  {
+    "id": "card_sokoku_metal",
+    "name": "占事略决：相剋",
+    "category": "術札",
+    "system": "占事略决",
+    "attribute": "金",
+    "templateId": "template_sokoku",
+    "cost": 2,
+    "mpCost": 2,
+    "weight": 5,
+    "target": "相手プレイヤーまたは相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "基本1ダメージ。金が木を剋す関係が成立する場合、共通相剋補正＋2を1回適用し、最終3ダメージとする。カード固有の追加加算は行わない。",
+    "description": "相剋の金属性版。",
+    "flavorText": "相反する理が噛み合い、崩れるべき一点を鋭く示す。 白き閃きが走り、曇りなき軌跡だけを残していく。",
+    "imageId": "img_card_sokoku",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_sokoku_metal",
+        "target": "opponent_any",
+        "baseDamage": 1
+      }
+    ]
+  },
+  {
+    "id": "card_sokoku_water",
+    "name": "占事略决：相剋",
+    "category": "術札",
+    "system": "占事略决",
+    "attribute": "水",
+    "templateId": "template_sokoku",
+    "cost": 2,
+    "mpCost": 2,
+    "weight": 5,
+    "target": "相手プレイヤーまたは相手式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "基本1ダメージ。水が火を剋す関係が成立する場合、共通相剋補正＋2を1回適用し、最終3ダメージとする。カード固有の追加加算は行わない。",
+    "description": "相剋の水属性版。",
+    "flavorText": "相反する理が噛み合い、崩れるべき一点を鋭く示す。 澄んだ流れが巡り、絶えず力の形を変えていく。",
+    "imageId": "img_card_sokoku",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "attack",
+        "cardId": "card_sokoku_water",
+        "target": "opponent_any",
+        "baseDamage": 1
+      }
+    ]
+  },
+  {
+    "id": "card_junkan_wood",
+    "name": "占事略决：循環",
+    "category": "術札",
+    "system": "占事略决",
+    "attribute": "木",
+    "templateId": "template_junkan",
+    "cost": 3,
+    "mpCost": 2,
+    "weight": 4,
+    "target": "自分プレイヤー",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "自分の現在属性を正方向へ1段階転輪する。その後、カードを2枚引き、手札を1枚選んで捨てる。無属性には使用できない。",
+    "description": "循環の木属性版。",
+    "flavorText": "始まりと終わりが輪を描き、失われた道を再びつなぐ。 青き息吹が脈打ち、静かに命の輪を広げていく。",
+    "imageId": "img_card_junkan",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": []
+  },
+  {
+    "id": "card_junkan_fire",
+    "name": "占事略决：循環",
+    "category": "術札",
+    "system": "占事略决",
+    "attribute": "火",
+    "templateId": "template_junkan",
+    "cost": 3,
+    "mpCost": 2,
+    "weight": 4,
+    "target": "自分プレイヤー",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "自分の現在属性を逆方向へ1段階転輪する。その後、カードを2枚引き、手札を1枚選んで捨てる。無属性には使用できない。",
+    "description": "循環の火属性版。",
+    "flavorText": "始まりと終わりが輪を描き、失われた道を再びつなぐ。 赤き残光が揺らめき、触れた気配を焦がしていく。",
+    "imageId": "img_card_junkan",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": []
+  },
+  {
+    "id": "card_junkan_earth",
+    "name": "占事略决：循環",
+    "category": "術札",
+    "system": "占事略决",
+    "attribute": "土",
+    "templateId": "template_junkan",
+    "cost": 3,
+    "mpCost": 2,
+    "weight": 4,
+    "target": "自分プレイヤー",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "自分の現在属性を正方向へ2段階転輪する。その後、カードを2枚引き、手札を1枚選んで捨てる。無属性には使用できない。",
+    "description": "循環の土属性版。",
+    "flavorText": "始まりと終わりが輪を描き、失われた道を再びつなぐ。 揺るがぬ気が沈み、足元から守りを築き上げる。",
+    "imageId": "img_card_junkan",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": []
+  },
+  {
+    "id": "card_junkan_metal",
+    "name": "占事略决：循環",
+    "category": "術札",
+    "system": "占事略决",
+    "attribute": "金",
+    "templateId": "template_junkan",
+    "cost": 3,
+    "mpCost": 2,
+    "weight": 4,
+    "target": "自分プレイヤー",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "自分の現在属性を逆方向へ2段階転輪する。その後、カードを2枚引き、手札を1枚選んで捨てる。無属性には使用できない。",
+    "description": "循環の金属性版。",
+    "flavorText": "始まりと終わりが輪を描き、失われた道を再びつなぐ。 白き閃きが走り、曇りなき軌跡だけを残していく。",
+    "imageId": "img_card_junkan",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": []
+  },
+  {
+    "id": "card_junkan_water",
+    "name": "占事略决：循環",
+    "category": "術札",
+    "system": "占事略决",
+    "attribute": "水",
+    "templateId": "template_junkan",
+    "cost": 3,
+    "mpCost": 2,
+    "weight": 4,
+    "target": "自分プレイヤー",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "正方向1段階または逆方向1段階を選んで転輪する。その後、カードを2枚引き、手札を1枚選んで捨てる。無属性には使用できない。",
+    "description": "循環の水属性版。",
+    "flavorText": "始まりと終わりが輪を描き、失われた道を再びつなぐ。 澄んだ流れが巡り、絶えず力の形を変えていく。",
+    "imageId": "img_card_junkan",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": []
+  },
+  {
+    "id": "card_summon_kanko",
+    "name": "使役術：管狐",
+    "category": "式神札",
+    "system": "使役術",
+    "attribute": "木",
+    "templateId": null,
+    "cost": 2,
+    "mpCost": 0,
+    "weight": 5,
+    "target": "自分の場",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "式神「管狐」を召喚する。",
+    "description": "管狐を召喚する式神札。",
+    "flavorText": "細き尾の狐が袖口から覗き、主の気配にそっと寄り添う。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "summon",
+        "cardId": "card_summon_kanko",
+        "target": "self_field",
+        "shikigamiId": "shikigami_kanko"
+      }
+    ]
+  },
+  {
+    "id": "card_summon_hakuro",
+    "name": "使役術：白狼",
+    "category": "式神札",
+    "system": "使役術",
+    "attribute": "金",
+    "templateId": null,
+    "cost": 3,
+    "mpCost": 0,
+    "weight": 4,
+    "target": "自分の場",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "式神「白狼」を召喚する。",
+    "description": "白狼を召喚する式神札。",
+    "flavorText": "白銀の毛並みが風を裂き、獲物を追う眼だけが鋭く光る。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "summon",
+        "cardId": "card_summon_hakuro",
+        "target": "self_field",
+        "shikigamiId": "shikigami_hakuro"
+      }
+    ]
+  },
+  {
+    "id": "card_summon_orochi",
+    "name": "使役術：大蛇",
+    "category": "式神札",
+    "system": "使役術",
+    "attribute": "水",
+    "templateId": null,
+    "cost": 3,
+    "mpCost": 1,
+    "weight": 3,
+    "target": "自分の場",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "式神「大蛇」を召喚する。",
+    "description": "大蛇を召喚する式神札。",
+    "flavorText": "深き水底より巨躯がうねり、静かな毒気をまとって現れる。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "summon",
+        "cardId": "card_summon_orochi",
+        "target": "self_field",
+        "shikigamiId": "shikigami_orochi"
+      }
+    ]
+  },
+  {
+    "id": "card_summon_kappa",
+    "name": "使役術：河童",
+    "category": "式神札",
+    "system": "使役術",
+    "attribute": "水",
+    "templateId": null,
+    "cost": 3,
+    "mpCost": 1,
+    "weight": 3,
+    "target": "自分の場",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "式神「河童」を召喚する。",
+    "description": "河童を召喚する式神札。",
+    "flavorText": "水音とともに小さな影が跳ね、丸い瞳で戦場を見渡す。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "summon",
+        "cardId": "card_summon_kappa",
+        "target": "self_field",
+        "shikigamiId": "shikigami_kappa"
+      }
+    ]
+  },
+  {
+    "id": "card_summon_karasutengu",
+    "name": "使役術：鴉天狗",
+    "category": "式神札",
+    "system": "使役術",
+    "attribute": "火",
+    "templateId": null,
+    "cost": 4,
+    "mpCost": 1,
+    "weight": 2.5,
+    "target": "自分の場",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "式神「鴉天狗」を召喚する。",
+    "description": "鴉天狗を召喚する式神札。",
+    "flavorText": "黒き翼が月を隠し、山風を従えた異形が空より舞い降りる。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "summon",
+        "cardId": "card_summon_karasutengu",
+        "target": "self_field",
+        "shikigamiId": "shikigami_karasutengu"
+      }
+    ]
+  },
+  {
+    "id": "card_summon_kamaitachi",
+    "name": "使役術：鎌鼬",
+    "category": "式神札",
+    "system": "使役術",
+    "attribute": "木",
+    "templateId": null,
+    "cost": 3,
+    "mpCost": 1,
+    "weight": 3,
+    "target": "自分の場",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "式神「鎌鼬」を召喚する。",
+    "description": "鎌鼬を召喚する式神札。",
+    "flavorText": "三筋の風が駆け抜けた後、笑う獣の影だけが残される。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "summon",
+        "cardId": "card_summon_kamaitachi",
+        "target": "self_field",
+        "shikigamiId": "shikigami_kamaitachi"
+      }
+    ]
+  },
+  {
+    "id": "card_summon_komainu",
+    "name": "使役術：狛犬",
+    "category": "式神札",
+    "system": "使役術",
+    "attribute": "土",
+    "templateId": null,
+    "cost": 4,
+    "mpCost": 0,
+    "weight": 3,
+    "target": "自分の場",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "式神「狛犬」を召喚する。",
+    "description": "狛犬を召喚する式神札。",
+    "flavorText": "社の守り手が石畳を踏み、低い唸りとともに前へ出る。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "summon",
+        "cardId": "card_summon_komainu",
+        "target": "self_field",
+        "shikigamiId": "shikigami_komainu"
+      }
+    ]
+  },
+  {
+    "id": "card_summon_shirozaru",
+    "name": "使役術：白猿",
+    "category": "式神札",
+    "system": "使役術",
+    "attribute": "金",
+    "templateId": null,
+    "cost": 3,
+    "mpCost": 1,
+    "weight": 3,
+    "target": "自分の場",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "式神「白猿」を召喚する。",
+    "description": "白猿を召喚する式神札。",
+    "flavorText": "白き猿が器用に印を真似、次の瞬間には敵意を映し返す。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "summon",
+        "cardId": "card_summon_shirozaru",
+        "target": "self_field",
+        "shikigamiId": "shikigami_shirozaru"
+      }
+    ]
+  },
+  {
+    "id": "card_summon_genki",
+    "name": "使役術：玄亀",
+    "category": "式神札",
+    "system": "使役術",
+    "attribute": "土",
+    "templateId": null,
+    "cost": 5,
+    "mpCost": 2,
+    "weight": 1.5,
+    "target": "自分の場",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "式神「玄亀」を召喚する。",
+    "description": "玄亀を召喚する式神札。",
+    "flavorText": "古き甲羅が地を擦り、積み重ねた歳月そのものが壁となる。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "summon",
+        "cardId": "card_summon_genki",
+        "target": "self_field",
+        "shikigamiId": "shikigami_genki"
+      }
+    ]
+  },
+  {
+    "id": "card_summon_hinotori",
+    "name": "使役術：火鳥",
+    "category": "式神札",
+    "system": "使役術",
+    "attribute": "火",
+    "templateId": null,
+    "cost": 5,
+    "mpCost": 3,
+    "weight": 1,
+    "target": "自分の場",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "式神「火鳥」を召喚する。",
+    "description": "火鳥を召喚する式神札。",
+    "flavorText": "燃える羽根が闇を照らし、灰の中から新たな翼が広がる。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "summon",
+        "cardId": "card_summon_hinotori",
+        "target": "self_field",
+        "shikigamiId": "shikigami_hinotori"
+      }
+    ]
+  },
+  {
+    "id": "card_barrier_guardian",
+    "name": "結界術：守護結界",
+    "category": "結界札",
+    "system": "結界術",
+    "attribute": "土",
+    "templateId": null,
+    "cost": 3,
+    "mpCost": 2,
+    "weight": 3,
+    "target": "自分の場",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "結界「守護結界」を設置する。",
+    "description": "守護結界を設置する結界札。",
+    "flavorText": "大地の祈りが四方を固め、侵すものを静かに退ける。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "barrier",
+        "cardId": "card_barrier_guardian",
+        "target": "self_field",
+        "fieldId": "barrier_guardian"
+      }
+    ]
+  },
+  {
+    "id": "card_barrier_spirit_vein",
+    "name": "結界術：霊脈結界",
+    "category": "結界札",
+    "system": "結界術",
+    "attribute": "水",
+    "templateId": null,
+    "cost": 3,
+    "mpCost": 2,
+    "weight": 3,
+    "target": "自分の場",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "結界「霊脈結界」を設置する。",
+    "description": "霊脈結界を設置する結界札。",
+    "flavorText": "見えぬ流れが場を巡り、尽きかけた霊気を再び呼び戻す。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "barrier",
+        "cardId": "card_barrier_spirit_vein",
+        "target": "self_field",
+        "fieldId": "barrier_spirit_vein"
+      }
+    ]
+  },
+  {
+    "id": "card_barrier_purification",
+    "name": "結界術：浄化結界",
+    "category": "結界札",
+    "system": "結界術",
+    "attribute": "金",
+    "templateId": null,
+    "cost": 3,
+    "mpCost": 2,
+    "weight": 3,
+    "target": "自分の場",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "結界「浄化結界」を設置する。",
+    "description": "浄化結界を設置する結界札。",
+    "flavorText": "白き光が穢れを照らし、触れた災いをひとつずつほどく。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "barrier",
+        "cardId": "card_barrier_purification",
+        "target": "self_field",
+        "fieldId": "barrier_purification"
+      }
+    ]
+  },
+  {
+    "id": "card_barrier_binding",
+    "name": "結界術：呪縛結界",
+    "category": "結界札",
+    "system": "結界術",
+    "attribute": "木",
+    "templateId": null,
+    "cost": 3,
+    "mpCost": 3,
+    "weight": 2.5,
+    "target": "自分の場",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "結界「呪縛結界」を設置する。",
+    "description": "呪縛結界を設置する結界札。",
+    "flavorText": "絡む蔦のような印が広がり、命じる声を深い霧へ閉ざす。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "barrier",
+        "cardId": "card_barrier_binding",
+        "target": "self_field",
+        "fieldId": "barrier_binding"
+      }
+    ]
+  },
+  {
+    "id": "card_terrain_chinju_forest",
+    "name": "地脈術：鎮守の森",
+    "category": "地形札",
+    "system": "地脈術",
+    "attribute": "木",
+    "templateId": null,
+    "cost": 4,
+    "mpCost": 3,
+    "weight": 2,
+    "target": "共有地形",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "地形「鎮守の森」を展開する。",
+    "description": "鎮守の森を展開する地形札。",
+    "flavorText": "木々のざわめきが重なり、戦場はいつしか古き森へ変わる。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "terrain",
+        "cardId": "card_terrain_chinju_forest",
+        "target": "shared_field",
+        "fieldId": "terrain_chinju_forest"
+      }
+    ]
+  },
+  {
+    "id": "card_terrain_scorched_earth",
+    "name": "地脈術：焦土",
+    "category": "地形札",
+    "system": "地脈術",
+    "attribute": "火",
+    "templateId": null,
+    "cost": 4,
+    "mpCost": 3,
+    "weight": 2,
+    "target": "共有地形",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "地形「焦土」を展開する。",
+    "description": "焦土を展開する地形札。",
+    "flavorText": "熱を失った大地が赤く割れ、残るものすべてを試し始める。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "terrain",
+        "cardId": "card_terrain_scorched_earth",
+        "target": "shared_field",
+        "fieldId": "terrain_scorched_earth"
+      }
+    ]
+  },
+  {
+    "id": "card_terrain_clear_stream",
+    "name": "地脈術：清流",
+    "category": "地形札",
+    "system": "地脈術",
+    "attribute": "水",
+    "templateId": null,
+    "cost": 4,
+    "mpCost": 3,
+    "weight": 2,
+    "target": "共有地形",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "地形「清流」を展開する。",
+    "description": "清流を展開する地形札。",
+    "flavorText": "澄んだ流れが足元を巡り、滞った気をゆるやかに運び去る。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "terrain",
+        "cardId": "card_terrain_clear_stream",
+        "target": "shared_field",
+        "fieldId": "terrain_clear_stream"
+      }
+    ]
+  },
+  {
+    "id": "card_terrain_mineral_vein",
+    "name": "地脈術：鉱脈",
+    "category": "地形札",
+    "system": "地脈術",
+    "attribute": "金",
+    "templateId": null,
+    "cost": 4,
+    "mpCost": 3,
+    "weight": 2,
+    "target": "共有地形",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "地形「鉱脈」を展開する。",
+    "description": "鉱脈を展開する地形札。",
+    "flavorText": "岩肌の奥で金気が鳴り、眠れる力が地上へ押し上げられる。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "terrain",
+        "cardId": "card_terrain_mineral_vein",
+        "target": "shared_field",
+        "fieldId": "terrain_mineral_vein"
+      }
+    ]
+  },
+  {
+    "id": "card_terrain_sacred_domain",
+    "name": "地脈術：神域",
+    "category": "地形札",
+    "system": "地脈術",
+    "attribute": "土",
+    "templateId": null,
+    "cost": 4,
+    "mpCost": 3,
+    "weight": 2,
+    "target": "共有地形",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "地形「神域」を展開する。",
+    "description": "神域を展開する地形札。",
+    "flavorText": "清らかな静寂が降り、争いの場さえ神前の庭へ変わる。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "terrain",
+        "cardId": "card_terrain_sacred_domain",
+        "target": "shared_field",
+        "fieldId": "terrain_sacred_domain"
+      }
+    ]
+  },
+  {
+    "id": "card_terrain_yomi_road",
+    "name": "地脈術：黄泉路",
+    "category": "地形札",
+    "system": "地脈術",
+    "attribute": "無属性",
+    "templateId": null,
+    "cost": 4,
+    "mpCost": 4,
+    "weight": 1.5,
+    "target": "共有地形",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "地形「黄泉路」を展開する。",
+    "description": "黄泉路を展開する地形札。",
+    "flavorText": "薄闇の道が口を開き、去りしものの気配を彼方へ導く。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": [
+      {
+        "type": "terrain",
+        "cardId": "card_terrain_yomi_road",
+        "target": "shared_field",
+        "fieldId": "terrain_yomi_road"
+      }
+    ]
+  },
+  {
+    "id": "card_forbidden_yomigaeshi",
+    "name": "禁術：黄泉返し",
+    "category": "術札",
+    "system": "禁術",
+    "attribute": "水",
+    "templateId": null,
+    "cost": 5,
+    "mpCost": 7,
+    "weight": 1,
+    "target": "自分の退場した式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "最大HP50％（端数切上げ）で復活。復活ターン行動不可。",
+    "description": "禁術タグあり。",
+    "flavorText": "死者の名を呼ぶ声が境を越え、消えた足音を再び近づける。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": []
+  },
+  {
+    "id": "card_forbidden_tenchigaeshi",
+    "name": "禁術：天地返し",
+    "category": "術札",
+    "system": "禁術",
+    "attribute": "土",
+    "templateId": null,
+    "cost": 5,
+    "mpCost": 6,
+    "weight": 1,
+    "target": "全体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "地形および結界をすべて消滅させる。",
+    "description": "禁術タグあり。",
+    "flavorText": "天と地の座が反転し、築かれた理は根元から崩れ落ちる。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": []
+  },
+  {
+    "id": "card_forbidden_tamashii_gui",
+    "name": "禁術：魂喰",
+    "category": "術札",
+    "system": "禁術",
+    "attribute": "金",
+    "templateId": null,
+    "cost": 5,
+    "mpCost": 6,
+    "weight": 1,
+    "target": "自分の式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "対象を消滅させ、自分プレイヤーのHPを5回復しMPを3回復する。",
+    "description": "禁術タグあり。",
+    "flavorText": "捧げられた魂は消えず、術者の内で異なる力へ姿を変える。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": []
+  },
+  {
+    "id": "card_forbidden_tenpenchii",
+    "name": "禁術：天変地異",
+    "category": "術札",
+    "system": "禁術",
+    "attribute": "火",
+    "templateId": null,
+    "cost": 5,
+    "mpCost": 7,
+    "weight": 1,
+    "target": "共有地形",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "現在の地形を消滅させ、任意の地形1つを選んで展開する。",
+    "description": "禁術タグあり。",
+    "flavorText": "雲が裂け、大地が鳴り、定められた景色さえ塗り替えられる。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": []
+  },
+  {
+    "id": "card_forbidden_kamioroshi",
+    "name": "禁術：神降ろし",
+    "category": "術札",
+    "system": "禁術",
+    "attribute": "木",
+    "templateId": null,
+    "cost": 5,
+    "mpCost": 7,
+    "weight": 1,
+    "target": "味方式神1体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "対象の最大HPと現在HPを4増加し、攻撃力を2増加する。",
+    "description": "禁術タグあり。",
+    "flavorText": "遠き御霊が一時の器を得て、戦場へ大いなる影を落とす。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": []
+  },
+  {
+    "id": "card_forbidden_mekkai",
+    "name": "禁術：滅界",
+    "category": "術札",
+    "system": "禁術",
+    "attribute": "無属性",
+    "templateId": null,
+    "cost": 5,
+    "mpCost": 5,
+    "weight": 1,
+    "target": "全体",
+    "timing": "自分のカード使用フェーズ",
+    "effectText": "すべての結界を消滅させる。",
+    "description": "禁術タグあり。",
+    "flavorText": "境を形づくる線が消え、守りも誓いも等しく虚空へ還る。",
+    "timings": [
+      "自分のカード使用フェーズ"
+    ],
+    "effects": []
+  }
 ]

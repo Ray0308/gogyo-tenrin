@@ -1,4 +1,4 @@
-﻿# 五行転輪
+# 五行転輪
 
 『五行転輪』MVPのクライアント・サーバー共通リポジトリです。
 
@@ -35,7 +35,15 @@ npm start
 - Health Check Path: `/health`
 ## マスターデータ
 
-実装用マスターのスナップショットは `server/data/` に配置しています。カードの `effectText` は表示用文章であり、ゲーム処理では解析しません。
+編集元データは `master/data/`、ゲームが読み込む生成済みデータは `server/data/` に配置します。カードの `effectText` は表示用文章であり、ゲーム処理では解析しません。構造化された `effects` を使用します。
+
+```bash
+npm run data:build
+npm run data:validate
+npm test
+```
+
+`npm run build` はデータ生成と検証も自動実行します。不正なID、重複ID、参照切れ、必須値不足、バージョン不一致がある場合はビルドまたはサーバー起動を失敗させます。
 
 Googleスプレッドシートから書き出したExcelを同期する場合:
 
@@ -43,4 +51,4 @@ Googleスプレッドシートから書き出したExcelを同期する場合:
 powershell -ExecutionPolicy Bypass -File scripts/import-master.ps1 -WorkbookPath <xlsxファイル>
 ```
 
-同期後は `npm run build` を実行してください。
+インポート後は `master/data/` から `server/data/` が自動生成されます。データ形式は `server/data/schemas/`、バージョンとファイル件数は `server/data/manifest.json` で管理します。

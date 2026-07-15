@@ -1,44 +1,44 @@
 [
-    {
-        "id":  "keyword_taunt",
-        "name":  "挑発",
-        "classification":  "対象制限",
-        "effectText":  "通常の単体攻撃対象を挑発持ちへ制限。",
-        "description":  "全体・ランダム・対象非選択には適用しない。"
-    },
-    {
-        "id":  "keyword_guard",
-        "name":  "かばう",
-        "classification":  "対象変更",
-        "effectText":  "味方への単体攻撃を1体だけ自動で肩代わり。",
-        "description":  "複数時は最も古く召喚された式神。連鎖しない。"
-    },
-    {
-        "id":  "keyword_stealth",
-        "name":  "ステルス",
-        "classification":  "対象制限",
-        "effectText":  "相手から通常の単体攻撃対象として選択されない。",
-        "description":  "全体・ランダム等には適用しない。"
-    },
-    {
-        "id":  "keyword_counter",
-        "name":  "反撃",
-        "classification":  "反応",
-        "effectText":  "攻撃ダメージ処理後も対象式神と攻撃主体が生存している場合、攻撃主体へ固定1ダメージを与える。",
-        "description":  "反撃ダメージはMVPでは固定1。反撃への反撃は発生しない。多段攻撃では全段終了後に1回だけ処理する。"
-    },
-    {
-        "id":  "keyword_pierce",
-        "name":  "貫通",
-        "classification":  "攻撃補助",
-        "effectText":  "式神への最終ダメージが残りHPを超えた余剰分を相手プレイヤーへ適用。",
-        "description":  "新しい攻撃として扱わない。"
-    },
-    {
-        "id":  "keyword_flying",
-        "name":  "飛行",
-        "classification":  "効果耐性",
-        "effectText":  "『飛行には適用されない』と記載されたカード・地形効果を受けない。",
-        "description":  "位置・射程には影響しない。"
-    }
+  {
+    "id": "keyword_taunt",
+    "name": "挑発",
+    "classification": "対象制限",
+    "effectText": "通常の単体攻撃対象を挑発持ちへ制限。",
+    "description": "全体・ランダム・対象非選択には適用しない。"
+  },
+  {
+    "id": "keyword_guard",
+    "name": "かばう",
+    "classification": "対象変更",
+    "effectText": "味方への単体攻撃を1体だけ自動で肩代わり。",
+    "description": "複数時は最も古く召喚された式神。連鎖しない。"
+  },
+  {
+    "id": "keyword_stealth",
+    "name": "ステルス",
+    "classification": "対象制限",
+    "effectText": "相手から通常の単体攻撃対象として選択されない。",
+    "description": "全体・ランダム等には適用しない。"
+  },
+  {
+    "id": "keyword_counter",
+    "name": "反撃",
+    "classification": "反応",
+    "effectText": "攻撃ダメージ処理後も対象式神と攻撃主体が生存している場合、攻撃主体へ固定1ダメージを与える。",
+    "description": "反撃ダメージはMVPでは固定1。反撃への反撃は発生しない。多段攻撃では全段終了後に1回だけ処理する。"
+  },
+  {
+    "id": "keyword_pierce",
+    "name": "貫通",
+    "classification": "攻撃補助",
+    "effectText": "式神への最終ダメージが残りHPを超えた余剰分を相手プレイヤーへ適用。",
+    "description": "新しい攻撃として扱わない。"
+  },
+  {
+    "id": "keyword_flying",
+    "name": "飛行",
+    "classification": "効果耐性",
+    "effectText": "『飛行には適用されない』と記載されたカード・地形効果を受けない。",
+    "description": "位置・射程には影響しない。"
+  }
 ]

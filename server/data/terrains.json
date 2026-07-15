@@ -1,62 +1,62 @@
 [
-    {
-        "id":  "terrain_chinju_forest",
-        "name":  "鎮守の森",
-        "attribute":  "木",
-        "system":  "地脈術",
-        "timing":  "両プレイヤーのターン終了時",
-        "target":  "場のすべての式神",
-        "effectText":  "HPを1回復。",
-        "description":  "共有地形。"
-    },
-    {
-        "id":  "terrain_scorched_earth",
-        "name":  "焦土",
-        "attribute":  "火",
-        "system":  "地脈術",
-        "timing":  "両プレイヤーのターン終了時",
-        "target":  "場のすべての式神",
-        "effectText":  "1ダメージ。プレイヤーは対象外。",
-        "description":  "共有地形。"
-    },
-    {
-        "id":  "terrain_clear_stream",
-        "name":  "清流",
-        "attribute":  "水",
-        "system":  "地脈術",
-        "timing":  "両プレイヤーのターン開始時",
-        "target":  "両プレイヤー",
-        "effectText":  "MPを1増加。最大MP30を超えない。",
-        "description":  "共有地形。"
-    },
-    {
-        "id":  "terrain_mineral_vein",
-        "name":  "鉱脈",
-        "attribute":  "金",
-        "system":  "地脈術",
-        "timing":  "通常のターン開始コスト回復後",
-        "target":  "手番プレイヤー",
-        "effectText":  "現在コストを1増加。基本コストを超えて保持可能。未使用分はターン終了時に失われる。",
-        "description":  "設置ターン中は発動しない。"
-    },
-    {
-        "id":  "terrain_sacred_domain",
-        "name":  "神域",
-        "attribute":  "土",
-        "system":  "地脈術",
-        "timing":  "常時",
-        "target":  "場のすべての式神",
-        "effectText":  "受けるダメージを1軽減。",
-        "description":  "共有地形。"
-    },
-    {
-        "id":  "terrain_yomi_road",
-        "name":  "黄泉路",
-        "attribute":  "無属性",
-        "system":  "地脈術",
-        "timing":  "式神退場後",
-        "target":  "退場式神の所有者",
-        "effectText":  "MPを1回復。",
-        "description":  "共有地形。"
-    }
+  {
+    "id": "terrain_chinju_forest",
+    "name": "鎮守の森",
+    "attribute": "木",
+    "system": "地脈術",
+    "timing": "両プレイヤーのターン終了時",
+    "target": "場のすべての式神",
+    "effectText": "HPを1回復。",
+    "description": "共有地形。"
+  },
+  {
+    "id": "terrain_scorched_earth",
+    "name": "焦土",
+    "attribute": "火",
+    "system": "地脈術",
+    "timing": "両プレイヤーのターン終了時",
+    "target": "場のすべての式神",
+    "effectText": "1ダメージ。プレイヤーは対象外。",
+    "description": "共有地形。"
+  },
+  {
+    "id": "terrain_clear_stream",
+    "name": "清流",
+    "attribute": "水",
+    "system": "地脈術",
+    "timing": "両プレイヤーのターン開始時",
+    "target": "両プレイヤー",
+    "effectText": "MPを1増加。最大MP30を超えない。",
+    "description": "共有地形。"
+  },
+  {
+    "id": "terrain_mineral_vein",
+    "name": "鉱脈",
+    "attribute": "金",
+    "system": "地脈術",
+    "timing": "通常のターン開始コスト回復後",
+    "target": "手番プレイヤー",
+    "effectText": "現在コストを1増加。基本コストを超えて保持可能。未使用分はターン終了時に失われる。",
+    "description": "設置ターン中は発動しない。"
+  },
+  {
+    "id": "terrain_sacred_domain",
+    "name": "神域",
+    "attribute": "土",
+    "system": "地脈術",
+    "timing": "常時",
+    "target": "場のすべての式神",
+    "effectText": "受けるダメージを1軽減。",
+    "description": "共有地形。"
+  },
+  {
+    "id": "terrain_yomi_road",
+    "name": "黄泉路",
+    "attribute": "無属性",
+    "system": "地脈術",
+    "timing": "式神退場後",
+    "target": "退場式神の所有者",
+    "effectText": "MPを1回復。",
+    "description": "共有地形。"
+  }
 ]

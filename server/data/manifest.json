@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.0.0",
+  "dataVersion": "0.1.0",
+  "files": {
+    "cards": {
+      "filename": "cards.json",
+      "count": 90
+    },
+    "cardTemplates": {
+      "filename": "cardTemplates.json",
+      "count": 16
+    },
+    "shikigami": {
+      "filename": "shikigami.json",
+      "count": 10
+    },
+    "barriers": {
+      "filename": "barriers.json",
+      "count": 4
+    },
+    "terrains": {
+      "filename": "terrains.json",
+      "count": 6
+    },
+    "forbiddenArts": {
+      "filename": "forbiddenArts.json",
+      "count": 6
+    },
+    "keywords": {
+      "filename": "keywords.json",
+      "count": 6
+    },
+    "curses": {
+      "filename": "curses.json",
+      "count": 8
+    },
+    "aiScores": {
+      "filename": "aiScores.json",
+      "count": 16
+    }
+  }
+}

@@ -1,0 +1,98 @@
+[
+  {
+    "id": "ai_lethal",
+    "target": "リーサル成立",
+    "score": 1000,
+    "notes": "相手プレイヤーを0HP以下にできる行動。"
+  },
+  {
+    "id": "ai_survival",
+    "target": "自分の敗北回避",
+    "score": 900,
+    "notes": "次の公開盤面上の確定ダメージで敗北する場合。"
+  },
+  {
+    "id": "ai_kill_shikigami",
+    "target": "相手式神退場",
+    "score": 120,
+    "notes": "対象式神を退場させられる行動。"
+  },
+  {
+    "id": "ai_damage_player",
+    "target": "相手プレイヤーへの1ダメージ",
+    "score": 20,
+    "notes": "確定ダメージのみ評価。"
+  },
+  {
+    "id": "ai_damage_shikigami",
+    "target": "相手式神への1ダメージ",
+    "score": 12,
+    "notes": "過剰ダメージは評価しない。"
+  },
+  {
+    "id": "ai_heal_player",
+    "target": "自分プレイヤーの1回復",
+    "score": 14,
+    "notes": "失われたHPを超える分は評価しない。"
+  },
+  {
+    "id": "ai_heal_shikigami",
+    "target": "味方式神の1回復",
+    "score": 10,
+    "notes": "失われたHPを超える分は評価しない。"
+  },
+  {
+    "id": "ai_gain_mp",
+    "target": "MP1増加",
+    "score": 8,
+    "notes": "最大MPを超える分は評価しない。"
+  },
+  {
+    "id": "ai_draw",
+    "target": "カード1枚獲得",
+    "score": 18,
+    "notes": "最大手札を超える分は評価しない。"
+  },
+  {
+    "id": "ai_summon",
+    "target": "式神召喚",
+    "score": 40,
+    "notes": "式神のHP、攻撃力、固有能力、盤面状況を総合評価する。具体係数は未確定。"
+  },
+  {
+    "id": "ai_barrier",
+    "target": "結界設置",
+    "score": 35,
+    "notes": "既存結界を上書きする場合は既存結界の残存価値を減算。"
+  },
+  {
+    "id": "ai_terrain",
+    "target": "地形展開",
+    "score": 25,
+    "notes": "自分側と相手側への期待値差で補正。"
+  },
+  {
+    "id": "ai_curse",
+    "target": "呪い付与",
+    "score": 20,
+    "notes": "種類・対象・残存回数により補正。"
+  },
+  {
+    "id": "ai_cleanse",
+    "target": "呪い解除",
+    "score": 22,
+    "notes": "実際に解除できる呪いがある場合のみ。"
+  },
+  {
+    "id": "ai_resource_penalty",
+    "target": "消費MP1",
+    "score": -5,
+    "notes": "コストはターン終了時に失われるため直接減点しない。"
+  },
+  {
+    "id": "ai_random_jitter",
+    "target": "同点時揺らぎ",
+    "score": "0-3",
+    "notes": "同点候補の固定化を避けるため、小さな乱数揺らぎを加える。具体範囲は未確定。"
+  }
+]

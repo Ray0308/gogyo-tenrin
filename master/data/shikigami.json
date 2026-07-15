@@ -1,0 +1,122 @@
+[
+    {
+        "id":  "shikigami_kanko",
+        "name":  "管狐",
+        "attribute":  "木",
+        "maxHp":  4,
+        "attack":  1,
+        "aiProfile":  "HPが最も低い敵を優先",
+        "keywords":  "ステルス",
+        "ability":  "霊気集め：通常行動完了後、自分プレイヤーのMP＋1。相生は発生しない。行動不能・行動失敗時は発動しない。",
+        "description":  "霊気を集める小型の狐。隠れながら主人のMPを支える補助型。",
+        "imageId":  "img_shikigami_kanko"
+    },
+    {
+        "id":  "shikigami_hakuro",
+        "name":  "白狼",
+        "attribute":  "金",
+        "maxHp":  6,
+        "attack":  3,
+        "aiProfile":  "相手プレイヤー優先",
+        "keywords":  null,
+        "ability":  "狩猟本能：HPが最も低い敵を攻撃する場合、その攻撃のみ攻撃力＋1。",
+        "description":  "弱った敵を逃さず仕留める、素直な高火力型の白狼。",
+        "imageId":  "img_shikigami_hakuro"
+    },
+    {
+        "id":  "shikigami_orochi",
+        "name":  "大蛇",
+        "attribute":  "水",
+        "maxHp":  7,
+        "attack":  2,
+        "aiProfile":  "相手式神優先",
+        "keywords":  null,
+        "ability":  "毒牙：通常攻撃が式神へダメージを与えた場合、呪い：毒を1スタック付与。プレイヤーには付与しない。",
+        "description":  "式神への攻撃と毒の蓄積を得意とする、水属性の妨害型。",
+        "imageId":  "img_shikigami_orochi"
+    },
+    {
+        "id":  "shikigami_kappa",
+        "name":  "河童",
+        "attribute":  "水",
+        "maxHp":  6,
+        "attack":  1,
+        "aiProfile":  "相手式神優先",
+        "keywords":  "かばう",
+        "ability":  "水薬：通常行動完了後、自分側で現在HP割合が最も低い式神を1回復。自身も候補。",
+        "description":  "味方をかばい、傷ついた式神を癒やす水属性の支援型。",
+        "imageId":  "img_shikigami_kappa"
+    },
+    {
+        "id":  "shikigami_karasutengu",
+        "name":  "鴉天狗",
+        "attribute":  "火",
+        "maxHp":  5,
+        "attack":  3,
+        "aiProfile":  "攻撃力が最も高い相手式神を優先",
+        "keywords":  "飛行",
+        "ability":  "天狗風：通常攻撃後、攻撃対象以外の相手式神1体をランダムに選び1ダメージ。属性一致・相剋・貫通・反撃なし。",
+        "description":  "飛行しながら複数の敵を削る、火属性の攻撃型式神。",
+        "imageId":  "img_shikigami_karasutengu"
+    },
+    {
+        "id":  "shikigami_kamaitachi",
+        "name":  "鎌鼬",
+        "attribute":  "木",
+        "maxHp":  4,
+        "attack":  2,
+        "aiProfile":  "ランダム",
+        "keywords":  null,
+        "ability":  "疾風連刃：最終攻撃力を2回へ分割する多段攻撃。偶数は均等、奇数は前半切り上げ・後半切り捨て。反撃は2回終了後に1回。",
+        "description":  "攻撃を二段へ分け、軽減や反撃との読み合いを生む速攻型。",
+        "imageId":  "img_shikigami_kamaitachi"
+    },
+    {
+        "id":  "shikigami_komainu",
+        "name":  "狛犬",
+        "attribute":  "土",
+        "maxHp":  8,
+        "attack":  2,
+        "aiProfile":  "相手式神優先",
+        "keywords":  "挑発",
+        "ability":  "守護の構え：行動後、次に受けるダメージを1軽減。1回で解除し、重複しない。",
+        "description":  "挑発と軽減で味方を守る、土属性の標準的な防御型。",
+        "imageId":  "img_shikigami_komainu"
+    },
+    {
+        "id":  "shikigami_shirozaru",
+        "name":  "白猿",
+        "attribute":  "金",
+        "maxHp":  6,
+        "attack":  2,
+        "aiProfile":  "ランダム",
+        "keywords":  "反撃",
+        "ability":  "模倣：反撃後、次の通常攻撃のみ攻撃力＋1。複数回反撃しても重複しない。",
+        "description":  "反撃を力へ変え、次の一撃を強化する金属性の反撃型。",
+        "imageId":  "img_shikigami_shirozaru"
+    },
+    {
+        "id":  "shikigami_genki",
+        "name":  "玄亀",
+        "attribute":  "土",
+        "maxHp":  10,
+        "attack":  1,
+        "aiProfile":  "相手式神優先",
+        "keywords":  "挑発・反撃",
+        "ability":  "甲羅籠り：行動開始時に自身の現在HPが最大HPの50％以下で、甲羅籠り中でない場合、攻撃の代わりに防御する。次の自分の行動開始時まで受けるダメージを2軽減する。重複せず、防御中は再付与しない。",
+        "description":  "高耐久と挑発・反撃を備え、条件に応じて防御へ移る重装型。",
+        "imageId":  "img_shikigami_genki"
+    },
+    {
+        "id":  "shikigami_hinotori",
+        "name":  "火鳥",
+        "attribute":  "火",
+        "maxHp":  5,
+        "attack":  3,
+        "aiProfile":  "HPが最も低い敵を優先",
+        "keywords":  "飛行・貫通",
+        "ability":  "炎上：通常攻撃でダメージを与えた対象へ呪い：火傷を付与。貫通ダメージのみ受けたプレイヤーには付与しない。",
+        "description":  "飛行と貫通に加え、攻撃対象へ火傷を与える希少な攻撃型。",
+        "imageId":  "img_shikigami_hinotori"
+    }
+]

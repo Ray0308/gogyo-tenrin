@@ -1,146 +1,146 @@
 [
-    {
-        "id":  "template_reidan",
-        "name":  "霊弾",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "imageId":  "img_card_reidan",
-        "description":  "基本効果：2ダメージ。 属性別追加効果を持つ。",
-        "hasAttributeVariants":  "有"
-    },
-    {
-        "id":  "template_zanfu",
-        "name":  "斬符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "imageId":  "img_card_zanfu",
-        "description":  "基本効果：3ダメージ。 属性別追加効果を持つ。",
-        "hasAttributeVariants":  "有"
-    },
-    {
-        "id":  "template_senfu",
-        "name":  "穿符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "imageId":  "img_card_senfu",
-        "description":  "基本効果：2ダメージ。この攻撃は挑発を無視して対象を選べる。 属性別追加効果を持つ。",
-        "hasAttributeVariants":  "有"
-    },
-    {
-        "id":  "template_bakufu",
-        "name":  "爆符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "imageId":  "img_card_bakufu",
-        "description":  "基本効果：各対象へ2ダメージ。 属性別追加効果を持つ。",
-        "hasAttributeVariants":  "有"
-    },
-    {
-        "id":  "template_shokufu",
-        "name":  "喰符",
-        "category":  "攻撃札",
-        "system":  "霊符術",
-        "imageId":  "img_card_shokufu",
-        "description":  "基本効果：2ダメージ。その後、自分プレイヤーのHPを1回復。 属性別追加効果を持つ。",
-        "hasAttributeVariants":  "有"
-    },
-    {
-        "id":  "template_shufu",
-        "name":  "守符",
-        "category":  "防御札",
-        "system":  "霊符術",
-        "imageId":  "img_card_shufu",
-        "description":  "基本効果：今回受けるダメージを3軽減。 属性別追加効果を持つ。",
-        "hasAttributeVariants":  "有"
-    },
-    {
-        "id":  "template_utsusemi",
-        "name":  "空蝉",
-        "category":  "防御札",
-        "system":  "霊符術",
-        "imageId":  "img_card_utsusemi",
-        "description":  "基本効果：今回の単体攻撃によるダメージを無効化。 属性別追加効果を持つ。",
-        "hasAttributeVariants":  "有"
-    },
-    {
-        "id":  "template_kekkaifu",
-        "name":  "結界符",
-        "category":  "防御札",
-        "system":  "霊符術",
-        "imageId":  "img_card_kekkaifu",
-        "description":  "基本効果：今回の攻撃で自分側が受けるダメージを各対象1軽減。 属性別追加効果を持つ。",
-        "hasAttributeVariants":  "有"
-    },
-    {
-        "id":  "template_purification",
-        "name":  "浄化",
-        "category":  "術札",
-        "system":  "陰陽秘術",
-        "imageId":  "img_card_joka",
-        "description":  "陰陽秘術：浄化の単独カード。",
-        "hasAttributeVariants":  "無"
-    },
-    {
-        "id":  "template_activation",
-        "name":  "活性",
-        "category":  "術札",
-        "system":  "陰陽秘術",
-        "imageId":  "img_card_kassei",
-        "description":  "陰陽秘術：活性の単独カード。",
-        "hasAttributeVariants":  "無"
-    },
-    {
-        "id":  "template_seal",
-        "name":  "封印",
-        "category":  "術札",
-        "system":  "陰陽秘術",
-        "imageId":  "img_card_fuin",
-        "description":  "陰陽秘術：封印の単独カード。",
-        "hasAttributeVariants":  "無"
-    },
-    {
-        "id":  "template_exorcism",
-        "name":  "祓詞",
-        "category":  "術札",
-        "system":  "陰陽秘術",
-        "imageId":  "img_card_haraekotoba",
-        "description":  "陰陽秘術：祓詞の単独カード。",
-        "hasAttributeVariants":  "無"
-    },
-    {
-        "id":  "template_tenrin",
-        "name":  "転輪",
-        "category":  "術札",
-        "system":  "占事略决",
-        "imageId":  "img_card_tenrin",
-        "description":  "占事略决：転輪。五属性展開。",
-        "hasAttributeVariants":  "有"
-    },
-    {
-        "id":  "template_sosei",
-        "name":  "相生",
-        "category":  "術札",
-        "system":  "占事略决",
-        "imageId":  "img_card_sosei",
-        "description":  "占事略决：相生。五属性展開。",
-        "hasAttributeVariants":  "有"
-    },
-    {
-        "id":  "template_sokoku",
-        "name":  "相剋",
-        "category":  "術札",
-        "system":  "占事略决",
-        "imageId":  "img_card_sokoku",
-        "description":  "占事略决：相剋。五属性展開。",
-        "hasAttributeVariants":  "有"
-    },
-    {
-        "id":  "template_junkan",
-        "name":  "循環",
-        "category":  "術札",
-        "system":  "占事略决",
-        "imageId":  "img_card_junkan",
-        "description":  "占事略决：循環。五属性展開。",
-        "hasAttributeVariants":  "有"
-    }
+  {
+    "id": "template_reidan",
+    "name": "霊弾",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "imageId": "img_card_reidan",
+    "description": "基本効果：2ダメージ。 属性別追加効果を持つ。",
+    "hasAttributeVariants": true
+  },
+  {
+    "id": "template_zanfu",
+    "name": "斬符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "imageId": "img_card_zanfu",
+    "description": "基本効果：3ダメージ。 属性別追加効果を持つ。",
+    "hasAttributeVariants": true
+  },
+  {
+    "id": "template_senfu",
+    "name": "穿符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "imageId": "img_card_senfu",
+    "description": "基本効果：2ダメージ。この攻撃は挑発を無視して対象を選べる。 属性別追加効果を持つ。",
+    "hasAttributeVariants": true
+  },
+  {
+    "id": "template_bakufu",
+    "name": "爆符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "imageId": "img_card_bakufu",
+    "description": "基本効果：各対象へ2ダメージ。 属性別追加効果を持つ。",
+    "hasAttributeVariants": true
+  },
+  {
+    "id": "template_shokufu",
+    "name": "喰符",
+    "category": "攻撃札",
+    "system": "霊符術",
+    "imageId": "img_card_shokufu",
+    "description": "基本効果：2ダメージ。その後、自分プレイヤーのHPを1回復。 属性別追加効果を持つ。",
+    "hasAttributeVariants": true
+  },
+  {
+    "id": "template_shufu",
+    "name": "守符",
+    "category": "防御札",
+    "system": "霊符術",
+    "imageId": "img_card_shufu",
+    "description": "基本効果：今回受けるダメージを3軽減。 属性別追加効果を持つ。",
+    "hasAttributeVariants": true
+  },
+  {
+    "id": "template_utsusemi",
+    "name": "空蝉",
+    "category": "防御札",
+    "system": "霊符術",
+    "imageId": "img_card_utsusemi",
+    "description": "基本効果：今回の単体攻撃によるダメージを無効化。 属性別追加効果を持つ。",
+    "hasAttributeVariants": true
+  },
+  {
+    "id": "template_kekkaifu",
+    "name": "結界符",
+    "category": "防御札",
+    "system": "霊符術",
+    "imageId": "img_card_kekkaifu",
+    "description": "基本効果：今回の攻撃で自分側が受けるダメージを各対象1軽減。 属性別追加効果を持つ。",
+    "hasAttributeVariants": true
+  },
+  {
+    "id": "template_purification",
+    "name": "浄化",
+    "category": "術札",
+    "system": "陰陽秘術",
+    "imageId": "img_card_joka",
+    "description": "陰陽秘術：浄化の単独カード。",
+    "hasAttributeVariants": false
+  },
+  {
+    "id": "template_activation",
+    "name": "活性",
+    "category": "術札",
+    "system": "陰陽秘術",
+    "imageId": "img_card_kassei",
+    "description": "陰陽秘術：活性の単独カード。",
+    "hasAttributeVariants": false
+  },
+  {
+    "id": "template_seal",
+    "name": "封印",
+    "category": "術札",
+    "system": "陰陽秘術",
+    "imageId": "img_card_fuin",
+    "description": "陰陽秘術：封印の単独カード。",
+    "hasAttributeVariants": false
+  },
+  {
+    "id": "template_exorcism",
+    "name": "祓詞",
+    "category": "術札",
+    "system": "陰陽秘術",
+    "imageId": "img_card_haraekotoba",
+    "description": "陰陽秘術：祓詞の単独カード。",
+    "hasAttributeVariants": false
+  },
+  {
+    "id": "template_tenrin",
+    "name": "転輪",
+    "category": "術札",
+    "system": "占事略决",
+    "imageId": "img_card_tenrin",
+    "description": "占事略决：転輪。五属性展開。",
+    "hasAttributeVariants": true
+  },
+  {
+    "id": "template_sosei",
+    "name": "相生",
+    "category": "術札",
+    "system": "占事略决",
+    "imageId": "img_card_sosei",
+    "description": "占事略决：相生。五属性展開。",
+    "hasAttributeVariants": true
+  },
+  {
+    "id": "template_sokoku",
+    "name": "相剋",
+    "category": "術札",
+    "system": "占事略决",
+    "imageId": "img_card_sokoku",
+    "description": "占事略决：相剋。五属性展開。",
+    "hasAttributeVariants": true
+  },
+  {
+    "id": "template_junkan",
+    "name": "循環",
+    "category": "術札",
+    "system": "占事略决",
+    "imageId": "img_card_junkan",
+    "description": "占事略决：循環。五属性展開。",
+    "hasAttributeVariants": true
+  }
 ]

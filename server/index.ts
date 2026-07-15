@@ -20,8 +20,10 @@ import {
   type ShikigamiState,
 } from "../shared/protocol.js";
 
-interface CardMaster { id:string; name:string; category:string; system:string; attribute:string; templateId:string|null; cost:number; mpCost:number; weight:number; target:string; timing:string; effectText:string; description:string; flavorText:string }
-interface ShikigamiMaster { id:string; name:string; attribute:string; maxHp:number; attack:number; aiProfile:string; keywords:string|null; ability:string; description:string; imageId:string }
+interface CardMaster { id:string; name:string; category:string; system:string; attribute:string; templateId:string|null; cost:number; mpCost:number; weight:number; target:string; timing:string; effectText:string; description:string; flavorText:string; imageId?:string; timings:string[]; effects:CardEffectDefinition[] }
+interface IdMaster { id:string }
+interface DataManifest { schemaVersion:string; dataVersion:string; files:Record<string,{filename:string;count:number}> }
+interface ShikigamiMaster { id:string; name:string; attribute:string; maxHp:number; attack:number; aiProfile:string; keywords:string|null; keywordIds:string[]; ability:string; description:string; imageId:string }
 interface FieldMaster { id:string; name:string; attribute:string; effectText:string; triggerCount?:number|null }
 type AttributeMatchEffect =
   | { type:"apply_curse"; curseId:"curse_poison"|"curse_burn"; stacks:number }
@@ -52,11 +54,17 @@ const currentDirectory=path.dirname(fileURLToPath(import.meta.url));
 const distributionDirectory=path.resolve(currentDirectory,"..");
 const clientDirectory=path.join(distributionDirectory,"client");
 const rootDocument=readFileSync(path.join(clientDirectory,"index.html"),"utf8");
+const manifest=loadJson<DataManifest>("manifest.json");
 const cards=loadJson<CardMaster[]>("cards.json");
+const cardTemplates=loadJson<IdMaster[]>("cardTemplates.json");
 const shikigami=loadJson<ShikigamiMaster[]>("shikigami.json");
 const barriers=loadJson<FieldMaster[]>("barriers.json");
 const terrains=loadJson<FieldMaster[]>("terrains.json");
-const definitions=loadJson<CardEffectDefinition[]>("cardEffects.json");
+const forbiddenArts=loadJson<IdMaster[]>("forbiddenArts.json");
+const keywords=loadJson<IdMaster[]>("keywords.json");
+const curses=loadJson<IdMaster[]>("curses.json");
+const aiScores=loadJson<IdMaster[]>("aiScores.json");
+const definitions=cards.flatMap(card=>card.effects);
 const cardById=new Map(cards.map(card=>[card.id,card]));
 const shikigamiById=new Map(shikigami.map(unit=>[unit.id,unit]));
 const barrierById=new Map(barriers.map(field=>[field.id,field]));
@@ -72,10 +80,32 @@ const overcomes:Record<FiveElement,FiveElement>={wood:"earth",earth:"water",wate
 
 function loadJson<T>(name:string):T{return JSON.parse(readFileSync(path.join(currentDirectory,"data",name),"utf8")) as T}
 function validateMaster():void{
-  if(cards.length===0||totalCardWeight<=0)throw new Error("抽選可能なカードがありません。");
+  if(manifest.schemaVersion!=="1.0.0"||manifest.dataVersion!=="0.1.0")throw new Error("Master data version mismatch.");
+  const collections:Record<string,IdMaster[]>={cards,cardTemplates,shikigami,barriers,terrains,forbiddenArts,keywords,curses,aiScores};
+  const filenames:Record<string,string>={cards:"cards.json",cardTemplates:"cardTemplates.json",shikigami:"shikigami.json",barriers:"barriers.json",terrains:"terrains.json",forbiddenArts:"forbiddenArts.json",keywords:"keywords.json",curses:"curses.json",aiScores:"aiScores.json"};
   const ids=new Set<string>();
-  for(const card of cards){if(!/^[a-z0-9_]+$/.test(card.id)||ids.has(card.id)||card.cost<0||card.mpCost<0||card.weight<0)throw new Error(`カードマスターが不正です: ${card.id}`);ids.add(card.id)}
-  for(const definition of definitions){if(!cardById.has(definition.cardId))throw new Error(`存在しないカードの効果です: ${definition.cardId}`);if(definition.type==="summon"&&!shikigamiById.has(definition.shikigamiId))throw new Error(`存在しない式神です: ${definition.shikigamiId}`);if(definition.type==="barrier"&&!barrierById.has(definition.fieldId))throw new Error(`存在しない結界です: ${definition.fieldId}`);if(definition.type==="terrain"&&!terrainById.has(definition.fieldId))throw new Error(`存在しない地形です: ${definition.fieldId}`)}
+  for(const [key,items] of Object.entries(collections)){
+    const entry=manifest.files[key];
+    if(!entry||entry.filename!==filenames[key]||entry.count!==items.length)throw new Error(`Master manifest mismatch: ${key}`);
+    for(const item of items){if(!/^[a-z0-9_]+$/.test(item.id)||ids.has(item.id))throw new Error(`Invalid or duplicate master ID: ${item.id}`);ids.add(item.id)}
+  }
+  if(cards.length===0||totalCardWeight<=0)throw new Error("No drawable cards are configured.");
+  const templateIds=new Set(cardTemplates.map(item=>item.id));
+  const keywordIds=new Set(keywords.map(item=>item.id));
+  const curseIds=new Set(curses.map(item=>item.id));
+  for(const card of cards){
+    if(card.cost<0||card.mpCost<0||card.weight<0||!Array.isArray(card.timings)||!Array.isArray(card.effects))throw new Error(`Invalid card master: ${card.id}`);
+    if(card.templateId&&!templateIds.has(card.templateId))throw new Error(`Unknown card template: ${card.templateId}`);
+  }
+  for(const unit of shikigami){if(!Array.isArray(unit.keywordIds)||unit.keywordIds.some(id=>!keywordIds.has(id)))throw new Error(`Invalid shikigami keyword reference: ${unit.id}`)}
+  for(const definition of definitions){
+    if(!cardById.has(definition.cardId))throw new Error(`Unknown effect card: ${definition.cardId}`);
+    if(definition.type==="summon"&&!shikigamiById.has(definition.shikigamiId))throw new Error(`Unknown shikigami: ${definition.shikigamiId}`);
+    if(definition.type==="barrier"&&!barrierById.has(definition.fieldId))throw new Error(`Unknown barrier: ${definition.fieldId}`);
+    if(definition.type==="terrain"&&!terrainById.has(definition.fieldId))throw new Error(`Unknown terrain: ${definition.fieldId}`);
+    const curseId=definition.type==="attack"&&definition.attributeMatchEffect?.type==="apply_curse"?definition.attributeMatchEffect.curseId:undefined;
+    if(curseId&&!curseIds.has(curseId))throw new Error(`Unknown curse: ${curseId}`);
+  }
 }
 validateMaster();
 
