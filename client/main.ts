@@ -62,6 +62,7 @@ const battleCueQueue: BattleCue[] = [];
 let battleCuePlaying = false;
 let activeBattleCueKey: string | undefined;
 let activeBattleEffects = 0;
+let battlePresentationGeneration = 0;
 
 function battlePresentationLocked(): boolean {
   return battleCuePlaying || battleCueQueue.length > 0 || activeBattleEffects > 0;
@@ -91,10 +92,21 @@ void loadCardCatalog();
 function syncBattlePresentationLock(): void {
   document.body.classList.toggle("battle-presentation-locked", battlePresentationLocked());
 }
+function cancelBattlePresentation(): void {
+  battlePresentationGeneration += 1;
+  battleCueQueue.length = 0;
+  battleCuePlaying = false;
+  activeBattleCueKey = undefined;
+  activeBattleEffects = 0;
+  document.querySelectorAll(".battle-cue-layer,.card-effect-layer,.battle-floating-change,.shikigami-retire-layer,.reidan-projectile").forEach((element) => element.remove());
+  syncBattlePresentationLock();
+}
 function holdBattlePresentation(duration: number): void {
+  const generation = battlePresentationGeneration;
   activeBattleEffects += 1;
   syncBattlePresentationLock();
   window.setTimeout(() => {
+    if (generation !== battlePresentationGeneration) return;
     activeBattleEffects = Math.max(0, activeBattleEffects - 1);
     syncBattlePresentationLock();
   }, duration);
@@ -115,6 +127,7 @@ function playNextBattleCue(): void {
     return;
   }
   battleCuePlaying = true;
+  const generation = battlePresentationGeneration;
   syncBattlePresentationLock();
   const cue = battleCueQueue.shift()!;
   activeBattleCueKey = cue.key;
@@ -129,8 +142,12 @@ function playNextBattleCue(): void {
   layer.append(panel);document.body.append(layer);
   cue.onShow?.();
   const duration = cue.duration ?? animationDuration();
-  window.setTimeout(() => layer.classList.add("leaving"), Math.max(40, duration - 160));
-  window.setTimeout(() => { layer.remove();battleCuePlaying = false;activeBattleCueKey = undefined;playNextBattleCue(); }, duration);
+  window.setTimeout(() => { if (generation === battlePresentationGeneration) layer.classList.add("leaving"); }, Math.max(40, duration - 160));
+  window.setTimeout(() => {
+    layer.remove();
+    if (generation !== battlePresentationGeneration) return;
+    battleCuePlaying = false;activeBattleCueKey = undefined;playNextBattleCue();
+  }, duration);
 }
 function combatantElement(change: Extract<BattleVisualChange, { type: "damage" | "heal" }>): HTMLElement | null {
   if (change.unitId) return document.querySelector<HTMLElement>(`[data-unit-id="${CSS.escape(change.unitId)}"]`);
@@ -256,6 +273,8 @@ function animateBattleChanges(changes: BattleVisualChange[]): void {
 }
 function updateState(nextState: SessionState): void {
   const changes = deriveBattleVisualChanges(state, nextState);
+  const enteringReaction = nextState.phase === "battle" && nextState.battle?.phase === "reaction";
+  if (enteringReaction) cancelBattlePresentation();
   let selectionError: string | undefined;
   state = nextState;
   if (pendingCardId) {
@@ -269,7 +288,7 @@ function updateState(nextState: SessionState): void {
   if (nextState.reconnectToken) localStorage.setItem(TOKEN_KEY, nextState.reconnectToken);
   render();
   if (selectionError) enqueueBattleCue({ title: "対象を選べません", detail: selectionError, side: "player" });
-  animateBattleChanges(changes);
+  if (!enteringReaction) animateBattleChanges(changes);
 }
 
 function escapeHtml(value: string): string {
@@ -287,8 +306,8 @@ function storeSettings(): void { localStorage.setItem(SETTINGS_KEY, JSON.stringi
 function button(label: string, action: string, extra = ""): string {
   return `<button class="menu-button ${extra}" data-action="${action}" ${busy ? "disabled" : ""}>${label}</button>`;
 }
-function shell(content: string): string {
-  return `<section class="screen"><div class="ambient-ring" aria-hidden="true"></div>${content}<footer>五行転輪 <span>●</span> MVP</footer></section>`;
+function shell(content: string, screenClass = ""): string {
+  return `<section class="screen ${screenClass}"><div class="ambient-ring" aria-hidden="true"></div>${content}<footer>五行転輪 <span>●</span> MVP</footer></section>`;
 }
 function error(): string { return errorMessage ? `<p class="error" role="alert">${escapeHtml(errorMessage)}</p>` : ""; }
 
@@ -337,7 +356,7 @@ function renderTitle(): void {
       </div>
     </nav>
     <p class="connection-ok title-connection"><span></span>霊脈接続済み</p>
-  </div>`);
+  </div>`, "title-screen");
 }
 function renderCpuSetup(): void {
   app.innerHTML = shell(`<header class="compact-header"><p class="eyebrow">CPU MATCH</p><h1>CPU戦</h1><p>陰陽師名を入力してください。</p></header><form class="form-card" data-form="cpu"><label for="player-name">プレイヤー名</label><input id="player-name" maxlength="20" autocomplete="nickname" placeholder="名前を入力" ${busy ? "disabled" : ""}/>${error()}<button class="menu-button" type="submit" ${busy ? "disabled" : ""}>${busy ? "準備中…" : "対戦準備へ"}</button>${button("戻る", "title", "text")}</form>`);
@@ -351,8 +370,16 @@ function renderRoomWaiting(): void {
   app.innerHTML=shell(`<header class="compact-header"><p class="eyebrow">ROOM</p><h1>\u5bfe\u6226\u5f85\u6a5f</h1></header><div class="notice-card"><p>\u90e8\u5c4bID</p><h2>${escapeHtml(state.roomId??"")}</h2><p>${opponentText}</p></div>${error()}<div class="menu">${startControl}${button("\u90e8\u5c4b\u3092\u9000\u51fa","room-leave","text")}</div>`);
 }
 function renderAttributeSelection(): void {
-  const choices = Object.entries(elements).map(([key, value]) => `<button class="element-card ${key}" data-element="${key}" ${busy ? "disabled" : ""}><span>${value.mark}</span><strong>${value.name}</strong></button>`).join("");
-  app.innerHTML = shell(`<header class="compact-header"><p class="eyebrow">INITIAL ATTRIBUTE</p><h1>初期属性を選択</h1><p>五行から、あなたの最初の属性を選んでください。</p></header><div class="elements">${choices}</div>${error()}<p class="muted center">CPUの属性は選択完了まで公開されません。</p>`);
+  const choices = Object.entries(elements).map(([key, value]) => `<button class="attribute-choice attribute-choice-${key} ${key}" data-element="${key}" aria-label="${value.name}属性を選択" ${busy ? "disabled" : ""}><span>${value.mark}</span></button>`).join("");
+  app.innerHTML = shell(`<div class="attribute-lobby">
+    <header class="attribute-heading"><p class="eyebrow">INITIAL ATTRIBUTE</p><h1>初期属性を選択</h1><p>五行から、あなたの最初の属性を選んでください。</p></header>
+    <div class="attribute-wheel" aria-label="五行属性選択">
+      <svg viewBox="0 0 300 300" aria-hidden="true"><circle cx="150" cy="150" r="112"></circle><polyline points="150,38 216,241 43,107 257,107 84,241 150,38"></polyline><circle cx="150" cy="150" r="48"></circle></svg>
+      ${choices}
+      <div class="attribute-wheel-core"><small>五行</small><strong>選択</strong></div>
+    </div>
+    <div class="attribute-note">${error()}<p>相手の属性は、双方の選択完了まで公開されません。</p></div>
+  </div>`, "attribute-screen");
 }
 function elementBadge(attribute?: FiveElement): string {
   if (!attribute) return `<span class="attribute unknown">?</span>`;
@@ -490,10 +517,6 @@ socket.on("session:state", updateState);
 socket.io.on("reconnect_attempt", () => { screen = "connecting"; render(); });
 
 app.addEventListener("click", (event) => {
-  if (state.phase === "battle" && battlePresentationLocked()) {
-    event.preventDefault();
-    return;
-  }
   const target = event.target as HTMLElement;
   const action = target.closest<HTMLElement>("[data-action]")?.dataset.action;
   const cardInstanceId = target.closest<HTMLElement>("[data-card-instance]")?.dataset.cardInstance;
@@ -502,6 +525,11 @@ app.addEventListener("click", (event) => {
   const reactionTarget = target.closest<HTMLElement>("[data-reaction-target]")?.dataset.reactionTarget as DefenseTarget | undefined;
   const targetType = target.closest<HTMLElement>("[data-target]")?.dataset.target as CardTarget | undefined;
   const attribute = target.closest<HTMLElement>("[data-element]")?.dataset.element as FiveElement | undefined;
+  const reactionInteraction = Boolean(reactionCard || action === "reaction-pass");
+  if (state.phase === "battle" && battlePresentationLocked() && !reactionInteraction) {
+    event.preventDefault();
+    return;
+  }
   if(discardInstanceId && state.battle?.pendingDiscard && !busy){busy=true;render();socket.emit("card:discard",{instanceId:discardInstanceId},applyResult);return;}
   if (reactionCard && !busy) {
     busy = true; render(); socket.emit("reaction:respond", { instanceId: reactionCard, target: reactionTarget }, applyResult); return;

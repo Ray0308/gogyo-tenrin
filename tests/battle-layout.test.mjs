@@ -77,6 +77,18 @@ test("battle presentation locks input and gives retired shikigami a dedicated ef
   assert.match(css, /shikigami-dissolve/);
 });
 
+test("reaction decisions preempt presentation and do not run behind animations", async () => {
+  const client = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
+  const server = await readFile(path.join(repositoryRoot, "server", "index.ts"), "utf8");
+  assert.match(client, /function cancelBattlePresentation/);
+  assert.match(client, /if \(enteringReaction\) cancelBattlePresentation\(\)/);
+  assert.match(client, /if \(!enteringReaction\) animateBattleChanges\(changes\)/);
+  assert.match(client, /battlePresentationLocked\(\) && !reactionInteraction/);
+  assert.match(server, /pausedTurnRemainingMs/);
+  assert.match(server, /if\(pausedTurnSide\)clearTurnTimer\(session\)/);
+  assert.match(server, /pending\.pausedTurnSide===battle\.activePlayer/);
+});
+
 test("field attacks make each shikigami visibly tappable and cancelling fully resets selection", async () => {
   const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
   assert.match(source, /enemyFieldTarget/);
@@ -107,4 +119,14 @@ test("title uses shikigami artwork and a five-element circle with an overcoming 
   }
   assert.match(css, /\.title-lobby[\s\S]*align-items:\s*stretch/);
   assert.match(css, /\.title-character figcaption[\s\S]*display:\s*none/);
+});
+
+test("initial attribute selection uses a compact five-element wheel", async () => {
+  const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
+  const css = await readFile(path.join(repositoryRoot, "client", "title.css"), "utf8");
+  assert.match(source, /class="attribute-wheel"/);
+  assert.match(source, /attribute-choice-/);
+  assert.match(source, /attribute-screen/);
+  assert.match(css, /\.attribute-wheel[\s\S]*aspect-ratio:\s*1/);
+  assert.match(css, /\.attribute-screen \.ambient-ring[\s\S]*display:\s*none/);
 });

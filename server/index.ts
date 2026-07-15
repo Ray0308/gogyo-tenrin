@@ -62,6 +62,7 @@ interface BuffUnitDefinition { type:"buff_unit"; cardId:string; target:"ally_uni
 type CardEffectDefinition = AttackDefinition|TurnDefinition|SummonDefinition|DefenseDefinition|FieldDefinition|CleanseDefinition|RestoreDefinition|SealDefinition|CleanseAllDefinition|TurnChoiceDefinition|GenerateDefinition|CycleDefinition|ReviveDefinition|ClearFieldsDefinition|SacrificeDefinition|ChooseTerrainDefinition|BuffUnitDefinition;
 interface PendingReaction {
   defenderSide:Side; eligibleCardIds:string[]; remainingMs:number; timer?:ReturnType<typeof setTimeout>;
+  pausedTurnSide?:Side; pausedTurnRemainingMs?:number;
   targets:{id:DefenseTarget;target:UnitTarget;predictedDamage:number}[];
   resolve:(definition?:DefenseDefinition,target?:DefenseTarget)=>void;
 }
@@ -338,12 +339,18 @@ function resolveCardAttack(state:SessionState,side:Side,card:CardView,definition
 }
 function armReactionTimer(session:StoredSession,pending:PendingReaction):void{const battle=session.state.battle!;const duration=Math.max(0,pending.remainingMs);if(battle.reaction)battle.reaction.deadline=Date.now()+duration;pending.timer=setTimeout(()=>{if(session.pendingReaction!==pending)return;battle.log.push("反応受付が時間切れとなった。");finishReaction(session,pending.defenderSide);sendSessionState(session)},duration)}
 function beginReaction(session:StoredSession,defenderSide:Side,sourceName:string,attackerName:string,targets:UnitTarget[],predictions:number[],resolve:(definition?:DefenseDefinition,target?:DefenseTarget)=>void):void{
-  const battle=session.state.battle!,eligible=defenseCards(session,defenderSide);battle.phase="reaction";battle.log.push(`${sourceName}に対する反応受付を開始した。`);battle.reaction={sourceName,attackerName,targets:targets.map((target,index)=>({id:defenseTargetId(target),label:defenseTargetLabel(target),predictedDamage:predictions[index]})),eligibleCardIds:eligible.map(item=>item.card.instanceId),deadline:Date.now()+10_000};const pending:PendingReaction={defenderSide,eligibleCardIds:battle.reaction.eligibleCardIds,remainingMs:10_000,targets:targets.map((target,index)=>({id:defenseTargetId(target),target,predictedDamage:predictions[index]})),resolve};session.pendingReaction=pending;armReactionTimer(session,pending);refreshPlayability(session.state);
+  const battle=session.state.battle!,eligible=defenseCards(session,defenderSide);
+  const pausedTurnSide=session.mode==="online"&&session.turnTimer?battle.activePlayer:undefined;
+  const pausedTurnRemainingMs=pausedTurnSide&&battle.turnDeadline?Math.max(0,battle.turnDeadline-Date.now()):undefined;
+  if(pausedTurnSide)clearTurnTimer(session);
+  battle.phase="reaction";battle.log.push(`${sourceName}に対する反応受付を開始した。`);battle.reaction={sourceName,attackerName,targets:targets.map((target,index)=>({id:defenseTargetId(target),label:defenseTargetLabel(target),predictedDamage:predictions[index]})),eligibleCardIds:eligible.map(item=>item.card.instanceId),deadline:Date.now()+10_000};const pending:PendingReaction={defenderSide,eligibleCardIds:battle.reaction.eligibleCardIds,remainingMs:10_000,pausedTurnSide,pausedTurnRemainingMs,targets:targets.map((target,index)=>({id:defenseTargetId(target),target,predictedDamage:predictions[index]})),resolve};session.pendingReaction=pending;armReactionTimer(session,pending);refreshPlayability(session.state);
 }
 function finishReaction(session:StoredSession,respondingSide:Side,instanceId?:string,targetId?:DefenseTarget):{ok:boolean;message?:string}{
   const pending=session.pendingReaction,battle=session.state.battle;if(!pending||pending.defenderSide!==respondingSide||!battle||battle.phase!=="reaction")return {ok:false,message:"現在は反応受付中ではありません。"};let definition:DefenseDefinition|undefined;
   if(instanceId){if(!pending.eligibleCardIds.includes(instanceId))return {ok:false,message:"この防御札は使用できません。"};const hand=handForSide(session,respondingSide),index=hand.findIndex(card=>card.instanceId===instanceId);const card=hand[index],effect=card?effectByCardId.get(card.cardId):undefined;if(!card||effect?.type!=="defense")return {ok:false,message:"防御札が見つかりません。"};if(effect.scope==="single"){if(pending.targets.length===1)targetId=pending.targets[0].id;if(!targetId||!pending.targets.some(target=>target.id===targetId))return {ok:false,message:"防御する対象を選択してください。"}}stateForSide(session.state,respondingSide).mp-=card.mpCost;consumeUsedCard(session,respondingSide,index);definition=effect;battle.log.push(`${respondingSide==="player"?"プレイヤー":"CPU"}が防御札 ${card.name}を使用した。`)}else battle.log.push(`${respondingSide==="player"?"プレイヤー":"CPU"}は防御札を使用しなかった。`);
-  if(pending.timer)clearTimeout(pending.timer);delete session.pendingReaction;delete battle.reaction;pending.resolve(definition,targetId);if(session.mode==="online"&&battle.phase==="reaction")battle.phase="card_use";return {ok:true};
+  if(pending.timer)clearTimeout(pending.timer);delete session.pendingReaction;delete battle.reaction;pending.resolve(definition,targetId);if(session.mode==="online"&&battle.phase==="reaction")battle.phase="card_use";
+  if(session.mode==="online"&&pending.pausedTurnSide===battle.activePlayer&&battle.phase==="card_use"&&!session.state.connectionPaused)armOnlineTurnTimer(session,pending.pausedTurnRemainingMs??60_000);
+  return {ok:true};
 }
 
 function rotateAttribute(state:SessionState,side:Side,steps:number):void{
