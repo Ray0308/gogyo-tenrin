@@ -82,12 +82,21 @@ test("battle presentation locks input and gives retired shikigami a dedicated ef
   assert.match(css, /shikigami-dissolve/);
 });
 
+test("battle state is committed only after its presentation queue finishes", async () => {
+  const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
+  assert.match(source, /let pendingPresentationState: SessionState \| null = null/);
+  assert.match(source, /const baselineState = pendingPresentationState \?\? state/);
+  assert.match(source, /pendingPresentationState = nextState;\s*animateBattleChanges\(changes\)/);
+  assert.match(source, /else commitPendingPresentationState\(\)/);
+  assert.match(source, /if \(enteringReaction \|\| nextState\.phase !== "battle"\)/);
+});
+
 test("reaction decisions preempt presentation and do not run behind animations", async () => {
   const client = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
   const server = await readFile(path.join(repositoryRoot, "server", "index.ts"), "utf8");
   assert.match(client, /function cancelBattlePresentation/);
-  assert.match(client, /if \(enteringReaction\) cancelBattlePresentation\(\)/);
-  assert.match(client, /if \(!enteringReaction\) animateBattleChanges\(changes\)/);
+  assert.match(client, /if \(enteringReaction \|\| nextState\.phase !== "battle"\) \{/);
+  assert.match(client, /cancelBattlePresentation\(\);\s*applyDisplayedState\(nextState\)/);
   assert.match(client, /battlePresentationLocked\(\) && !reactionInteraction/);
   assert.match(server, /pausedTurnRemainingMs/);
   assert.match(server, /if\(pausedTurnSide\)clearTurnTimer\(session\)/);

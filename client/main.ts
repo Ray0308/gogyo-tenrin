@@ -62,6 +62,7 @@ const battleCueQueue: BattleCue[] = [];
 let battleCuePlaying = false;
 let activeBattleCueKey: string | undefined;
 let battlePresentationGeneration = 0;
+let pendingPresentationState: SessionState | null = null;
 
 function battlePresentationLocked(): boolean {
   return battleCuePlaying || battleCueQueue.length > 0;
@@ -96,6 +97,7 @@ function cancelBattlePresentation(): void {
   battleCueQueue.length = 0;
   battleCuePlaying = false;
   activeBattleCueKey = undefined;
+  pendingPresentationState = null;
   document.querySelectorAll(".battle-cue-layer,.card-effect-layer,.battle-floating-change,.shikigami-retire-layer,.reidan-projectile").forEach((element) => element.remove());
   syncBattlePresentationLock();
 }
@@ -121,9 +123,34 @@ function enqueueBattleCue(cue: BattleCue): void {
   battleCueQueue.push(cue);
   playNextBattleCue();
 }
+function applyDisplayedState(nextState: SessionState): void {
+  let selectionError: string | undefined;
+  state = nextState;
+  if (pendingCardId) {
+    const pending = nextState.battle?.player.hand.find((card) => card.instanceId === pendingCardId);
+    if (!pending?.playable) {
+      clearCardSelection();
+      selectionError = pending?.unusableReason ?? "選択可能な対象がなくなりました。";
+      errorMessage = selectionError;
+    }
+  }
+  if (nextState.reconnectToken) localStorage.setItem(TOKEN_KEY, nextState.reconnectToken);
+  render();
+  if (selectionError) enqueueBattleCue({ title: "対象を選べません", detail: selectionError, side: "player" });
+}
+function commitPendingPresentationState(): void {
+  const nextState = pendingPresentationState;
+  pendingPresentationState = null;
+  if (nextState) applyDisplayedState(nextState);
+  syncBattlePresentationLock();
+}
 function playNextBattleCue(): void {
-  if (battleCuePlaying || battleCueQueue.length === 0) {
+  if (battleCuePlaying) {
     syncBattlePresentationLock();
+    return;
+  }
+  if (battleCueQueue.length === 0) {
+    commitPendingPresentationState();
     return;
   }
   battleCuePlaying = true;
@@ -148,7 +175,7 @@ function playNextBattleCue(): void {
     if (generation !== battlePresentationGeneration) return;
     battleCuePlaying = false;activeBattleCueKey = undefined;
     if (battleCueQueue.length > 0) window.setTimeout(playNextBattleCue, presentationGap());
-    else playNextBattleCue();
+    else commitPendingPresentationState();
   }, duration);
 }
 function combatantElement(change: Extract<BattleVisualChange, { type: "damage" | "heal" }>): HTMLElement | null {
@@ -283,23 +310,28 @@ function animateBattleChanges(changes: BattleVisualChange[]): void {
   }
 }
 function updateState(nextState: SessionState): void {
-  const changes = deriveBattleVisualChanges(state, nextState);
-  const enteringReaction = nextState.phase === "battle" && nextState.battle?.phase === "reaction";
-  if (enteringReaction) cancelBattlePresentation();
-  let selectionError: string | undefined;
-  state = nextState;
-  if (pendingCardId) {
-    const pending = nextState.battle?.player.hand.find((card) => card.instanceId === pendingCardId);
-    if (!pending?.playable) {
-      clearCardSelection();
-      selectionError = pending?.unusableReason ?? "選択可能な対象がなくなりました。";
-      errorMessage = selectionError;
-    }
-  }
   if (nextState.reconnectToken) localStorage.setItem(TOKEN_KEY, nextState.reconnectToken);
-  render();
-  if (selectionError) enqueueBattleCue({ title: "対象を選べません", detail: selectionError, side: "player" });
-  if (!enteringReaction) animateBattleChanges(changes);
+  const baselineState = pendingPresentationState ?? state;
+  const changes = deriveBattleVisualChanges(baselineState, nextState);
+  const enteringReaction = nextState.phase === "battle" && nextState.battle?.phase === "reaction";
+  const enteringBattle = baselineState.phase !== "battle" && nextState.phase === "battle";
+  if (enteringReaction || nextState.phase !== "battle") {
+    cancelBattlePresentation();
+    applyDisplayedState(nextState);
+    return;
+  }
+  if (enteringBattle) {
+    applyDisplayedState(nextState);
+    animateBattleChanges(changes);
+    return;
+  }
+  if (changes.length === 0) {
+    if (battlePresentationLocked() || pendingPresentationState) pendingPresentationState = nextState;
+    else applyDisplayedState(nextState);
+    return;
+  }
+  pendingPresentationState = nextState;
+  animateBattleChanges(changes);
 }
 
 function escapeHtml(value: string): string {
