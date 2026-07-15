@@ -36,6 +36,7 @@ export interface CurseState {
 export interface ShikigamiState {
   instanceId: string;
   shikigamiId: string;
+  imageId: string;
   name: string;
   attribute: string;
   hp: number;

@@ -209,9 +209,13 @@ function renderUnits(units: NonNullable<SessionState["battle"]>["player"]["shiki
     const enemyTarget = owner==="cpu"&&(targetMode==="cpu_unit"||targetMode==="cpu_any")&&(!unit.keywords.includes("\u30b9\u30c6\u30eb\u30b9")||unit.keywords.includes("\u6311\u767a"))&&(ignoreTaunt||!hasTaunt||unit.keywords.includes("\u6311\u767a"));
     const allyTarget = owner==="player"&&targetMode==="player_unit";
     const target = enemyTarget?`data-target="cpu_unit:${unit.instanceId}"`:allyTarget?`data-target="player_unit:${unit.instanceId}"`:"";
-    return `<article class="unit-slot ${cardAttributeClass(unit.attribute)}" data-unit-id="${unit.instanceId}" data-unit-side="${owner}" ${target}><strong>${escapeHtml(unit.name)}</strong><span>${escapeHtml(unit.attribute)}</span><b>HP ${unit.hp} / ${unit.maxHp}</b><span>ATK ${unit.attack}</span>${keywords}${renderCurses(unit.curses)}${oneShotReduction}${shellReduction}</article>`;
+    return `<article class="unit-slot ${cardAttributeClass(unit.attribute)}" data-unit-id="${unit.instanceId}" data-unit-side="${owner}" ${target}><img class="unit-portrait" src="${shikigamiImagePath(unit.imageId)}" alt="" loading="lazy"><div class="unit-shade"></div><strong>${escapeHtml(unit.name)}</strong><span>${escapeHtml(unit.attribute)}</span><b>HP ${unit.hp} / ${unit.maxHp}</b><span>ATK ${unit.attack}</span>${keywords}${renderCurses(unit.curses)}${oneShotReduction}${shellReduction}</article>`;
   }).join("");
   return `<div class="unit-slots">${slots}</div>`;
+}
+function shikigamiImagePath(imageId: string): string {
+  const safeImageId = /^[a-z0-9_]+$/.test(imageId) ? imageId : "img_shikigami_unknown";
+  return `/client/assets/shikigami/${safeImageId}.png`;
 }
 function cardAttributeClass(attribute: string): string {
   return ({ "木": "wood", "火": "fire", "土": "earth", "金": "metal", "水": "water", "無属性": "neutral" } as Record<string, string>)[attribute] ?? "neutral";

@@ -1,0 +1,70 @@
+.unit-slot:not(.empty) {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 108px !important;
+  justify-content: flex-end;
+  padding: 34px 5px 6px;
+  background: #081321;
+}
+
+.unit-portrait {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 38%;
+  opacity: .9;
+  transition: transform .2s ease, filter .2s ease;
+}
+
+.unit-shade {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(4, 11, 20, .04) 18%, rgba(4, 11, 20, .25) 43%, rgba(4, 11, 20, .94) 82%);
+  pointer-events: none;
+}
+
+.unit-slot:not(.empty) > strong,
+.unit-slot:not(.empty) > span,
+.unit-slot:not(.empty) > b,
+.unit-slot:not(.empty) > small,
+.unit-slot:not(.empty) > .curse-row {
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 1px 5px #000;
+}
+
+.unit-slot:not(.empty) > strong {
+  font-size: .84rem;
+}
+
+.unit-slot:not(.empty) > span,
+.unit-slot:not(.empty) > b {
+  line-height: 1;
+}
+
+.unit-slot[data-target]:hover .unit-portrait {
+  transform: scale(1.05);
+  filter: brightness(1.12);
+}
+
+@media (max-width: 420px) {
+  .unit-slot:not(.empty) {
+    min-height: 96px !important;
+    padding-top: 28px;
+  }
+
+  .unit-slot:not(.empty) > strong {
+    font-size: .74rem;
+  }
+
+  .unit-slot:not(.empty) > span,
+  .unit-slot:not(.empty) > b,
+  .unit-slot:not(.empty) > small {
+    font-size: .53rem;
+  }
+}
