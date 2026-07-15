@@ -1,5 +1,5 @@
 import express from "express";
-import { beginShikigamiAction, canCounterCardAttack, reduceUnitDamage } from "./combat-rules.js";
+import { beginShikigamiAction, canCounterCardAttack, hasSelectableAttackUnit, isSelectableAttackUnit, reduceUnitDamage } from "./combat-rules.js";
 import { readFileSync } from "node:fs";
 import { randomInt, randomUUID } from "node:crypto";
 import { createServer } from "node:http";
@@ -206,7 +206,8 @@ function isDefinitionUsable(state:SessionState,side:Side,card:CardView,definitio
   if((definition.type==="sacrifice"||definition.type==="buff_unit")&&actor.shikigami.length===0)return "No allied shikigami is available.";
   if(definition.type==="cleanse"&&!actor.curses.length&&!actor.shikigami.some(unit=>unit.curses.length))return "There is no curse to remove.";
   if(definition.type==="seal"&&!opponent.shikigami.length&&!opponent.barrier)return "There is no valid seal target.";
-  if(definition.type==="attack"&&definition.target!=="opponent_any"&&opponent.shikigami.length===0)return "There is no valid attack target.";
+  if(definition.type==="attack"&&definition.target==="opponent_units"&&opponent.shikigami.length===0)return "攻撃対象となる相手式神がいません。";
+  if(definition.type==="attack"&&definition.target==="opponent_unit"&&!hasSelectableAttackUnit(opponent.shikigami,Boolean(definition.ignoreTaunt)))return "ステルスまたは挑発により選択可能な相手式神がいません。";
   return undefined;
 }
 function decorateHand(state:SessionState,side:Side,hand:CardView[]):void{
@@ -270,9 +271,8 @@ function validateUtilityTarget(state:SessionState,side:Side,definition:CardEffec
   return target===expectedPlayerTarget(definition);
 }
 function validUnitAttackTarget(state:SessionState,side:Side,definition:AttackDefinition,unit:ShikigamiState):boolean{
-  const units=stateForSide(state,otherSide(side)).shikigami,taunts=units.filter(candidate=>candidate.keywords.includes("挑発"));
-  if(unit.keywords.includes("ステルス")&&!unit.keywords.includes("挑発"))return false;
-  return Boolean(definition.ignoreTaunt)||taunts.length===0||unit.keywords.includes("挑発");
+  const units=stateForSide(state,otherSide(side)).shikigami;
+  return isSelectableAttackUnit(units,unit,Boolean(definition.ignoreTaunt));
 }
 function validateAttackTarget(state:SessionState,side:Side,definition:AttackDefinition,target:CardTarget|undefined):boolean{
   if(side==="cpu"&&state.mode!=="online")return true;if(definition.target==="opponent_units")return target==="cpu_field";

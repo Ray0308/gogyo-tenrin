@@ -12,6 +12,7 @@ export type BattleVisualChange =
       text: string;
       kind: "attack" | "defense" | "counter" | "effect";
       actorUnitId?: string;
+      targetUnitId?: string;
     };
 
 function unitChanges(
@@ -86,12 +87,19 @@ export function deriveBattleVisualChanges(previous: SessionState, next: SessionS
   for (const text of actionLogs) {
     const unit = actionUnit(text, previousBattle, nextBattle);
     const side = unit?.side ?? actionSide(text);
+    const targetSide = side === "player" ? "cpu" : "player";
+    const previousTargets = new Map(previousBattle[targetSide].shikigami.map((item) => [item.instanceId, item]));
+    const damagedTargets = nextBattle[targetSide].shikigami.filter((item) => {
+      const previousTarget = previousTargets.get(item.instanceId);
+      return previousTarget && item.hp < previousTarget.hp;
+    });
     changes.push({
       type: "action",
       side,
       text,
       kind: actionKind(text),
       actorUnitId: unit?.instanceId,
+      targetUnitId: damagedTargets.length === 1 ? damagedTargets[0].instanceId : undefined,
     });
   }
   if (turnChanged) changes.push({ type: "turn", side: nextBattle.activePlayer, turnNumber: nextBattle.turnNumber });

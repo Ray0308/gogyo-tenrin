@@ -89,6 +89,34 @@ function actionElement(change: Extract<BattleVisualChange, { type: "action" }>):
   if (change.actorUnitId) return document.querySelector<HTMLElement>(`[data-unit-id="${CSS.escape(change.actorUnitId)}"]`);
   return document.querySelector<HTMLElement>(`[data-combatant="${change.side}"]`);
 }
+function actionTargetElement(change: Extract<BattleVisualChange, { type: "action" }>): HTMLElement | null {
+  if (change.targetUnitId) return document.querySelector<HTMLElement>(`[data-unit-id="${CSS.escape(change.targetUnitId)}"]`);
+  const targetSide = change.side === "player" ? "cpu" : "player";
+  return document.querySelector<HTMLElement>(`[data-combatant="${targetSide}"]`);
+}
+function showReidanProjectile(change: Extract<BattleVisualChange, { type: "action" }>): void {
+  const actor = actionElement(change);
+  const target = actionTargetElement(change);
+  if (!actor || !target) return;
+  const start = actor.getBoundingClientRect();
+  const end = target.getBoundingClientRect();
+  const startX = start.left + start.width / 2;
+  const startY = start.top + start.height / 2;
+  const endX = end.left + end.width / 2;
+  const endY = end.top + Math.min(end.height / 2, 56);
+  const orb = document.createElement("span");
+  orb.className = `reidan-projectile ${change.side}`;
+  orb.style.left = `${startX}px`;
+  orb.style.top = `${startY}px`;
+  document.body.append(orb);
+  const flight = orb.animate([
+    { transform: "translate(-50%, -50%) scale(.25)", opacity: 0 },
+    { transform: "translate(-50%, -50%) scale(1)", opacity: 1, offset: .16 },
+    { transform: `translate(calc(-50% + ${endX - startX}px), calc(-50% + ${endY - startY}px)) scale(.72)`, opacity: 1, offset: .86 },
+    { transform: `translate(calc(-50% + ${endX - startX}px), calc(-50% + ${endY - startY}px)) scale(1.7)`, opacity: 0 },
+  ], { duration: Math.max(420, animationDuration() * .86), easing: "cubic-bezier(.2,.72,.25,1)" });
+  flight.finished.finally(() => orb.remove());
+}
 function replayAnimation(target: HTMLElement, className: string): void {
   target.classList.remove(className);
   void target.offsetWidth;
@@ -115,6 +143,7 @@ function animateBattleChanges(changes: BattleVisualChange[]): void {
       requestAnimationFrame(() => {
         const actor = actionElement(change);
         if (actor) replayAnimation(actor, change.kind === "defense" ? "is-defending" : change.kind === "counter" ? "is-countering" : "is-attacking");
+        if (change.kind === "attack" && /霊弾/.test(change.text)) showReidanProjectile(change);
       });
     }
     else if (change.type === "retire") enqueueBattleCue({ title: `${change.name} 退場`, side: change.side });
@@ -132,9 +161,21 @@ function animateBattleChanges(changes: BattleVisualChange[]): void {
 }
 function updateState(nextState: SessionState): void {
   const changes = deriveBattleVisualChanges(state, nextState);
+  let selectionError: string | undefined;
   state = nextState;
+  if (pendingCardId) {
+    const pending = nextState.battle?.player.hand.find((card) => card.instanceId === pendingCardId);
+    if (!pending?.playable) {
+      pendingCardId = null;
+      selectedCardId = null;
+      selectedChoice = undefined;
+      selectionError = pending?.unusableReason ?? "選択可能な対象がなくなりました。";
+      errorMessage = selectionError;
+    }
+  }
   if (nextState.reconnectToken) localStorage.setItem(TOKEN_KEY, nextState.reconnectToken);
   render();
+  if (selectionError) enqueueBattleCue({ title: "対象を選べません", detail: selectionError, side: "player" });
   animateBattleChanges(changes);
 }
 
@@ -209,7 +250,10 @@ function renderUnits(units: NonNullable<SessionState["battle"]>["player"]["shiki
     const enemyTarget = owner==="cpu"&&(targetMode==="cpu_unit"||targetMode==="cpu_any")&&(!unit.keywords.includes("\u30b9\u30c6\u30eb\u30b9")||unit.keywords.includes("\u6311\u767a"))&&(ignoreTaunt||!hasTaunt||unit.keywords.includes("\u6311\u767a"));
     const allyTarget = owner==="player"&&targetMode==="player_unit";
     const target = enemyTarget?`data-target="cpu_unit:${unit.instanceId}"`:allyTarget?`data-target="player_unit:${unit.instanceId}"`:"";
-    return `<article class="unit-slot ${cardAttributeClass(unit.attribute)}" data-unit-id="${unit.instanceId}" data-unit-side="${owner}" ${target}><img class="unit-portrait" src="${shikigamiImagePath(unit.imageId)}" alt="" loading="lazy"><div class="unit-shade"></div><strong>${escapeHtml(unit.name)}</strong><span>${escapeHtml(unit.attribute)}</span><b>HP ${unit.hp} / ${unit.maxHp}</b><span>ATK ${unit.attack}</span>${keywords}${renderCurses(unit.curses)}${oneShotReduction}${shellReduction}</article>`;
+    const targetContext = owner==="cpu"?(targetMode==="cpu_unit"||targetMode==="cpu_any"):targetMode==="player_unit";
+    const targetClass = targetContext?(target?"target-option":"target-blocked"):"";
+    const targetBadge = targetContext?(target?'<em class="target-badge">対象</em>':`<em class="target-reason">${unit.keywords.includes("ステルス")?"ステルス":"対象外"}</em>`):"";
+    return `<article class="unit-slot ${cardAttributeClass(unit.attribute)} ${targetClass}" data-unit-id="${unit.instanceId}" data-unit-side="${owner}" ${target}><img class="unit-portrait" src="${shikigamiImagePath(unit.imageId)}" alt="" loading="lazy"><div class="unit-shade"></div>${targetBadge}<strong>${escapeHtml(unit.name)}</strong><span>${escapeHtml(unit.attribute)}</span><b>HP ${unit.hp} / ${unit.maxHp}</b><span>ATK ${unit.attack}</span>${keywords}${renderCurses(unit.curses)}${oneShotReduction}${shellReduction}</article>`;
   }).join("");
   return `<div class="unit-slots">${slots}</div>`;
 }
@@ -234,9 +278,9 @@ function renderBattle(): void {
   const pendingCard = battle.player.hand.find((card) => card.instanceId === pendingCardId);
   const pendingTarget = pendingCard?.playTarget;
   const targeting = pendingCard !== undefined;
-  const targetLabels: Record<CardPlayTarget, string> = { cpu_player: "Opponent", cpu_unit: "Opponent shikigami", cpu_any: "Opponent or shikigami", cpu_field: "Opponent field", cpu_barrier: "Opponent barrier", player: "Player", player_unit: "Allied shikigami", player_field: "Allied field", player_barrier: "Player barrier", retired_unit: "Retired shikigami", shared_field: "Shared terrain" };
+  const targetLabels: Record<CardPlayTarget, string> = { cpu_player: "相手プレイヤー", cpu_unit: "相手式神", cpu_any: "相手プレイヤーまたは相手式神", cpu_field: "相手式神全体", cpu_barrier: "相手結界", player: "自分プレイヤー", player_unit: "味方式神", player_field: "味方式神エリア", player_barrier: "自分結界", retired_unit: "退場した式神", shared_field: "共有地形" };
   const retiredTargets = targeting && pendingTarget==="retired_unit" ? battle.player.retiredShikigami.map(unit=>`<button class="menu-button small" data-target="retired_unit:${unit.instanceId}">${escapeHtml(unit.name)} (HP ${unit.maxHp})</button>`).join("") : "";
-  const targetGuide = targeting && pendingTarget ? `<div class="target-guide">${targetLabels[pendingTarget]}を選択してください。${button("キャンセル", "cancel-target", "small text")}</div>` : "";
+  const targetGuide = targeting && pendingTarget ? `<div class="target-guide"><strong>${targetLabels[pendingTarget]}を選択</strong><span>金色に光っている対象をタップしてください。</span>${button("キャンセル", "cancel-target", "small text")}</div>` : "";
   const opponentHasTaunt = battle.cpu.shikigami.some((unit) => unit.keywords.includes("挑発"));
   const targetAttribute = (target: CardPlayTarget): string => targeting && (pendingTarget === target || (pendingTarget === "cpu_any" && target === "cpu_player")) && !(target === "cpu_player" && opponentHasTaunt && !pendingCard?.ignoreTaunt) ? 'data-target="' + target + '"' : "";
   const log = battle.log.slice(-8).map((entry) => `<li>${escapeHtml(entry)}</li>`).join("");

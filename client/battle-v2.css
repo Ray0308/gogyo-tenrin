@@ -324,3 +324,146 @@ body:has(.battle-v2) {
     grid-auto-columns: 132px;
   }
 }
+
+.battle-v2 .target-guide {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  border-color: #f0cf79;
+  background: linear-gradient(90deg, rgba(116, 82, 18, .42), rgba(47, 39, 20, .7));
+  box-shadow: 0 0 18px rgba(240, 207, 121, .13);
+}
+
+.battle-v2 .target-guide strong {
+  color: #ffe8a3;
+}
+
+.battle-v2 .target-guide span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #d7cda8;
+  font-weight: 500;
+}
+
+.battle-v2 .unit-slot.target-option {
+  outline: 3px solid #f5d56e;
+  outline-offset: -3px;
+  box-shadow: inset 0 0 25px rgba(245, 213, 110, .3), 0 0 20px rgba(245, 213, 110, .5);
+  animation: selectable-target-pulse .8s ease-in-out infinite alternate;
+}
+
+.battle-v2 .unit-slot.target-blocked {
+  opacity: .48;
+  filter: saturate(.25);
+}
+
+.target-badge,
+.target-reason {
+  position: absolute;
+  z-index: 4;
+  top: 6px;
+  right: 6px;
+  padding: 3px 7px;
+  border-radius: 12px;
+  font: 800 .54rem system-ui, sans-serif;
+  font-style: normal;
+  letter-spacing: .08em;
+  pointer-events: none;
+}
+
+.target-badge {
+  color: #1b1608;
+  background: #f5d56e;
+  box-shadow: 0 0 14px rgba(245, 213, 110, .7);
+}
+
+.target-reason {
+  color: #c2c7cf;
+  border: 1px solid rgba(194, 199, 207, .35);
+  background: rgba(4, 9, 16, .8);
+}
+
+.battle-v2 .battle-player[data-target],
+.battle-v2 .field[data-target],
+.battle-v2 .terrain[data-target],
+.battle-v2 .barrier-display[data-target] {
+  outline: 3px solid #f5d56e;
+  outline-offset: -2px;
+  box-shadow: inset 0 0 24px rgba(245, 213, 110, .2), 0 0 20px rgba(245, 213, 110, .42);
+}
+
+.battle-v2 .battle-player[data-target]::after,
+.battle-v2 .field[data-target]::after,
+.battle-v2 .terrain[data-target]::after,
+.battle-v2 .barrier-display[data-target]::after {
+  content: "対象";
+  position: absolute;
+  z-index: 5;
+  top: 4px;
+  right: 5px;
+  padding: 3px 7px;
+  border-radius: 10px;
+  color: #191407;
+  background: #f5d56e;
+  font: 800 .52rem system-ui, sans-serif;
+  pointer-events: none;
+}
+
+.battle-v2 .unit-slot.is-attacking {
+  z-index: 5;
+  animation: none !important;
+}
+
+.battle-v2 .unit-slot[data-unit-side="player"].is-attacking .unit-portrait {
+  animation: shikigami-lunge-up .56s cubic-bezier(.18, .78, .24, 1) both;
+}
+
+.battle-v2 .unit-slot[data-unit-side="cpu"].is-attacking .unit-portrait {
+  animation: shikigami-lunge-down .56s cubic-bezier(.18, .78, .24, 1) both;
+}
+
+.reidan-projectile {
+  position: fixed;
+  z-index: 90;
+  width: 24px;
+  aspect-ratio: 1;
+  border: 2px solid rgba(255, 246, 199, .9);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff, #aee7ff 25%, #4b9ee8 58%, rgba(40, 93, 171, .2) 72%);
+  box-shadow: 0 0 8px #fff, 0 0 18px #78c9ff, 0 0 32px rgba(70, 151, 255, .8);
+  pointer-events: none;
+}
+
+.reidan-projectile::before {
+  content: "";
+  position: absolute;
+  width: 42px;
+  height: 10px;
+  right: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: linear-gradient(90deg, transparent, rgba(141, 218, 255, .72));
+  filter: blur(4px);
+}
+
+@keyframes selectable-target-pulse {
+  to {
+    outline-color: #fff0a8;
+    box-shadow: inset 0 0 30px rgba(255, 229, 139, .36), 0 0 27px rgba(245, 213, 110, .7);
+  }
+}
+
+@keyframes shikigami-lunge-up {
+  0%, 100% { transform: translateY(0) scale(1); filter: none; }
+  38% { transform: translateY(-13px) scale(1.08); filter: brightness(1.35); }
+  62% { transform: translateY(-8px) scale(1.04); filter: brightness(1.16); }
+}
+
+@keyframes shikigami-lunge-down {
+  0%, 100% { transform: translateY(0) scale(1); filter: none; }
+  38% { transform: translateY(13px) scale(1.08); filter: brightness(1.35); }
+  62% { transform: translateY(8px) scale(1.04); filter: brightness(1.16); }
+}

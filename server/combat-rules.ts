@@ -3,6 +3,28 @@ export interface UnitDamageReductionState {
   shellDamageReduction: number;
 }
 
+export interface AttackTargetUnit {
+  keywords: string[];
+}
+
+export function isSelectableAttackUnit(
+  units: AttackTargetUnit[],
+  unit: AttackTargetUnit,
+  ignoreTaunt = false,
+): boolean {
+  if (unit.keywords.includes("ステルス") && !unit.keywords.includes("挑発")) return false;
+  if (ignoreTaunt) return true;
+  const hasTaunt = units.some((candidate) => candidate.keywords.includes("挑発"));
+  return !hasTaunt || unit.keywords.includes("挑発");
+}
+
+export function hasSelectableAttackUnit(
+  units: AttackTargetUnit[],
+  ignoreTaunt = false,
+): boolean {
+  return units.some((unit) => isSelectableAttackUnit(units, unit, ignoreTaunt));
+}
+
 export function reduceUnitDamage(
   amount: number,
   unit: UnitDamageReductionState,

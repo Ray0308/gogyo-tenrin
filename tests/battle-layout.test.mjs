@@ -22,3 +22,14 @@ test("battle redesign retains all primary battle actions", async () => {
     assert.match(source, new RegExp(`data-action="${action}"|button\\([^\\n]+,\\s*"${action}"`));
   }
 });
+
+test("target guidance and battle motion effects are present", async () => {
+  const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
+  const css = await readFile(path.join(repositoryRoot, "client", "battle-v2.css"), "utf8");
+  assert.match(source, /target-option/);
+  assert.match(source, /金色に光っている対象/);
+  assert.match(source, /showReidanProjectile/);
+  assert.match(css, /\.target-badge/);
+  assert.match(css, /\.reidan-projectile/);
+  assert.match(css, /shikigami-lunge-up/);
+});

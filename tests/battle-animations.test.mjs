@@ -55,3 +55,15 @@ test("entering battle produces a battle-start cue", () => {
   const changes = deriveBattleVisualChanges({ phase: "attribute_reveal" }, battleState());
   assert.deepEqual(changes, [{ type: "battle_start", side: "player" }]);
 });
+
+test("single-target attack animation identifies its damaged shikigami", () => {
+  const previous = battleState({ cpuUnits: [unit("target", 5)] });
+  const next = battleState({
+    cpuUnits: [unit("target", 2)],
+    log: ["プレイヤーが霊符術：霊弾を使用し、targetへ3ダメージ。"],
+  });
+  const attack = deriveBattleVisualChanges(previous, next).find(
+    (change) => change.type === "action" && change.text.includes("霊弾"),
+  );
+  assert.equal(attack?.targetUnitId, "target");
+});
