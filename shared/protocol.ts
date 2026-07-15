@@ -1,7 +1,8 @@
-﻿export const FIVE_ELEMENTS = ["wood", "fire", "earth", "metal", "water"] as const;
+export const FIVE_ELEMENTS = ["wood", "fire", "earth", "metal", "water"] as const;
 export type FiveElement = (typeof FIVE_ELEMENTS)[number];
 export type GamePhase = "title" | "attribute_selection" | "attribute_reveal" | "battle";
-export type CardTarget = "cpu_player" | "player" | "player_field";
+export type CardPlayTarget = "cpu_player" | "cpu_unit" | "cpu_any" | "cpu_field" | "player" | "player_field";
+export type CardTarget = "cpu_player" | "cpu_field" | "player" | "player_field" | `cpu_unit:${string}`;
 
 export interface CardView {
   instanceId: string;
@@ -19,7 +20,8 @@ export interface CardView {
   flavorText: string;
   playable: boolean;
   unusableReason?: string;
-  playTarget?: CardTarget;
+  playTarget?: CardPlayTarget;
+  ignoreTaunt?: boolean;
 }
 
 export interface CurseState {

@@ -2,7 +2,7 @@
   {
     "type": "attack",
     "cardId": "card_reidan_wood",
-    "target": "opponent_player",
+    "target": "opponent_any",
     "baseDamage": 2,
     "attributeMatchEffect": {
       "type": "apply_curse",
@@ -12,8 +12,60 @@
   },
   {
     "type": "attack",
+    "cardId": "card_zanfu_wood",
+    "target": "opponent_unit",
+    "baseDamage": 3,
+    "attributeMatchEffect": {
+      "type": "apply_curse",
+      "curseId": "curse_poison",
+      "stacks": 1
+    }
+  },
+  {
+    "type": "attack",
+    "cardId": "card_senfu_wood",
+    "target": "opponent_unit",
+    "baseDamage": 2,
+    "ignoreTaunt": true,
+    "attributeMatchEffect": {
+      "type": "apply_curse",
+      "curseId": "curse_poison",
+      "stacks": 1
+    }
+  },
+  {
+    "type": "attack",
+    "cardId": "card_bakufu_wood",
+    "target": "opponent_units",
+    "baseDamage": 2,
+    "attributeMatchEffect": {
+      "type": "apply_curse",
+      "curseId": "curse_poison",
+      "stacks": 1
+    }
+  },
+  {
+    "type": "attack",
+    "cardId": "card_shokufu_wood",
+    "target": "opponent_any",
+    "baseDamage": 2,
+    "healSelf": 1,
+    "attributeMatchEffect": {
+      "type": "apply_curse",
+      "curseId": "curse_poison",
+      "stacks": 1
+    }
+  },
+  {
+    "type": "attack",
+    "cardId": "card_sokoku_wood",
+    "target": "opponent_any",
+    "baseDamage": 1
+  },
+  {
+    "type": "attack",
     "cardId": "card_reidan_fire",
-    "target": "opponent_player",
+    "target": "opponent_any",
     "baseDamage": 2,
     "attributeMatchEffect": {
       "type": "apply_curse",
@@ -23,8 +75,60 @@
   },
   {
     "type": "attack",
+    "cardId": "card_zanfu_fire",
+    "target": "opponent_unit",
+    "baseDamage": 3,
+    "attributeMatchEffect": {
+      "type": "apply_curse",
+      "curseId": "curse_burn",
+      "stacks": 1
+    }
+  },
+  {
+    "type": "attack",
+    "cardId": "card_senfu_fire",
+    "target": "opponent_unit",
+    "baseDamage": 2,
+    "ignoreTaunt": true,
+    "attributeMatchEffect": {
+      "type": "apply_curse",
+      "curseId": "curse_burn",
+      "stacks": 1
+    }
+  },
+  {
+    "type": "attack",
+    "cardId": "card_bakufu_fire",
+    "target": "opponent_units",
+    "baseDamage": 2,
+    "attributeMatchEffect": {
+      "type": "apply_curse",
+      "curseId": "curse_burn",
+      "stacks": 1
+    }
+  },
+  {
+    "type": "attack",
+    "cardId": "card_shokufu_fire",
+    "target": "opponent_any",
+    "baseDamage": 2,
+    "healSelf": 1,
+    "attributeMatchEffect": {
+      "type": "apply_curse",
+      "curseId": "curse_burn",
+      "stacks": 1
+    }
+  },
+  {
+    "type": "attack",
+    "cardId": "card_sokoku_fire",
+    "target": "opponent_any",
+    "baseDamage": 1
+  },
+  {
+    "type": "attack",
     "cardId": "card_reidan_earth",
-    "target": "opponent_player",
+    "target": "opponent_any",
     "baseDamage": 2,
     "attributeMatchEffect": {
       "type": "next_damage_reduction",
@@ -33,8 +137,56 @@
   },
   {
     "type": "attack",
+    "cardId": "card_zanfu_earth",
+    "target": "opponent_unit",
+    "baseDamage": 3,
+    "attributeMatchEffect": {
+      "type": "next_damage_reduction",
+      "amount": 1
+    }
+  },
+  {
+    "type": "attack",
+    "cardId": "card_senfu_earth",
+    "target": "opponent_unit",
+    "baseDamage": 2,
+    "ignoreTaunt": true,
+    "attributeMatchEffect": {
+      "type": "next_damage_reduction",
+      "amount": 1
+    }
+  },
+  {
+    "type": "attack",
+    "cardId": "card_bakufu_earth",
+    "target": "opponent_units",
+    "baseDamage": 2,
+    "attributeMatchEffect": {
+      "type": "next_damage_reduction",
+      "amount": 1
+    }
+  },
+  {
+    "type": "attack",
+    "cardId": "card_shokufu_earth",
+    "target": "opponent_any",
+    "baseDamage": 2,
+    "healSelf": 1,
+    "attributeMatchEffect": {
+      "type": "next_damage_reduction",
+      "amount": 1
+    }
+  },
+  {
+    "type": "attack",
+    "cardId": "card_sokoku_earth",
+    "target": "opponent_any",
+    "baseDamage": 1
+  },
+  {
+    "type": "attack",
     "cardId": "card_reidan_metal",
-    "target": "opponent_player",
+    "target": "opponent_any",
     "baseDamage": 2,
     "attributeMatchEffect": {
       "type": "ignore_damage_reduction",
@@ -43,13 +195,109 @@
   },
   {
     "type": "attack",
+    "cardId": "card_zanfu_metal",
+    "target": "opponent_unit",
+    "baseDamage": 3,
+    "attributeMatchEffect": {
+      "type": "ignore_damage_reduction",
+      "amount": 1
+    }
+  },
+  {
+    "type": "attack",
+    "cardId": "card_senfu_metal",
+    "target": "opponent_unit",
+    "baseDamage": 2,
+    "ignoreTaunt": true,
+    "attributeMatchEffect": {
+      "type": "ignore_damage_reduction",
+      "amount": 1
+    }
+  },
+  {
+    "type": "attack",
+    "cardId": "card_bakufu_metal",
+    "target": "opponent_units",
+    "baseDamage": 2,
+    "attributeMatchEffect": {
+      "type": "ignore_damage_reduction",
+      "amount": 1
+    }
+  },
+  {
+    "type": "attack",
+    "cardId": "card_shokufu_metal",
+    "target": "opponent_any",
+    "baseDamage": 2,
+    "healSelf": 1,
+    "attributeMatchEffect": {
+      "type": "ignore_damage_reduction",
+      "amount": 1
+    }
+  },
+  {
+    "type": "attack",
+    "cardId": "card_sokoku_metal",
+    "target": "opponent_any",
+    "baseDamage": 1
+  },
+  {
+    "type": "attack",
     "cardId": "card_reidan_water",
-    "target": "opponent_player",
+    "target": "opponent_any",
     "baseDamage": 2,
     "attributeMatchEffect": {
       "type": "gain_mp",
       "amount": 1
     }
+  },
+  {
+    "type": "attack",
+    "cardId": "card_zanfu_water",
+    "target": "opponent_unit",
+    "baseDamage": 3,
+    "attributeMatchEffect": {
+      "type": "gain_mp",
+      "amount": 1
+    }
+  },
+  {
+    "type": "attack",
+    "cardId": "card_senfu_water",
+    "target": "opponent_unit",
+    "baseDamage": 2,
+    "ignoreTaunt": true,
+    "attributeMatchEffect": {
+      "type": "gain_mp",
+      "amount": 1
+    }
+  },
+  {
+    "type": "attack",
+    "cardId": "card_bakufu_water",
+    "target": "opponent_units",
+    "baseDamage": 2,
+    "attributeMatchEffect": {
+      "type": "gain_mp",
+      "amount": 1
+    }
+  },
+  {
+    "type": "attack",
+    "cardId": "card_shokufu_water",
+    "target": "opponent_any",
+    "baseDamage": 2,
+    "healSelf": 1,
+    "attributeMatchEffect": {
+      "type": "gain_mp",
+      "amount": 1
+    }
+  },
+  {
+    "type": "attack",
+    "cardId": "card_sokoku_water",
+    "target": "opponent_any",
+    "baseDamage": 1
   },
   {
     "type": "turn",

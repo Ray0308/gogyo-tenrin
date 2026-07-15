@@ -1,5 +1,6 @@
 import {
   type ActionResult,
+  type CardPlayTarget,
   type CardTarget,
   type FiveElement,
   type SessionState,
@@ -99,17 +100,19 @@ function elementBadge(attribute?: FiveElement): string {
 function renderReveal(): void {
   app.innerHTML = shell(`<header class="compact-header"><p class="eyebrow">ATTRIBUTE REVEAL</p><h1>属性公開</h1></header><div class="versus"><div>${elementBadge(state.playerAttribute)}<strong>${escapeHtml(state.playerName ?? "あなた")}</strong></div><b>対</b><div>${elementBadge(state.cpuAttribute)}<strong>CPU</strong></div></div>${error()}<div class="menu">${button("対戦を開始", "enter-match")}</div>`);
 }
-function renderUnits(units: NonNullable<SessionState["battle"]>["player"]["shikigami"]): string {
+function renderUnits(units: NonNullable<SessionState["battle"]>["player"]["shikigami"], targetMode?: CardPlayTarget, ignoreTaunt = false): string {
+  const hasTaunt = units.some((unit) => unit.keywords.includes("挑発"));
   const slots = Array.from({ length: 3 }, (_, index) => {
     const unit = units[index];
     if (!unit) return `<div class="unit-slot empty">式神枠</div>`;
     const keywords = unit.keywords.length > 0 ? `<small>${unit.keywords.map(escapeHtml).join("・")}</small>` : "";
     const reduction = unit.nextDamageReduction > 0 ? `<span class="unit-effect">軽減 ${unit.nextDamageReduction}</span>` : "";
-    return `<article class="unit-slot ${cardAttributeClass(unit.attribute)}"><strong>${escapeHtml(unit.name)}</strong><span>${escapeHtml(unit.attribute)}</span><b>HP ${unit.hp} / ${unit.maxHp}</b><span>攻撃 ${unit.attack}</span>${keywords}${renderCurses(unit.curses)}${reduction}</article>`;
+    const canTarget = (targetMode === "cpu_unit" || targetMode === "cpu_any") && (!unit.keywords.includes("ステルス") || unit.keywords.includes("挑発")) && (ignoreTaunt || !hasTaunt || unit.keywords.includes("挑発"));
+    const target = canTarget ? `data-target="cpu_unit:${unit.instanceId}"` : "";
+    return `<article class="unit-slot ${cardAttributeClass(unit.attribute)}" ${target}><strong>${escapeHtml(unit.name)}</strong><span>${escapeHtml(unit.attribute)}</span><b>HP ${unit.hp} / ${unit.maxHp}</b><span>攻撃 ${unit.attack}</span>${keywords}${renderCurses(unit.curses)}${reduction}</article>`;
   }).join("");
   return `<div class="unit-slots">${slots}</div>`;
-}
-function cardAttributeClass(attribute: string): string {
+}function cardAttributeClass(attribute: string): string {
   return ({ "木": "wood", "火": "fire", "土": "earth", "金": "metal", "水": "water", "無属性": "neutral" } as Record<string, string>)[attribute] ?? "neutral";
 }
 function renderCurses(curses: { name: string; stacks: number }[]): string {
@@ -126,16 +129,17 @@ function renderBattle(): void {
   const pendingCard = battle.player.hand.find((card) => card.instanceId === pendingCardId);
   const pendingTarget = pendingCard?.playTarget;
   const targeting = pendingCard !== undefined;
-  const targetLabels: Record<CardTarget, string> = { cpu_player: "相手プレイヤー", player: "自分プレイヤー", player_field: "味方式神エリア" };
+  const targetLabels: Record<CardPlayTarget, string> = { cpu_player: "相手プレイヤー", cpu_unit: "相手式神", cpu_any: "相手プレイヤーまたは相手式神", cpu_field: "相手式神エリア", player: "自分プレイヤー", player_field: "味方式神エリア" };
   const targetGuide = targeting && pendingTarget ? `<div class="target-guide">${targetLabels[pendingTarget]}を選択してください。${button("キャンセル", "cancel-target", "small text")}</div>` : "";
-  const targetAttribute = (target: CardTarget): string => targeting && pendingTarget === target ? 'data-target="' + target + '"' : "";
+  const opponentHasTaunt = battle.cpu.shikigami.some((unit) => unit.keywords.includes("挑発"));
+  const targetAttribute = (target: CardPlayTarget): string => targeting && (pendingTarget === target || (pendingTarget === "cpu_any" && target === "cpu_player")) && !(target === "cpu_player" && opponentHasTaunt && !pendingCard?.ignoreTaunt) ? 'data-target="' + target + '"' : "";
   const log = battle.log.slice(-8).map((entry) => `<li>${escapeHtml(entry)}</li>`).join("");
   const finished = battle.phase === "finished";
   const result = finished ? `<div class="battle-result"><strong>${battle.winner === "player" ? "勝利" : "敗北"}</strong><span>対戦が終了しました</span></div>` : "";
   const canEndTurn = !finished && battle.phase === "card_use" && battle.activePlayer === "player";
   app.innerHTML = `<section class="battle">
     <header class="battle-player opponent" ${targetAttribute("cpu_player")}><div><span>CPU</span><strong>HP ${battle.cpu.hp}</strong>${renderCurses(battle.cpu.curses)}</div>${elementBadge(state.cpuAttribute)}<div class="resource"><span>MP ${battle.cpu.mp} / 30</span><span>COST ${battle.cpu.cost}</span><span>手札 ${battle.cpu.handCount}</span></div></header>
-    <section class="field enemy"><p>相手式神</p>${renderUnits(battle.cpu.shikigami)}</section>
+    <section class="field enemy" ${targetAttribute("cpu_field")}><p>相手式神</p>${renderUnits(battle.cpu.shikigami, pendingTarget, pendingCard?.ignoreTaunt)}</section>
     <section class="terrain"><span>共有地形</span><strong>通常状態</strong><div class="field-ring"></div></section>
     <section class="field ally" ${targetAttribute("player_field")}><p>味方式神</p>${renderUnits(battle.player.shikigami)}</section>
     <header class="battle-player" ${targetAttribute("player")}><div><span>${escapeHtml(state.playerName ?? "あなた")}</span><strong>HP ${battle.player.hp}</strong>${renderCurses(battle.player.curses)}</div>${elementBadge(state.playerAttribute)}<div class="resource"><span>MP ${battle.player.mp} / 30</span><span>COST ${battle.player.cost}</span><span>捨て札 ${battle.player.discard.length}</span></div></header>
