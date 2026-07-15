@@ -88,8 +88,21 @@ test("field attacks make each shikigami visibly tappable and cancelling fully re
 test("title and in-battle rules expose the shared card catalog", async () => {
   const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
   const css = await readFile(path.join(repositoryRoot, "client", "catalog.css"), "utf8");
-  assert.match(source, /button\("カード一覧", "catalog"/);
+  assert.match(source, /data-action="catalog"><span>カード一覧/);
   assert.match(source, /button\("カード一覧を見る", "catalog"/);
   assert.match(source, /fetch\("\/api\/cards"\)/);
   assert.match(css, /\.catalog-grid/);
+});
+
+test("title uses shikigami artwork and a five-element circle with an overcoming star", async () => {
+  const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
+  const css = await readFile(path.join(repositoryRoot, "client", "title.css"), "utf8");
+  assert.match(source, /title-character-center/);
+  assert.match(source, /img_shikigami_hinotori\.png/);
+  assert.match(source, /five-star-cycle/);
+  assert.match(source, /five-star-overcome/);
+  assert.match(source, /polyline/);
+  for (const element of ["wood", "fire", "earth", "metal", "water"]) {
+    assert.match(css, new RegExp(`\\.five-node-${element}`));
+  }
 });

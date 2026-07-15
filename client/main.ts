@@ -308,7 +308,36 @@ function renderConnecting(): void {
   app.innerHTML = shell(`<div class="center-card"><p class="eyebrow">SERVER CONNECTION</p><h1>五行転輪</h1><div class="loader"></div><h2>サーバーへ接続中</h2><p class="muted">起動待ちの場合も自動で再試行します。</p>${error()}${button("手動で再試行", "retry", "secondary")}</div>`);
 }
 function renderTitle(): void {
-  app.innerHTML = shell(`<header class="title-header"><div class="cycle-mark"><span>木</span><span>火</span><span>土</span><span>金</span><span>水</span></div><p class="eyebrow">GOGYO TENRIN</p><h1>五行転輪</h1><p class="subtitle">巡る霊気を読み、五行を転じよ。</p></header><nav class="menu">${button("CPU戦", "cpu")}${button("オンライン対戦", "online")}${button("ルール確認", "rules", "secondary")}${button("カード一覧", "catalog", "secondary")}${button("設定", "settings", "secondary")}</nav><p class="connection-ok"><span></span>サーバー接続済み</p>`);
+  app.innerHTML = shell(`<div class="title-lobby">
+    <section class="title-hero" aria-label="五行転輪">
+      <div class="title-mist" aria-hidden="true"></div>
+      <figure class="title-character title-character-left"><img src="/client/assets/shikigami/img_shikigami_kanko.png" alt="管狐"><figcaption>木・管狐</figcaption></figure>
+      <figure class="title-character title-character-center"><img src="/client/assets/shikigami/img_shikigami_hinotori.png" alt="火鳥"><figcaption>火・火鳥</figcaption></figure>
+      <figure class="title-character title-character-right"><img src="/client/assets/shikigami/img_shikigami_genki.png" alt="玄亀"><figcaption>土・玄亀</figcaption></figure>
+      <div class="five-star" aria-label="五行の相生円環と相剋五芒星">
+        <svg viewBox="0 0 200 200" role="img" aria-hidden="true">
+          <circle class="five-star-cycle" cx="100" cy="100" r="88"></circle>
+          <polyline class="five-star-overcome" points="100,12 152.9,172.8 14.4,72.2 185.6,72.2 47.1,172.8 100,12"></polyline>
+          <circle class="five-star-inner" cx="100" cy="100" r="41"></circle>
+        </svg>
+        <span class="five-node five-node-wood">木</span><span class="five-node five-node-fire">火</span><span class="five-node five-node-earth">土</span><span class="five-node five-node-metal">金</span><span class="five-node five-node-water">水</span>
+        <div class="five-star-core"><small>五行</small><b>転輪</b></div>
+      </div>
+      <header class="title-brand"><p class="eyebrow">GOGYO TENRIN</p><h1>五行転輪</h1><p>巡る霊気を読み、五行を転じよ。</p></header>
+    </section>
+    <nav class="title-menu" aria-label="メインメニュー">
+      <div class="title-primary-actions">
+        <button class="title-action title-action-primary" data-action="cpu"><span>CPU戦</span><small>一人で五行を巡る</small></button>
+        <button class="title-action title-action-primary" data-action="online"><span>オンライン対戦</span><small>陰陽師と相対する</small></button>
+      </div>
+      <div class="title-utility-actions">
+        <button class="title-action" data-action="rules"><span>ルール</span></button>
+        <button class="title-action" data-action="catalog"><span>カード一覧</span></button>
+        <button class="title-action" data-action="settings"><span>設定</span></button>
+      </div>
+    </nav>
+    <p class="connection-ok title-connection"><span></span>霊脈接続済み</p>
+  </div>`);
 }
 function renderCpuSetup(): void {
   app.innerHTML = shell(`<header class="compact-header"><p class="eyebrow">CPU MATCH</p><h1>CPU戦</h1><p>陰陽師名を入力してください。</p></header><form class="form-card" data-form="cpu"><label for="player-name">プレイヤー名</label><input id="player-name" maxlength="20" autocomplete="nickname" placeholder="名前を入力" ${busy ? "disabled" : ""}/>${error()}<button class="menu-button" type="submit" ${busy ? "disabled" : ""}>${busy ? "準備中…" : "対戦準備へ"}</button>${button("戻る", "title", "text")}</form>`);
