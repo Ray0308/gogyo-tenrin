@@ -20,7 +20,7 @@ test("battle animation changes describe turn, damage, summon, and retirement", (
   const previous = battleState({ playerUnits: [unit("old")], cpuUnits: [unit("enemy", 5)] });
   const next = battleState({
     turn: 2, playerHp: 27, playerUnits: [unit("new")], cpuUnits: [unit("enemy", 3)],
-    log: ["CPUが霊符術：霊弾を使用した。"],
+    log: ["CPUが霊符術：霊弾を使用し、プレイヤーへ3ダメージ。"],
   });
   const changes = deriveBattleVisualChanges(previous, next);
   assert.ok(changes.some((change) => change.type === "turn" && change.turnNumber === 2));
@@ -29,6 +29,26 @@ test("battle animation changes describe turn, damage, summon, and retirement", (
   assert.ok(changes.some((change) => change.type === "retire" && change.unitId === "old"));
   assert.ok(changes.some((change) => change.type === "summon" && change.unitId === "new"));
   assert.ok(changes.some((change) => change.type === "action" && change.side === "cpu"));
+  assert.ok(changes.some((change) => change.type === "action" && change.kind === "attack"));
+});
+
+test("battle animation changes distinguish defense and counter actions", () => {
+  const previous = battleState({
+    playerUnits: [unit("白猿")],
+    log: ["反応受付を開始した。"],
+  });
+  previous.battle.phase = "reaction";
+  const next = battleState({
+    playerUnits: [unit("白猿")],
+    log: [
+      "反応受付を開始した。",
+      "プレイヤーが霊符術：守符を使用した。",
+      "白猿の反撃により敵へ1ダメージ。",
+    ],
+  });
+  const changes = deriveBattleVisualChanges(previous, next);
+  assert.ok(changes.some((change) => change.type === "action" && change.kind === "defense"));
+  assert.ok(changes.some((change) => change.type === "action" && change.kind === "counter" && change.actorUnitId === "白猿"));
 });
 
 test("entering battle produces a battle-start cue", () => {

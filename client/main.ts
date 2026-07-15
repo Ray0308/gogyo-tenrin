@@ -85,20 +85,47 @@ function combatantElement(change: Extract<BattleVisualChange, { type: "damage" |
   if (change.unitId) return document.querySelector<HTMLElement>(`[data-unit-id="${CSS.escape(change.unitId)}"]`);
   return document.querySelector<HTMLElement>(`[data-combatant="${change.side}"]`);
 }
+function actionElement(change: Extract<BattleVisualChange, { type: "action" }>): HTMLElement | null {
+  if (change.actorUnitId) return document.querySelector<HTMLElement>(`[data-unit-id="${CSS.escape(change.actorUnitId)}"]`);
+  return document.querySelector<HTMLElement>(`[data-combatant="${change.side}"]`);
+}
+function replayAnimation(target: HTMLElement, className: string): void {
+  target.classList.remove(className);
+  void target.offsetWidth;
+  target.classList.add(className);
+  window.setTimeout(() => target.classList.remove(className), animationDuration() + 180);
+}
+function showFloatingChange(target: HTMLElement, type: "damage" | "heal", amount: number): void {
+  const rect = target.getBoundingClientRect();
+  const number = document.createElement("span");
+  number.className = `battle-floating-change ${type}`;
+  number.textContent = `${type === "damage" ? "-" : "+"}${amount}`;
+  number.style.left = `${rect.left + rect.width / 2}px`;
+  number.style.top = `${rect.top + Math.min(rect.height * .45, 54)}px`;
+  document.body.append(number);
+  window.setTimeout(() => number.remove(), Math.max(760, animationDuration() + 220));
+}
 function animateBattleChanges(changes: BattleVisualChange[]): void {
   for (const change of changes) {
     if (change.type === "battle_start") enqueueBattleCue({ title: "対戦開始", detail: change.side === "player" ? "自分のターン" : "相手のターン", side: change.side });
     else if (change.type === "turn") enqueueBattleCue({ title: change.side === "player" ? "自分のターン" : "相手のターン", detail: `第${change.turnNumber}ターン・手札更新`, side: change.side });
-    else if (change.type === "action") enqueueBattleCue({ title: change.side === "player" ? "術式発動" : "相手の行動", detail: change.text, side: change.side });
+    else if (change.type === "action") {
+      const title = change.kind === "defense" ? "防御発動" : change.kind === "counter" ? "反撃" : change.side === "player" ? "攻撃" : "相手の攻撃";
+      enqueueBattleCue({ title, detail: change.text, side: change.side });
+      requestAnimationFrame(() => {
+        const actor = actionElement(change);
+        if (actor) replayAnimation(actor, change.kind === "defense" ? "is-defending" : change.kind === "counter" ? "is-countering" : "is-attacking");
+      });
+    }
     else if (change.type === "retire") enqueueBattleCue({ title: `${change.name} 退場`, side: change.side });
     else if (change.type === "summon") {
       requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-unit-id="${CSS.escape(change.unitId)}"]`)?.classList.add("is-summoned"));
     } else if (change.type === "damage" || change.type === "heal") {
       requestAnimationFrame(() => {
         const target = combatantElement(change);if (!target) return;
-        target.classList.add(change.type === "damage" ? "is-hit" : "is-healed");
-        const number = document.createElement("span");number.className = `floating-change ${change.type}`;number.textContent = `${change.type === "damage" ? "−" : "+"}${change.amount}`;target.append(number);
-        window.setTimeout(() => number.remove(), animationDuration());
+        replayAnimation(target, change.type === "damage" ? "is-hit" : "is-healed");
+        showFloatingChange(target, change.type, change.amount);
+        if (change.type === "damage" && settings.vibration) navigator.vibrate?.(35);
       });
     }
   }
@@ -284,11 +311,17 @@ app.addEventListener("click", (event) => {
   const attribute = target.closest<HTMLElement>("[data-element]")?.dataset.element as FiveElement | undefined;
   if(discardInstanceId && state.battle?.pendingDiscard && !busy){busy=true;render();socket.emit("card:discard",{instanceId:discardInstanceId},applyResult);return;}
   if (reactionCard && !busy) {
+    const card = state.battle?.player.hand.find((item) => item.instanceId === reactionCard);
+    enqueueBattleCue({ title: "防御発動", detail: card?.name, side: "player" });
     busy = true; render(); socket.emit("reaction:respond", { instanceId: reactionCard, target: reactionTarget }, applyResult); return;
   }  if (targetType && pendingCardId && !busy) {
     const instanceId = pendingCardId;
     const usedCard = state.battle?.player.hand.find((card) => card.instanceId === instanceId);
     enqueueBattleCue({ title: "術式発動", detail: usedCard?.name, side: "player" });
+    requestAnimationFrame(() => {
+      const actor = document.querySelector<HTMLElement>('[data-combatant="player"]');
+      if (actor) replayAnimation(actor, "is-attacking");
+    });
     busy = true;
     render();
     socket.emit("card:use", { instanceId, target: targetType, choice: selectedChoice }, (result) => {

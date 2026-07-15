@@ -6,7 +6,13 @@ export type BattleVisualChange =
   | { type: "turn"; side: BattleSide; turnNumber: number }
   | { type: "damage" | "heal"; side: BattleSide; amount: number; unitId?: string }
   | { type: "summon" | "retire"; side: BattleSide; unitId: string; name: string }
-  | { type: "action"; side: BattleSide; text: string };
+  | {
+      type: "action";
+      side: BattleSide;
+      text: string;
+      kind: "attack" | "defense" | "counter" | "effect";
+      actorUnitId?: string;
+    };
 
 function unitChanges(
   previous: ShikigamiState[],
@@ -37,6 +43,26 @@ function actionSide(text: string): BattleSide {
   return /CPU|相手/.test(text) ? "cpu" : "player";
 }
 
+function actionKind(text: string): "attack" | "defense" | "counter" | "effect" {
+  if (/反撃|countered/.test(text)) return "counter";
+  if (/^(?:プレイヤー|CPU)が.+を使用した。$/.test(text)) return "defense";
+  if (/ダメージ|攻撃|使用し、/.test(text)) return "attack";
+  return "effect";
+}
+
+function actionUnit(
+  text: string,
+  previousBattle: NonNullable<SessionState["battle"]>,
+  nextBattle: NonNullable<SessionState["battle"]>,
+): { side: BattleSide; instanceId: string } | undefined {
+  for (const side of ["player", "cpu"] as const) {
+    const units = [...previousBattle[side].shikigami, ...nextBattle[side].shikigami];
+    const unit = units.find((item) => text.startsWith(`${item.name}が`) || text.startsWith(`${item.name}の反撃`));
+    if (unit) return { side, instanceId: unit.instanceId };
+  }
+  return undefined;
+}
+
 export function deriveBattleVisualChanges(previous: SessionState, next: SessionState): BattleVisualChange[] {
   const nextBattle = next.battle;
   if (next.phase !== "battle" || !nextBattle) return [];
@@ -54,8 +80,20 @@ export function deriveBattleVisualChanges(previous: SessionState, next: SessionS
   }
 
   const addedLogs = nextBattle.log.slice(previousBattle.log.length);
-  const actionLogs = addedLogs.filter((entry) => /CPU.*(?:使用|攻撃)|countered/.test(entry)).slice(-2);
-  for (const text of actionLogs) changes.push({ type: "action", side: actionSide(text), text });
+  const actionLogs = addedLogs.filter((entry) =>
+    /(?:プレイヤー|CPU)が.+を使用|.+が.+へ\d+ダメージ|反撃|countered/.test(entry),
+  ).slice(-6);
+  for (const text of actionLogs) {
+    const unit = actionUnit(text, previousBattle, nextBattle);
+    const side = unit?.side ?? actionSide(text);
+    changes.push({
+      type: "action",
+      side,
+      text,
+      kind: actionKind(text),
+      actorUnitId: unit?.instanceId,
+    });
+  }
   if (turnChanged) changes.push({ type: "turn", side: nextBattle.activePlayer, turnNumber: nextBattle.turnNumber });
   return changes;
 }
