@@ -6,6 +6,7 @@ import {
   type FiveElement,
   type SessionState,
 } from "../shared/protocol.js";
+import { deriveBattleVisualChanges, type BattleSide, type BattleVisualChange } from "./battle-animations.js";
 
 type Acknowledge = (result: ActionResult) => void;
 interface BrowserSocket {
@@ -51,6 +52,64 @@ let state: SessionState = { phase: "title" };
 let busy = false;
 let errorMessage = "";
 let settings: Settings = loadSettings();
+interface BattleCue { title: string; detail?: string; side?: BattleSide }
+const battleCueQueue: BattleCue[] = [];
+let battleCuePlaying = false;
+
+function animationDuration(): number {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return 80;
+  return settings.speed === "fast" ? 420 : settings.speed === "slow" ? 950 : 650;
+}
+function enqueueBattleCue(cue: BattleCue): void {
+  battleCueQueue.push(cue);
+  playNextBattleCue();
+}
+function playNextBattleCue(): void {
+  if (battleCuePlaying || battleCueQueue.length === 0) return;
+  battleCuePlaying = true;
+  const cue = battleCueQueue.shift()!;
+  const layer = document.createElement("div");
+  layer.className = `battle-cue-layer ${cue.side ?? "neutral"}`;
+  const panel = document.createElement("div");
+  panel.className = "battle-cue";
+  const title = document.createElement("strong");
+  title.textContent = cue.title;
+  panel.append(title);
+  if (cue.detail) { const detail = document.createElement("span"); detail.textContent = cue.detail; panel.append(detail); }
+  layer.append(panel);document.body.append(layer);
+  const duration = animationDuration();
+  window.setTimeout(() => layer.classList.add("leaving"), Math.max(40, duration - 160));
+  window.setTimeout(() => { layer.remove();battleCuePlaying = false;playNextBattleCue(); }, duration);
+}
+function combatantElement(change: Extract<BattleVisualChange, { type: "damage" | "heal" }>): HTMLElement | null {
+  if (change.unitId) return document.querySelector<HTMLElement>(`[data-unit-id="${CSS.escape(change.unitId)}"]`);
+  return document.querySelector<HTMLElement>(`[data-combatant="${change.side}"]`);
+}
+function animateBattleChanges(changes: BattleVisualChange[]): void {
+  for (const change of changes) {
+    if (change.type === "battle_start") enqueueBattleCue({ title: "対戦開始", detail: change.side === "player" ? "自分のターン" : "相手のターン", side: change.side });
+    else if (change.type === "turn") enqueueBattleCue({ title: change.side === "player" ? "自分のターン" : "相手のターン", detail: `第${change.turnNumber}ターン・手札更新`, side: change.side });
+    else if (change.type === "action") enqueueBattleCue({ title: change.side === "player" ? "術式発動" : "相手の行動", detail: change.text, side: change.side });
+    else if (change.type === "retire") enqueueBattleCue({ title: `${change.name} 退場`, side: change.side });
+    else if (change.type === "summon") {
+      requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-unit-id="${CSS.escape(change.unitId)}"]`)?.classList.add("is-summoned"));
+    } else if (change.type === "damage" || change.type === "heal") {
+      requestAnimationFrame(() => {
+        const target = combatantElement(change);if (!target) return;
+        target.classList.add(change.type === "damage" ? "is-hit" : "is-healed");
+        const number = document.createElement("span");number.className = `floating-change ${change.type}`;number.textContent = `${change.type === "damage" ? "−" : "+"}${change.amount}`;target.append(number);
+        window.setTimeout(() => number.remove(), animationDuration());
+      });
+    }
+  }
+}
+function updateState(nextState: SessionState): void {
+  const changes = deriveBattleVisualChanges(state, nextState);
+  state = nextState;
+  if (nextState.reconnectToken) localStorage.setItem(TOKEN_KEY, nextState.reconnectToken);
+  render();
+  animateBattleChanges(changes);
+}
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>'"]/g, (character) => ({
@@ -123,7 +182,7 @@ function renderUnits(units: NonNullable<SessionState["battle"]>["player"]["shiki
     const enemyTarget = owner==="cpu"&&(targetMode==="cpu_unit"||targetMode==="cpu_any")&&(!unit.keywords.includes("\u30b9\u30c6\u30eb\u30b9")||unit.keywords.includes("\u6311\u767a"))&&(ignoreTaunt||!hasTaunt||unit.keywords.includes("\u6311\u767a"));
     const allyTarget = owner==="player"&&targetMode==="player_unit";
     const target = enemyTarget?`data-target="cpu_unit:${unit.instanceId}"`:allyTarget?`data-target="player_unit:${unit.instanceId}"`:"";
-    return `<article class="unit-slot ${cardAttributeClass(unit.attribute)}" ${target}><strong>${escapeHtml(unit.name)}</strong><span>${escapeHtml(unit.attribute)}</span><b>HP ${unit.hp} / ${unit.maxHp}</b><span>ATK ${unit.attack}</span>${keywords}${renderCurses(unit.curses)}${oneShotReduction}${shellReduction}</article>`;
+    return `<article class="unit-slot ${cardAttributeClass(unit.attribute)}" data-unit-id="${unit.instanceId}" data-unit-side="${owner}" ${target}><strong>${escapeHtml(unit.name)}</strong><span>${escapeHtml(unit.attribute)}</span><b>HP ${unit.hp} / ${unit.maxHp}</b><span>ATK ${unit.attack}</span>${keywords}${renderCurses(unit.curses)}${oneShotReduction}${shellReduction}</article>`;
   }).join("");
   return `<div class="unit-slots">${slots}</div>`;
 }
@@ -166,13 +225,13 @@ function renderBattle(): void {
   const pausedPanel = state.connectionPaused ? `<section class="connection-pause"><h2>\u518d\u63a5\u7d9a\u5f85\u6a5f\u4e2d</h2><p>\u76f8\u624b\u306e\u5fa9\u5e30\u3092\u5f85\u3063\u3066\u3044\u307e\u3059\u3002\u5bfe\u6226\u306f\u4e00\u6642\u505c\u6b62\u4e2d\u3067\u3059\u3002</p></section>` : "";
   const reactionPanel = reaction ? `<section class="reaction-panel"><div><p class="eyebrow">REACTION</p><h2>防御・反応受付中</h2><strong>${escapeHtml(reaction.attackerName)}の${escapeHtml(reaction.sourceName)}</strong><p>${reaction.targets.map((item) => `${escapeHtml(item.label)}：予測 ${item.predictedDamage}ダメージ`).join(" / ")}</p><div class="reaction-time">残り <b data-reaction-countdown>${Math.max(0, Math.ceil((reaction.deadline - Date.now()) / 1000))}</b> 秒</div></div><div class="reaction-options">${reactionOptions || '<p class="muted">使用可能な防御札はありません。</p>'}</div><button class="menu-button secondary" data-action="reaction-pass">使用しない</button></section>` : "";
   app.innerHTML = `<section class="battle">${pausedPanel}${reactionPanel}
-    <header class="battle-player opponent" ${targetAttribute("cpu_player")}><div><span>${escapeHtml(state.opponentName ?? "CPU")}</span><strong>HP ${battle.cpu.hp}</strong>${renderCurses(battle.cpu.curses)}</div>${elementBadge(state.cpuAttribute)}<div class="resource"><span>MP ${battle.cpu.mp} / 30</span><span>COST ${battle.cpu.cost}</span><span>手札 ${battle.cpu.handCount}</span></div></header>
+    <header class="battle-player opponent" data-combatant="cpu" ${targetAttribute("cpu_player")}><div><span>${escapeHtml(state.opponentName ?? "CPU")}</span><strong>HP ${battle.cpu.hp}</strong>${renderCurses(battle.cpu.curses)}</div>${elementBadge(state.cpuAttribute)}<div class="resource"><span>MP ${battle.cpu.mp} / 30</span><span>COST ${battle.cpu.cost}</span><span>手札 ${battle.cpu.handCount}</span></div></header>
     <section class="barrier-display" ${targetAttribute("cpu_barrier") || (targeting && pendingCard?.cardId==="card_fuin" && battle.cpu.barrier ? 'data-target="cpu_barrier"' : "")}><span>相手結界</span><strong>${battle.cpu.barrier ? escapeHtml(battle.cpu.barrier.name) : "未設置"}</strong><small>${battle.cpu.barrier ? escapeHtml(battle.cpu.barrier.effectText) : ""}</small></section>
     <section class="field enemy" ${targetAttribute("cpu_field")}><p>相手式神</p>${renderUnits(battle.cpu.shikigami, pendingTarget, pendingCard?.ignoreTaunt, "cpu")}</section>
     <section class="terrain" ${targetAttribute("shared_field")}><span>共有地形</span><strong>${battle.terrain ? escapeHtml(battle.terrain.name) : "通常状態"}</strong><small>${battle.terrain ? escapeHtml(battle.terrain.effectText) : ""}</small><div class="field-ring"></div></section>
     <section class="field ally" ${targetAttribute("player_field")}><p>味方式神</p>${renderUnits(battle.player.shikigami, pendingTarget, false, "player")}</section>
     <section class="barrier-display" ${targetAttribute("player_barrier")}><span>自分結界</span><strong>${battle.player.barrier ? escapeHtml(battle.player.barrier.name) : "未設置"}</strong><small>${battle.player.barrier ? escapeHtml(battle.player.barrier.effectText) : ""}</small></section>
-    <header class="battle-player" ${targetAttribute("player") || (targeting && pendingCard?.cardId==="card_joka" ? 'data-target="player"' : "")}><div><span>${escapeHtml(state.playerName ?? "あなた")}</span><strong>HP ${battle.player.hp}</strong>${renderCurses(battle.player.curses)}</div>${elementBadge(state.playerAttribute)}<div class="resource"><span>MP ${battle.player.mp} / 30</span><span>COST ${battle.player.cost}</span><span>捨て札 ${battle.player.discard.length}</span></div></header>
+    <header class="battle-player" data-combatant="player" ${targetAttribute("player") || (targeting && pendingCard?.cardId==="card_joka" ? 'data-target="player"' : "")}><div><span>${escapeHtml(state.playerName ?? "あなた")}</span><strong>HP ${battle.player.hp}</strong>${renderCurses(battle.player.curses)}</div>${elementBadge(state.playerAttribute)}<div class="resource"><span>MP ${battle.player.mp} / 30</span><span>COST ${battle.player.cost}</span><span>捨て札 ${battle.player.discard.length}</span></div></header>
     <section class="hand"><div class="phase-label">${finished ? "対戦終了" : `第${battle.turnNumber}ターン・${battle.activePlayer === "player" ? "自分" : "CPU"}の${battle.phase === "reaction" ? "反応受付中" : battle.phase === "resolving" ? "処理中" : "カード使用フェーズ"}`} ${battle.turnDeadline&&!finished?`<span> / \u6b8b\u308a <b data-turn-countdown>${Math.max(0,Math.ceil((battle.turnDeadline-Date.now())/1000))}</b> \u79d2</span>`:""}</div>${result}${targetGuide}<div class="hand-cards" aria-label="自分の手札">${cards || '<p class="empty-hand">手札がありません。</p>'}</div><button class="menu-button end-turn" data-action="end-turn" ${!canEndTurn || busy ? "disabled" : ""}>ターン終了</button><details class="battle-log" ${settings.log ? "open" : ""}><summary>対戦ログ</summary><ol>${log}</ol></details><div class="battle-actions">${button("ルール", "rules", "small secondary")}${button("設定", "settings", "small secondary")}${button("タイトルへ戻る", "reset", "small text")}</div></section>
   </section>`;
 }
@@ -198,9 +257,7 @@ function applyResult(result: ActionResult): void {
   busy = false;
   if (!result.ok) { errorMessage = result.message ?? "処理に失敗しました。"; render(); return; }
   errorMessage = "";
-  if (result.state) state = result.state;
-  if (state.reconnectToken) localStorage.setItem(TOKEN_KEY, state.reconnectToken);
-  render();
+  if (result.state) updateState(result.state); else render();
 }
 function resumeSession(): void {
   const token = localStorage.getItem(TOKEN_KEY);
@@ -213,7 +270,7 @@ function resumeSession(): void {
 
 socket.on("connect", () => { errorMessage = ""; resumeSession(); });
 socket.on("connect_error", () => { screen = "connecting"; errorMessage = "サーバーへ接続できません。再試行しています。"; render(); });
-socket.on("session:state", (nextState) => { state = nextState; if (nextState.reconnectToken) localStorage.setItem(TOKEN_KEY, nextState.reconnectToken); render(); });
+socket.on("session:state", updateState);
 socket.io.on("reconnect_attempt", () => { screen = "connecting"; render(); });
 
 app.addEventListener("click", (event) => {
@@ -230,6 +287,8 @@ app.addEventListener("click", (event) => {
     busy = true; render(); socket.emit("reaction:respond", { instanceId: reactionCard, target: reactionTarget }, applyResult); return;
   }  if (targetType && pendingCardId && !busy) {
     const instanceId = pendingCardId;
+    const usedCard = state.battle?.player.hand.find((card) => card.instanceId === instanceId);
+    enqueueBattleCue({ title: "術式発動", detail: usedCard?.name, side: "player" });
     busy = true;
     render();
     socket.emit("card:use", { instanceId, target: targetType, choice: selectedChoice }, (result) => {
@@ -255,7 +314,7 @@ app.addEventListener("click", (event) => {
   else if (action === "rematch-cancel") { busy=true; render(); socket.emit("rematch:cancel",applyResult); }
   else if (action === "enter-match") { busy = true; render(); socket.emit("match:enter", applyResult); }
   else if (action === "reaction-pass") { busy = true; render(); socket.emit("reaction:respond", {}, applyResult); }
-  else if (action === "end-turn") { busy = true; pendingCardId = null; selectedCardId = null; render(); socket.emit("turn:end", applyResult); }
+  else if (action === "end-turn") { busy = true; pendingCardId = null; selectedCardId = null; enqueueBattleCue({ title: "CPUのターン", detail: "相手が行動中", side: "cpu" }); render(); socket.emit("turn:end", applyResult); }
   else if (action === "reset") { busy = true; pendingCardId = null; selectedCardId = null; localStorage.removeItem(TOKEN_KEY); socket.emit("session:reset", (result) => { screen = "title"; applyResult(result); }); }
 });
 app.addEventListener("submit", (event) => {
