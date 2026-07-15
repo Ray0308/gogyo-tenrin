@@ -22,3 +22,10 @@ test("all MVP shikigami portraits are present and optimized for board display", 
     assert.equal(png.readUInt32BE(20), 512);
   }
 });
+
+test("shikigami portraits render above the unit background", async () => {
+  const css = await readFile(path.join(repositoryRoot, "client", "shikigami.css"), "utf8");
+  const portraitRule = css.match(/\.unit-portrait\s*\{[^}]+\}/)?.[0];
+  assert.ok(portraitRule);
+  assert.doesNotMatch(portraitRule, /z-index:\s*-/);
+});

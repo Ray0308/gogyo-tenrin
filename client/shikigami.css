@@ -10,19 +10,20 @@
 
 .unit-portrait {
   position: absolute;
-  z-index: -2;
+  z-index: 0;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center 38%;
   opacity: .9;
+  pointer-events: none;
   transition: transform .2s ease, filter .2s ease;
 }
 
 .unit-shade {
   position: absolute;
-  z-index: -1;
+  z-index: 1;
   inset: 0;
   background: linear-gradient(180deg, rgba(4, 11, 20, .04) 18%, rgba(4, 11, 20, .25) 43%, rgba(4, 11, 20, .94) 82%);
   pointer-events: none;
@@ -34,7 +35,7 @@
 .unit-slot:not(.empty) > small,
 .unit-slot:not(.empty) > .curse-row {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   text-shadow: 0 1px 5px #000;
 }
 
