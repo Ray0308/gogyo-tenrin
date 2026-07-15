@@ -14,11 +14,14 @@ interface BrowserSocket {
   on(event: "session:state", listener: (state: SessionState) => void): void;
   emit(event: "session:resume", token: string, callback: Acknowledge): void;
   emit(event: "cpu:start", payload: { playerName: string }, callback: Acknowledge): void;
+  emit(event: "room:create", payload: { playerName: string }, callback: Acknowledge): void;
+  emit(event: "room:join", payload: { playerName: string; roomId: string }, callback: Acknowledge): void;
   emit(event: "attribute:select", payload: { attribute: FiveElement }, callback: Acknowledge): void;
   emit(event: "match:enter" | "session:reset", callback: Acknowledge): void;
-  emit(event: "card:use", payload: { instanceId: string; target: CardTarget }, callback: Acknowledge): void;
+  emit(event: "card:use", payload: { instanceId: string; target: CardTarget; choice?: string }, callback: Acknowledge): void;
+  emit(event: "card:discard", payload: { instanceId: string }, callback: Acknowledge): void;
   emit(event: "reaction:respond", payload: { instanceId?: string; target?: DefenseTarget }, callback: Acknowledge): void;
-  emit(event: "turn:end", callback: Acknowledge): void;
+  emit(event: "turn:end" | "room:start" | "room:leave" | "rematch:request" | "rematch:cancel", callback: Acknowledge): void;
   connect(): void;
   io: { on(event: "reconnect_attempt", listener: () => void): void };
 }
@@ -43,6 +46,7 @@ let screen: LocalScreen = "connecting";
 let dialog: Dialog = null;
 let selectedCardId: string | null = null;
 let pendingCardId: string | null = null;
+let selectedChoice: string | undefined;
 let state: SessionState = { phase: "title" };
 let busy = false;
 let errorMessage = "";
@@ -71,6 +75,7 @@ function error(): string { return errorMessage ? `<p class="error" role="alert">
 function render(): void {
   const phase = state.phase;
   if (screen === "connecting") renderConnecting();
+  else if (phase === "room_waiting") renderRoomWaiting();
   else if (phase === "attribute_selection") renderAttributeSelection();
   else if (phase === "attribute_reveal") renderReveal();
   else if (phase === "battle") renderBattle();
@@ -89,7 +94,12 @@ function renderCpuSetup(): void {
   app.innerHTML = shell(`<header class="compact-header"><p class="eyebrow">CPU MATCH</p><h1>CPU戦</h1><p>陰陽師名を入力してください。</p></header><form class="form-card" data-form="cpu"><label for="player-name">プレイヤー名</label><input id="player-name" maxlength="20" autocomplete="nickname" placeholder="名前を入力" ${busy ? "disabled" : ""}/>${error()}<button class="menu-button" type="submit" ${busy ? "disabled" : ""}>${busy ? "準備中…" : "対戦準備へ"}</button>${button("戻る", "title", "text")}</form>`);
 }
 function renderOnline(): void {
-  app.innerHTML = shell(`<header class="compact-header"><p class="eyebrow">ONLINE MATCH</p><h1>オンライン対戦</h1></header><div class="notice-card"><h2>次の実装工程</h2><p>部屋作成・参加はCPU戦の基本フロー確認後に接続します。</p></div><nav class="menu">${button("部屋を作る", "noop", "disabled")}${button("部屋に入る", "noop", "disabled")}${button("戻る", "title", "text")}</nav>`);
+  app.innerHTML = shell(`<header class="compact-header"><p class="eyebrow">ONLINE MATCH</p><h1>\u30aa\u30f3\u30e9\u30a4\u30f3\u5bfe\u6226</h1><p>\u90e8\u5c4b\u3092\u4f5c\u6210\u3059\u308b\u304b\u30016\u6587\u5b57\u306e\u90e8\u5c4bID\u3067\u53c2\u52a0\u3057\u307e\u3059\u3002</p></header><div class="online-grid"><form class="form-card" data-form="room-create"><h2>\u90e8\u5c4b\u3092\u4f5c\u308b</h2><label>\u30d7\u30ec\u30a4\u30e4\u30fc\u540d<input name="playerName" maxlength="20" required></label><button class="menu-button" type="submit" ${busy?"disabled":""}>\u4f5c\u6210</button></form><form class="form-card" data-form="room-join"><h2>\u90e8\u5c4b\u306b\u5165\u308b</h2><label>\u30d7\u30ec\u30a4\u30e4\u30fc\u540d<input name="playerName" maxlength="20" required></label><label>\u90e8\u5c4bID<input name="roomId" maxlength="6" autocomplete="off" required></label><button class="menu-button" type="submit" ${busy?"disabled":""}>\u53c2\u52a0</button></form></div>${error()}<nav class="menu">${button("\u623b\u308b","title","text")}</nav>`);
+}
+function renderRoomWaiting(): void {
+  const ready=Boolean(state.roomReady),host=state.role==="host",opponentText=ready?`${escapeHtml(state.opponentName??"")} \u304c\u53c2\u52a0\u3057\u307e\u3057\u305f\u3002`:`\u76f8\u624b\u306e\u53c2\u52a0\u3092\u5f85\u3063\u3066\u3044\u307e\u3059\u3002`;
+  const startControl=host?button("\u5bfe\u6226\u958b\u59cb","room-start",ready?"":"disabled"):`<p class="muted center">\u30db\u30b9\u30c8\u306e\u958b\u59cb\u64cd\u4f5c\u3092\u5f85\u3063\u3066\u3044\u307e\u3059\u3002</p>`;
+  app.innerHTML=shell(`<header class="compact-header"><p class="eyebrow">ROOM</p><h1>\u5bfe\u6226\u5f85\u6a5f</h1></header><div class="notice-card"><p>\u90e8\u5c4bID</p><h2>${escapeHtml(state.roomId??"")}</h2><p>${opponentText}</p></div>${error()}<div class="menu">${startControl}${button("\u90e8\u5c4b\u3092\u9000\u51fa","room-leave","text")}</div>`);
 }
 function renderAttributeSelection(): void {
   const choices = Object.entries(elements).map(([key, value]) => `<button class="element-card ${key}" data-element="${key}" ${busy ? "disabled" : ""}><span>${value.mark}</span><strong>${value.name}</strong></button>`).join("");
@@ -100,21 +110,23 @@ function elementBadge(attribute?: FiveElement): string {
   return `<span class="attribute ${attribute}">${elements[attribute].mark}</span>`;
 }
 function renderReveal(): void {
-  app.innerHTML = shell(`<header class="compact-header"><p class="eyebrow">ATTRIBUTE REVEAL</p><h1>属性公開</h1></header><div class="versus"><div>${elementBadge(state.playerAttribute)}<strong>${escapeHtml(state.playerName ?? "あなた")}</strong></div><b>対</b><div>${elementBadge(state.cpuAttribute)}<strong>CPU</strong></div></div>${error()}<div class="menu">${button("対戦を開始", "enter-match")}</div>`);
+  app.innerHTML = shell(`<header class="compact-header"><p class="eyebrow">ATTRIBUTE REVEAL</p><h1>属性公開</h1></header><div class="versus"><div>${elementBadge(state.playerAttribute)}<strong>${escapeHtml(state.playerName ?? "あなた")}</strong></div><b>対</b><div>${elementBadge(state.cpuAttribute)}<strong>${escapeHtml(state.opponentName ?? "CPU")}</strong></div></div>${error()}<div class="menu">${button("対戦を開始", "enter-match")}</div>`);
 }
-function renderUnits(units: NonNullable<SessionState["battle"]>["player"]["shikigami"], targetMode?: CardPlayTarget, ignoreTaunt = false): string {
-  const hasTaunt = units.some((unit) => unit.keywords.includes("挑発"));
+function renderUnits(units: NonNullable<SessionState["battle"]>["player"]["shikigami"], targetMode?: CardPlayTarget, ignoreTaunt = false, owner: "cpu"|"player" = "cpu"): string {
+  const hasTaunt = units.some((unit) => unit.keywords.includes("\u6311\u767a"));
   const slots = Array.from({ length: 3 }, (_, index) => {
     const unit = units[index];
-    if (!unit) return `<div class="unit-slot empty">式神枠</div>`;
-    const keywords = unit.keywords.length > 0 ? `<small>${unit.keywords.map(escapeHtml).join("・")}</small>` : "";
-    const reduction = unit.nextDamageReduction > 0 ? `<span class="unit-effect">軽減 ${unit.nextDamageReduction}</span>` : "";
-    const canTarget = (targetMode === "cpu_unit" || targetMode === "cpu_any") && (!unit.keywords.includes("ステルス") || unit.keywords.includes("挑発")) && (ignoreTaunt || !hasTaunt || unit.keywords.includes("挑発"));
-    const target = canTarget ? `data-target="cpu_unit:${unit.instanceId}"` : "";
-    return `<article class="unit-slot ${cardAttributeClass(unit.attribute)}" ${target}><strong>${escapeHtml(unit.name)}</strong><span>${escapeHtml(unit.attribute)}</span><b>HP ${unit.hp} / ${unit.maxHp}</b><span>攻撃 ${unit.attack}</span>${keywords}${renderCurses(unit.curses)}${reduction}</article>`;
+    if (!unit) return `<div class="unit-slot empty">\u7a7a\u304d</div>`;
+    const keywords = unit.keywords.length > 0 ? `<small>${unit.keywords.map(escapeHtml).join("?")}</small>` : "";
+    const reduction = unit.nextDamageReduction > 0 ? `<span class="unit-effect">\u8efd\u6e1b ${unit.nextDamageReduction}</span>` : "";
+    const enemyTarget = owner==="cpu"&&(targetMode==="cpu_unit"||targetMode==="cpu_any")&&(!unit.keywords.includes("\u30b9\u30c6\u30eb\u30b9")||unit.keywords.includes("\u6311\u767a"))&&(ignoreTaunt||!hasTaunt||unit.keywords.includes("\u6311\u767a"));
+    const allyTarget = owner==="player"&&targetMode==="player_unit";
+    const target = enemyTarget?`data-target="cpu_unit:${unit.instanceId}"`:allyTarget?`data-target="player_unit:${unit.instanceId}"`:"";
+    return `<article class="unit-slot ${cardAttributeClass(unit.attribute)}" ${target}><strong>${escapeHtml(unit.name)}</strong><span>${escapeHtml(unit.attribute)}</span><b>HP ${unit.hp} / ${unit.maxHp}</b><span>ATK ${unit.attack}</span>${keywords}${renderCurses(unit.curses)}${reduction}</article>`;
   }).join("");
   return `<div class="unit-slots">${slots}</div>`;
-}function cardAttributeClass(attribute: string): string {
+}
+function cardAttributeClass(attribute: string): string {
   return ({ "木": "wood", "火": "fire", "土": "earth", "金": "metal", "水": "water", "無属性": "neutral" } as Record<string, string>)[attribute] ?? "neutral";
 }
 function renderCurses(curses: { name: string; stacks: number }[]): string {
@@ -127,17 +139,19 @@ function renderBattle(): void {
     app.innerHTML = shell(`<div class="notice-card"><h2>対戦状態を取得できません</h2><p>タイトルへ戻って対戦を開始し直してください。</p>${button("タイトルへ戻る", "reset")}</div>`);
     return;
   }
-  const cards = battle.player.hand.map((card) => `<button class="hand-card ${cardAttributeClass(card.attribute)} ${card.playable ? "" : "unplayable"}" data-card-instance="${card.instanceId}"><span class="hand-card-system">${escapeHtml(card.system)}</span><strong>${escapeHtml(card.name.split("：").at(-1) ?? card.name)}</strong><span class="hand-card-attribute">${escapeHtml(card.attribute)}</span><span class="hand-card-cost">C ${card.cost}</span>${card.mpCost > 0 ? `<span class="hand-card-mp">MP ${card.mpCost}</span>` : ""}<small>${escapeHtml(card.effectText)}</small></button>`).join("");
+  const cards = battle.player.hand.map((card) => `<button ${battle.pendingDiscard ? `data-discard-instance="${card.instanceId}"` : `data-card-instance="${card.instanceId}"`} class="hand-card ${cardAttributeClass(card.attribute)} ${card.playable ? "" : "unplayable"}"><span class="hand-card-system">${escapeHtml(card.system)}</span><strong>${escapeHtml(card.name.split("：").at(-1) ?? card.name)}</strong><span class="hand-card-attribute">${escapeHtml(card.attribute)}</span><span class="hand-card-cost">C ${card.cost}</span>${card.mpCost > 0 ? `<span class="hand-card-mp">MP ${card.mpCost}</span>` : ""}<small>${escapeHtml(card.effectText)}</small></button>`).join("");
   const pendingCard = battle.player.hand.find((card) => card.instanceId === pendingCardId);
   const pendingTarget = pendingCard?.playTarget;
   const targeting = pendingCard !== undefined;
-  const targetLabels: Record<CardPlayTarget, string> = { cpu_player: "相手プレイヤー", cpu_unit: "相手式神", cpu_any: "相手プレイヤーまたは相手式神", cpu_field: "相手式神エリア", player: "自分プレイヤー", player_field: "味方式神エリア", shared_field: "共有地形" };
+  const targetLabels: Record<CardPlayTarget, string> = { cpu_player: "Opponent", cpu_unit: "Opponent shikigami", cpu_any: "Opponent or shikigami", cpu_field: "Opponent field", cpu_barrier: "Opponent barrier", player: "Player", player_unit: "Allied shikigami", player_field: "Allied field", player_barrier: "Player barrier", retired_unit: "Retired shikigami", shared_field: "Shared terrain" };
+  const retiredTargets = targeting && pendingTarget==="retired_unit" ? battle.player.retiredShikigami.map(unit=>`<button class="menu-button small" data-target="retired_unit:${unit.instanceId}">${escapeHtml(unit.name)} (HP ${unit.maxHp})</button>`).join("") : "";
   const targetGuide = targeting && pendingTarget ? `<div class="target-guide">${targetLabels[pendingTarget]}を選択してください。${button("キャンセル", "cancel-target", "small text")}</div>` : "";
   const opponentHasTaunt = battle.cpu.shikigami.some((unit) => unit.keywords.includes("挑発"));
   const targetAttribute = (target: CardPlayTarget): string => targeting && (pendingTarget === target || (pendingTarget === "cpu_any" && target === "cpu_player")) && !(target === "cpu_player" && opponentHasTaunt && !pendingCard?.ignoreTaunt) ? 'data-target="' + target + '"' : "";
   const log = battle.log.slice(-8).map((entry) => `<li>${escapeHtml(entry)}</li>`).join("");
   const finished = battle.phase === "finished";
-  const result = finished ? `<div class="battle-result"><strong>${battle.winner === "player" ? "勝利" : "敗北"}</strong><span>対戦が終了しました</span></div>` : "";
+  const resultActions=state.mode==="online"?`${button("\u518d\u6226\u3092\u7533\u3057\u8fbc\u3080","rematch")}${button("\u518d\u6226\u3092\u3084\u3081\u308b","rematch-cancel","secondary")}`:button("\u518d\u6226","rematch");
+  const result = finished ? `<div class="battle-result"><strong>${battle.winner === "player" ? "\u52dd\u5229" : "\u6557\u5317"}</strong><span>\u5bfe\u6226\u304c\u7d42\u4e86\u3057\u307e\u3057\u305f</span><div class="result-actions">${resultActions}</div></div>` : "";
   const canEndTurn = !finished && battle.phase === "card_use" && battle.activePlayer === "player";
   const reaction = battle.reaction;
   const reactionCards = reaction ? battle.player.hand.filter((card) => reaction.eligibleCardIds.includes(card.instanceId)) : [];
@@ -148,16 +162,17 @@ function renderBattle(): void {
       : reaction!.targets.map((item) => `<button class="reaction-card" data-reaction-card="${card.instanceId}" data-reaction-target="${item.id}"><strong>${escapeHtml(card.name.split("：").at(-1) ?? card.name)} → ${escapeHtml(item.label)}</strong><span>${escapeHtml(card.effectText)}</span></button>`).join("");
     return choices;
   }).join("");
+  const pausedPanel = state.connectionPaused ? `<section class="connection-pause"><h2>\u518d\u63a5\u7d9a\u5f85\u6a5f\u4e2d</h2><p>\u76f8\u624b\u306e\u5fa9\u5e30\u3092\u5f85\u3063\u3066\u3044\u307e\u3059\u3002\u5bfe\u6226\u306f\u4e00\u6642\u505c\u6b62\u4e2d\u3067\u3059\u3002</p></section>` : "";
   const reactionPanel = reaction ? `<section class="reaction-panel"><div><p class="eyebrow">REACTION</p><h2>防御・反応受付中</h2><strong>${escapeHtml(reaction.attackerName)}の${escapeHtml(reaction.sourceName)}</strong><p>${reaction.targets.map((item) => `${escapeHtml(item.label)}：予測 ${item.predictedDamage}ダメージ`).join(" / ")}</p><div class="reaction-time">残り <b data-reaction-countdown>${Math.max(0, Math.ceil((reaction.deadline - Date.now()) / 1000))}</b> 秒</div></div><div class="reaction-options">${reactionOptions || '<p class="muted">使用可能な防御札はありません。</p>'}</div><button class="menu-button secondary" data-action="reaction-pass">使用しない</button></section>` : "";
-  app.innerHTML = `<section class="battle">${reactionPanel}
-    <header class="battle-player opponent" ${targetAttribute("cpu_player")}><div><span>CPU</span><strong>HP ${battle.cpu.hp}</strong>${renderCurses(battle.cpu.curses)}</div>${elementBadge(state.cpuAttribute)}<div class="resource"><span>MP ${battle.cpu.mp} / 30</span><span>COST ${battle.cpu.cost}</span><span>手札 ${battle.cpu.handCount}</span></div></header>
-    <section class="barrier-display"><span>相手結界</span><strong>${battle.cpu.barrier ? escapeHtml(battle.cpu.barrier.name) : "未設置"}</strong><small>${battle.cpu.barrier ? escapeHtml(battle.cpu.barrier.effectText) : ""}</small></section>
-    <section class="field enemy" ${targetAttribute("cpu_field")}><p>相手式神</p>${renderUnits(battle.cpu.shikigami, pendingTarget, pendingCard?.ignoreTaunt)}</section>
+  app.innerHTML = `<section class="battle">${pausedPanel}${reactionPanel}
+    <header class="battle-player opponent" ${targetAttribute("cpu_player")}><div><span>${escapeHtml(state.opponentName ?? "CPU")}</span><strong>HP ${battle.cpu.hp}</strong>${renderCurses(battle.cpu.curses)}</div>${elementBadge(state.cpuAttribute)}<div class="resource"><span>MP ${battle.cpu.mp} / 30</span><span>COST ${battle.cpu.cost}</span><span>手札 ${battle.cpu.handCount}</span></div></header>
+    <section class="barrier-display" ${targetAttribute("cpu_barrier") || (targeting && pendingCard?.cardId==="card_fuin" && battle.cpu.barrier ? 'data-target="cpu_barrier"' : "")}><span>相手結界</span><strong>${battle.cpu.barrier ? escapeHtml(battle.cpu.barrier.name) : "未設置"}</strong><small>${battle.cpu.barrier ? escapeHtml(battle.cpu.barrier.effectText) : ""}</small></section>
+    <section class="field enemy" ${targetAttribute("cpu_field")}><p>相手式神</p>${renderUnits(battle.cpu.shikigami, pendingTarget, pendingCard?.ignoreTaunt, "cpu")}</section>
     <section class="terrain" ${targetAttribute("shared_field")}><span>共有地形</span><strong>${battle.terrain ? escapeHtml(battle.terrain.name) : "通常状態"}</strong><small>${battle.terrain ? escapeHtml(battle.terrain.effectText) : ""}</small><div class="field-ring"></div></section>
-    <section class="field ally" ${targetAttribute("player_field")}><p>味方式神</p>${renderUnits(battle.player.shikigami)}</section>
-    <section class="barrier-display"><span>自分結界</span><strong>${battle.player.barrier ? escapeHtml(battle.player.barrier.name) : "未設置"}</strong><small>${battle.player.barrier ? escapeHtml(battle.player.barrier.effectText) : ""}</small></section>
-    <header class="battle-player" ${targetAttribute("player")}><div><span>${escapeHtml(state.playerName ?? "あなた")}</span><strong>HP ${battle.player.hp}</strong>${renderCurses(battle.player.curses)}</div>${elementBadge(state.playerAttribute)}<div class="resource"><span>MP ${battle.player.mp} / 30</span><span>COST ${battle.player.cost}</span><span>捨て札 ${battle.player.discard.length}</span></div></header>
-    <section class="hand"><div class="phase-label">${finished ? "対戦終了" : `第${battle.turnNumber}ターン・${battle.activePlayer === "player" ? "自分" : "CPU"}の${battle.phase === "reaction" ? "反応受付中" : battle.phase === "resolving" ? "処理中" : "カード使用フェーズ"}`}</div>${result}${targetGuide}<div class="hand-cards" aria-label="自分の手札">${cards || '<p class="empty-hand">手札がありません。</p>'}</div><button class="menu-button end-turn" data-action="end-turn" ${!canEndTurn || busy ? "disabled" : ""}>ターン終了</button><details class="battle-log" ${settings.log ? "open" : ""}><summary>対戦ログ</summary><ol>${log}</ol></details><div class="battle-actions">${button("ルール", "rules", "small secondary")}${button("設定", "settings", "small secondary")}${button("タイトルへ戻る", "reset", "small text")}</div></section>
+    <section class="field ally" ${targetAttribute("player_field")}><p>味方式神</p>${renderUnits(battle.player.shikigami, pendingTarget, false, "player")}</section>
+    <section class="barrier-display" ${targetAttribute("player_barrier")}><span>自分結界</span><strong>${battle.player.barrier ? escapeHtml(battle.player.barrier.name) : "未設置"}</strong><small>${battle.player.barrier ? escapeHtml(battle.player.barrier.effectText) : ""}</small></section>
+    <header class="battle-player" ${targetAttribute("player") || (targeting && pendingCard?.cardId==="card_joka" ? 'data-target="player"' : "")}><div><span>${escapeHtml(state.playerName ?? "あなた")}</span><strong>HP ${battle.player.hp}</strong>${renderCurses(battle.player.curses)}</div>${elementBadge(state.playerAttribute)}<div class="resource"><span>MP ${battle.player.mp} / 30</span><span>COST ${battle.player.cost}</span><span>捨て札 ${battle.player.discard.length}</span></div></header>
+    <section class="hand"><div class="phase-label">${finished ? "対戦終了" : `第${battle.turnNumber}ターン・${battle.activePlayer === "player" ? "自分" : "CPU"}の${battle.phase === "reaction" ? "反応受付中" : battle.phase === "resolving" ? "処理中" : "カード使用フェーズ"}`} ${battle.turnDeadline&&!finished?`<span> / \u6b8b\u308a <b data-turn-countdown>${Math.max(0,Math.ceil((battle.turnDeadline-Date.now())/1000))}</b> \u79d2</span>`:""}</div>${result}${targetGuide}<div class="hand-cards" aria-label="自分の手札">${cards || '<p class="empty-hand">手札がありません。</p>'}</div><button class="menu-button end-turn" data-action="end-turn" ${!canEndTurn || busy ? "disabled" : ""}>ターン終了</button><details class="battle-log" ${settings.log ? "open" : ""}><summary>対戦ログ</summary><ol>${log}</ol></details><div class="battle-actions">${button("ルール", "rules", "small secondary")}${button("設定", "settings", "small secondary")}${button("タイトルへ戻る", "reset", "small text")}</div></section>
   </section>`;
 }
 function renderDialog(): void {
@@ -170,7 +185,7 @@ function renderDialog(): void {
     const useControl = state.battle?.phase === "reaction"
       ? `<p class="target-guide">反応受付パネルから防御対象を選択してください。</p>`
       : card.playable
-      ? `<button class="menu-button" data-action="prepare-card">使用する</button>`
+      ? `${card.choiceOptions?.length ? `<label>\u9078\u629e <select data-card-choice>${card.choiceOptions.map(option=>`<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`).join("")}</select></label>` : ""}<button class="menu-button" data-action="prepare-card">使用する</button>`
       : `<p class="unusable-message">使用不可：${escapeHtml(card.unusableReason ?? "現在は使用できません。")}</p>`;    content = `<div class="card-detail ${cardAttributeClass(card.attribute)}"><p class="eyebrow">${escapeHtml(card.category)} / ${escapeHtml(card.system)}</p><h2>${escapeHtml(card.name)}</h2><div class="card-detail-meta"><span>属性 ${escapeHtml(card.attribute)}</span><span>コスト ${card.cost}</span><span>MP ${card.mpCost}</span></div><h3>効果</h3><p>${escapeHtml(card.effectText)}</p><h3>対象</h3><p>${escapeHtml(card.target)}</p><h3>使用タイミング</h3><p>${escapeHtml(card.timing)}</p><p class="flavor">${escapeHtml(card.flavorText)}</p>${useControl}</div>`;
   } else {
     content = `<h2>設定</h2><label>BGM音量<input type="range" min="0" max="100" value="${settings.bgm}" data-setting="bgm"></label><label>効果音音量<input type="range" min="0" max="100" value="${settings.sound}" data-setting="sound"></label><label class="check"><input type="checkbox" ${settings.vibration ? "checked" : ""} data-setting="vibration">振動</label><label>演出速度 <select data-setting="speed"><option value="slow" ${settings.speed === "slow" ? "selected" : ""}>ゆっくり</option><option value="normal" ${settings.speed === "normal" ? "selected" : ""}>標準</option><option value="fast" ${settings.speed === "fast" ? "selected" : ""}>速い</option></select></label><label class="check"><input type="checkbox" ${settings.log ? "checked" : ""} data-setting="log">対戦ログを表示</label>`;
@@ -204,18 +219,20 @@ app.addEventListener("click", (event) => {
   const target = event.target as HTMLElement;
   const action = target.closest<HTMLElement>("[data-action]")?.dataset.action;
   const cardInstanceId = target.closest<HTMLElement>("[data-card-instance]")?.dataset.cardInstance;
+  const discardInstanceId = target.closest<HTMLElement>("[data-discard-instance]")?.dataset.discardInstance;
   const reactionCard = target.closest<HTMLElement>("[data-reaction-card]")?.dataset.reactionCard;
   const reactionTarget = target.closest<HTMLElement>("[data-reaction-target]")?.dataset.reactionTarget as DefenseTarget | undefined;
   const targetType = target.closest<HTMLElement>("[data-target]")?.dataset.target as CardTarget | undefined;
   const attribute = target.closest<HTMLElement>("[data-element]")?.dataset.element as FiveElement | undefined;
+  if(discardInstanceId && state.battle?.pendingDiscard && !busy){busy=true;render();socket.emit("card:discard",{instanceId:discardInstanceId},applyResult);return;}
   if (reactionCard && !busy) {
     busy = true; render(); socket.emit("reaction:respond", { instanceId: reactionCard, target: reactionTarget }, applyResult); return;
   }  if (targetType && pendingCardId && !busy) {
     const instanceId = pendingCardId;
     busy = true;
     render();
-    socket.emit("card:use", { instanceId, target: targetType }, (result) => {
-      if (result.ok) { pendingCardId = null; selectedCardId = null; }
+    socket.emit("card:use", { instanceId, target: targetType, choice: selectedChoice }, (result) => {
+      if (result.ok) { pendingCardId = null; selectedCardId = null; selectedChoice = undefined; }
       applyResult(result);
     });
     return;
@@ -229,19 +246,23 @@ app.addEventListener("click", (event) => {
   else if (action === "title") { screen = "title"; render(); }
   else if (action === "rules" || action === "settings") { dialog = action; render(); }
   else if (action === "close-dialog") { dialog = null; selectedCardId = null; render(); }
-  else if (action === "prepare-card" && selectedCardId) { pendingCardId = selectedCardId; dialog = null; render(); }
+  else if (action === "prepare-card" && selectedCardId) { const card=state.battle?.player.hand.find(item=>item.instanceId===selectedCardId); selectedChoice=(document.querySelector<HTMLSelectElement>("[data-card-choice]")?.value ?? card?.choiceOptions?.[0]?.value); pendingCardId = selectedCardId; dialog = null; render(); }
   else if (action === "cancel-target") { pendingCardId = null; selectedCardId = null; render(); }
+  else if (action === "room-start") { busy=true; render(); socket.emit("room:start",applyResult); }
+  else if (action === "room-leave") { busy=true; localStorage.removeItem(TOKEN_KEY); socket.emit("room:leave",(result)=>{screen="title";applyResult(result);}); }
+  else if (action === "rematch") { busy=true; render(); socket.emit("rematch:request",applyResult); }
+  else if (action === "rematch-cancel") { busy=true; render(); socket.emit("rematch:cancel",applyResult); }
   else if (action === "enter-match") { busy = true; render(); socket.emit("match:enter", applyResult); }
   else if (action === "reaction-pass") { busy = true; render(); socket.emit("reaction:respond", {}, applyResult); }
   else if (action === "end-turn") { busy = true; pendingCardId = null; selectedCardId = null; render(); socket.emit("turn:end", applyResult); }
   else if (action === "reset") { busy = true; pendingCardId = null; selectedCardId = null; localStorage.removeItem(TOKEN_KEY); socket.emit("session:reset", (result) => { screen = "title"; applyResult(result); }); }
 });
 app.addEventListener("submit", (event) => {
-  const form = event.target as HTMLFormElement;
-  if (form.dataset.form !== "cpu") return;
-  event.preventDefault();
-  const playerName = form.querySelector<HTMLInputElement>("#player-name")?.value ?? "";
-  busy = true; render(); socket.emit("cpu:start", { playerName }, applyResult);
+  const form=event.target as HTMLFormElement;event.preventDefault();
+  const playerName=form.querySelector<HTMLInputElement>('[name="playerName"],#player-name')?.value??"";
+  if(form.dataset.form==="cpu"){busy=true;render();socket.emit("cpu:start",{playerName},applyResult);return}
+  if(form.dataset.form==="room-create"){busy=true;render();socket.emit("room:create",{playerName},applyResult);return}
+  if(form.dataset.form==="room-join"){const roomId=form.querySelector<HTMLInputElement>('[name="roomId"]')?.value??"";busy=true;render();socket.emit("room:join",{playerName,roomId},applyResult)}
 });
 app.addEventListener("change", (event) => {
   const input = event.target as HTMLInputElement | HTMLSelectElement;
@@ -257,4 +278,4 @@ app.addEventListener("change", (event) => {
 
 render();
 socket.connect();
-setInterval(() => { const countdown = document.querySelector<HTMLElement>('[data-reaction-countdown]'); const deadline = state.battle?.reaction?.deadline; if (countdown && deadline) countdown.textContent = String(Math.max(0, Math.ceil((deadline - Date.now()) / 1000))); }, 250);
+setInterval(() => { const reactionCountdown=document.querySelector<HTMLElement>('[data-reaction-countdown]'),turnCountdown=document.querySelector<HTMLElement>('[data-turn-countdown]'),reactionDeadline=state.battle?.reaction?.deadline,turnDeadline=state.battle?.turnDeadline;if(reactionCountdown&&reactionDeadline)reactionCountdown.textContent=String(Math.max(0,Math.ceil((reactionDeadline-Date.now())/1000)));if(turnCountdown&&turnDeadline)turnCountdown.textContent=String(Math.max(0,Math.ceil((turnDeadline-Date.now())/1000))); },250);

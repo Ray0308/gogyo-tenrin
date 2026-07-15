@@ -52,3 +52,9 @@ powershell -ExecutionPolicy Bypass -File scripts/import-master.ps1 -WorkbookPath
 ```
 
 インポート後は `master/data/` から `server/data/` が自動生成されます。データ形式は `server/data/schemas/`、バージョンとファイル件数は `server/data/manifest.json` で管理します。
+## MVP status
+
+- CPU and online matches use the same authoritative server game engine.
+- Online rooms support create, join, host start, private hands, reconnect waiting, turn timers, reactions, and rematch requests.
+- All 90 master cards have structured effects and are validated before the server starts.
+- Run `npm test` to build, validate master data, and execute the online integration flow.

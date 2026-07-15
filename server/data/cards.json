@@ -1286,7 +1286,14 @@
     "timings": [
       "自分のカード使用フェーズ"
     ],
-    "effects": []
+    "effects": [
+      {
+        "type": "cleanse",
+        "cardId": "card_joka",
+        "target": "self_or_ally_unit",
+        "amount": 1
+      }
+    ]
   },
   {
     "id": "card_kassei",
@@ -1307,7 +1314,15 @@
     "timings": [
       "自分のカード使用フェーズ"
     ],
-    "effects": []
+    "effects": [
+      {
+        "type": "restore",
+        "cardId": "card_kassei",
+        "target": "self_player",
+        "hp": 3,
+        "mp": 1
+      }
+    ]
   },
   {
     "id": "card_fuin",
@@ -1328,7 +1343,13 @@
     "timings": [
       "自分のカード使用フェーズ"
     ],
-    "effects": []
+    "effects": [
+      {
+        "type": "seal",
+        "cardId": "card_fuin",
+        "target": "opponent_unit_or_barrier"
+      }
+    ]
   },
   {
     "id": "card_haraekotoba",
@@ -1349,7 +1370,14 @@
     "timings": [
       "自分のカード使用フェーズ"
     ],
-    "effects": []
+    "effects": [
+      {
+        "type": "cleanse_all_units",
+        "cardId": "card_haraekotoba",
+        "target": "all_units",
+        "amount": 1
+      }
+    ]
   },
   {
     "id": "card_tenrin_wood",
@@ -1482,7 +1510,17 @@
     "timings": [
       "自分のカード使用フェーズ"
     ],
-    "effects": []
+    "effects": [
+      {
+        "type": "turn_choice",
+        "cardId": "card_tenrin_water",
+        "target": "self_player",
+        "steps": [
+          1,
+          -1
+        ]
+      }
+    ]
   },
   {
     "id": "card_sosei_wood",
@@ -1503,7 +1541,17 @@
     "timings": [
       "自分のカード使用フェーズ"
     ],
-    "effects": []
+    "effects": [
+      {
+        "type": "generate",
+        "cardId": "card_sosei_wood",
+        "target": "self_player",
+        "requiredAttribute": "water",
+        "successMp": 3,
+        "failureMp": 1,
+        "steps": 1
+      }
+    ]
   },
   {
     "id": "card_sosei_fire",
@@ -1524,7 +1572,17 @@
     "timings": [
       "自分のカード使用フェーズ"
     ],
-    "effects": []
+    "effects": [
+      {
+        "type": "generate",
+        "cardId": "card_sosei_fire",
+        "target": "self_player",
+        "requiredAttribute": "wood",
+        "successMp": 3,
+        "failureMp": 1,
+        "steps": 1
+      }
+    ]
   },
   {
     "id": "card_sosei_earth",
@@ -1545,7 +1603,17 @@
     "timings": [
       "自分のカード使用フェーズ"
     ],
-    "effects": []
+    "effects": [
+      {
+        "type": "generate",
+        "cardId": "card_sosei_earth",
+        "target": "self_player",
+        "requiredAttribute": "fire",
+        "successMp": 3,
+        "failureMp": 1,
+        "steps": 1
+      }
+    ]
   },
   {
     "id": "card_sosei_metal",
@@ -1566,7 +1634,17 @@
     "timings": [
       "自分のカード使用フェーズ"
     ],
-    "effects": []
+    "effects": [
+      {
+        "type": "generate",
+        "cardId": "card_sosei_metal",
+        "target": "self_player",
+        "requiredAttribute": "earth",
+        "successMp": 3,
+        "failureMp": 1,
+        "steps": 1
+      }
+    ]
   },
   {
     "id": "card_sosei_water",
@@ -1587,7 +1665,17 @@
     "timings": [
       "自分のカード使用フェーズ"
     ],
-    "effects": []
+    "effects": [
+      {
+        "type": "generate",
+        "cardId": "card_sosei_water",
+        "target": "self_player",
+        "requiredAttribute": "metal",
+        "successMp": 3,
+        "failureMp": 1,
+        "steps": 1
+      }
+    ]
   },
   {
     "id": "card_sokoku_wood",
@@ -1748,7 +1836,16 @@
     "timings": [
       "自分のカード使用フェーズ"
     ],
-    "effects": []
+    "effects": [
+      {
+        "type": "cycle",
+        "cardId": "card_junkan_wood",
+        "target": "self_player",
+        "steps": 1,
+        "draw": 2,
+        "discard": 1
+      }
+    ]
   },
   {
     "id": "card_junkan_fire",
@@ -1769,7 +1866,16 @@
     "timings": [
       "自分のカード使用フェーズ"
     ],
-    "effects": []
+    "effects": [
+      {
+        "type": "cycle",
+        "cardId": "card_junkan_fire",
+        "target": "self_player",
+        "steps": -1,
+        "draw": 2,
+        "discard": 1
+      }
+    ]
   },
   {
     "id": "card_junkan_earth",
@@ -1790,7 +1896,16 @@
     "timings": [
       "自分のカード使用フェーズ"
     ],
-    "effects": []
+    "effects": [
+      {
+        "type": "cycle",
+        "cardId": "card_junkan_earth",
+        "target": "self_player",
+        "steps": 2,
+        "draw": 2,
+        "discard": 1
+      }
+    ]
   },
   {
     "id": "card_junkan_metal",
@@ -1811,7 +1926,16 @@
     "timings": [
       "自分のカード使用フェーズ"
     ],
-    "effects": []
+    "effects": [
+      {
+        "type": "cycle",
+        "cardId": "card_junkan_metal",
+        "target": "self_player",
+        "steps": -2,
+        "draw": 2,
+        "discard": 1
+      }
+    ]
   },
   {
     "id": "card_junkan_water",
@@ -1832,7 +1956,19 @@
     "timings": [
       "自分のカード使用フェーズ"
     ],
-    "effects": []
+    "effects": [
+      {
+        "type": "cycle_choice",
+        "cardId": "card_junkan_water",
+        "target": "self_player",
+        "steps": [
+          1,
+          -1
+        ],
+        "draw": 2,
+        "discard": 1
+      }
+    ]
   },
   {
     "id": "card_summon_kanko",
@@ -2392,7 +2528,15 @@
     "timings": [
       "自分のカード使用フェーズ"
     ],
-    "effects": []
+    "effects": [
+      {
+        "type": "revive",
+        "cardId": "card_forbidden_yomigaeshi",
+        "target": "retired_ally_unit",
+        "hpRatio": 0.5,
+        "canActThisTurn": false
+      }
+    ]
   },
   {
     "id": "card_forbidden_tenchigaeshi",
@@ -2412,7 +2556,15 @@
     "timings": [
       "自分のカード使用フェーズ"
     ],
-    "effects": []
+    "effects": [
+      {
+        "type": "clear_fields",
+        "cardId": "card_forbidden_tenchigaeshi",
+        "target": "all",
+        "barriers": true,
+        "terrain": true
+      }
+    ]
   },
   {
     "id": "card_forbidden_tamashii_gui",
@@ -2432,7 +2584,15 @@
     "timings": [
       "自分のカード使用フェーズ"
     ],
-    "effects": []
+    "effects": [
+      {
+        "type": "sacrifice",
+        "cardId": "card_forbidden_tamashii_gui",
+        "target": "ally_unit",
+        "heal": 5,
+        "mp": 3
+      }
+    ]
   },
   {
     "id": "card_forbidden_tenpenchii",
@@ -2452,7 +2612,13 @@
     "timings": [
       "自分のカード使用フェーズ"
     ],
-    "effects": []
+    "effects": [
+      {
+        "type": "choose_terrain",
+        "cardId": "card_forbidden_tenpenchii",
+        "target": "shared_field"
+      }
+    ]
   },
   {
     "id": "card_forbidden_kamioroshi",
@@ -2472,7 +2638,16 @@
     "timings": [
       "自分のカード使用フェーズ"
     ],
-    "effects": []
+    "effects": [
+      {
+        "type": "buff_unit",
+        "cardId": "card_forbidden_kamioroshi",
+        "target": "ally_unit",
+        "maxHp": 4,
+        "hp": 4,
+        "attack": 2
+      }
+    ]
   },
   {
     "id": "card_forbidden_mekkai",
@@ -2492,6 +2667,14 @@
     "timings": [
       "自分のカード使用フェーズ"
     ],
-    "effects": []
+    "effects": [
+      {
+        "type": "clear_fields",
+        "cardId": "card_forbidden_mekkai",
+        "target": "all",
+        "barriers": true,
+        "terrain": false
+      }
+    ]
   }
 ]

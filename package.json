@@ -3,14 +3,16 @@
   "version": "0.2.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "clean": "node -e \"import('node:fs').then(({ rmSync }) => rmSync('dist', { recursive: true, force: true }))\"",
     "data:build": "node scripts/build-data.mjs",
     "data:validate": "node scripts/validate-data.mjs",
     "build": "npm run clean && npm run data:build && npm run data:validate && tsc && node scripts/copy-client.mjs",
     "start": "node dist/server/index.js",
-    "test": "node --test tests/*.test.mjs"
+    "test": "npm run build && node --test tests/*.test.mjs"
   },
   "dependencies": {
     "express": "^5.1.0",

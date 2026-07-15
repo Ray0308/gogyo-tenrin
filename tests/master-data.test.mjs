@@ -30,6 +30,7 @@ test("マスターから仕様どおりの実装JSONを生成できる", async (
     assert.equal(dataset.aiScores.length, 16);
     assert.ok(dataset.cards.every((card) => Array.isArray(card.timings)));
     assert.ok(dataset.cards.every((card) => Array.isArray(card.effects)));
+    assert.ok(dataset.cards.every((card) => card.effects.length === 1), "all MVP cards must have one structured effect");
 
     const { manifest } = await readGeneratedData(outputDirectory);
     assert.equal(manifest.schemaVersion, "1.0.0");

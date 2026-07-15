@@ -1,8 +1,8 @@
 export const FIVE_ELEMENTS = ["wood", "fire", "earth", "metal", "water"] as const;
 export type FiveElement = (typeof FIVE_ELEMENTS)[number];
-export type GamePhase = "title" | "attribute_selection" | "attribute_reveal" | "battle";
-export type CardPlayTarget = "cpu_player" | "cpu_unit" | "cpu_any" | "cpu_field" | "player" | "player_field" | "shared_field";
-export type CardTarget = "cpu_player" | "cpu_field" | "player" | "player_field" | "shared_field" | `cpu_unit:${string}`;
+export type GamePhase = "title" | "room_waiting" | "attribute_selection" | "attribute_reveal" | "battle";
+export type CardPlayTarget = "cpu_player" | "cpu_unit" | "cpu_any" | "cpu_field" | "cpu_barrier" | "player" | "player_unit" | "player_field" | "player_barrier" | "retired_unit" | "shared_field";
+export type CardTarget = "cpu_player" | "cpu_field" | "cpu_barrier" | "player" | "player_field" | "player_barrier" | "shared_field" | `cpu_unit:${string}` | `player_unit:${string}` | `retired_unit:${string}` | `terrain:${string}`;
 export type DefenseTarget = "player" | `player_unit:${string}`;
 
 export interface CardView {
@@ -23,6 +23,7 @@ export interface CardView {
   unusableReason?: string;
   playTarget?: CardPlayTarget;
   ignoreTaunt?: boolean;
+  choiceOptions?: { value: string; label: string }[];
 }
 
 export interface CurseState {
@@ -46,6 +47,8 @@ export interface ShikigamiState {
   curses: CurseState[];
   nextDamageReduction: number;
   nextAttackBonus: number;
+  cannotActTurn?: number;
+  abilityDisabledUntilTurn?: number;
 }
 
 export interface FieldObjectState {
@@ -54,6 +57,7 @@ export interface FieldObjectState {
   attribute: string;
   effectText: string;
   triggerCount?: number;
+  skipNextTrigger?: boolean;
 }
 
 export interface BattlePlayerState {
@@ -64,6 +68,7 @@ export interface BattlePlayerState {
   nextDamageReduction: number;
   shikigami: ShikigamiState[];
   barrier?: FieldObjectState;
+  retiredShikigami: ShikigamiState[];
 }
 
 export interface BattleState {
@@ -74,6 +79,8 @@ export interface BattleState {
   player: BattlePlayerState & { hand: CardView[]; discard: CardView[] };
   cpu: BattlePlayerState & { handCount: number };
   terrain?: FieldObjectState;
+  turnDeadline?: number;
+  pendingDiscard?: { count: number; side: "player" | "cpu" };
   reaction?: {
     sourceName: string;
     attackerName: string;
@@ -86,6 +93,14 @@ export interface BattleState {
 
 export interface SessionState {
   phase: GamePhase;
+  mode?: "cpu" | "online";
+  roomId?: string;
+  role?: "host" | "guest";
+  opponentName?: string;
+  roomReady?: boolean;
+  connectionPaused?: boolean;
+  rematchStatus?: "waiting" | "requested";
+  rematchDeadline?: number;
   reconnectToken?: string;
   playerName?: string;
   playerAttribute?: FiveElement;
@@ -102,9 +117,16 @@ export interface ActionResult {
 export interface ClientToServerEvents {
   "session:resume": (token: string, callback: (result: ActionResult) => void) => void;
   "cpu:start": (payload: { playerName: string }, callback: (result: ActionResult) => void) => void;
+  "room:create": (payload: { playerName: string }, callback: (result: ActionResult) => void) => void;
+  "room:join": (payload: { playerName: string; roomId: string }, callback: (result: ActionResult) => void) => void;
+  "room:start": (callback: (result: ActionResult) => void) => void;
+  "room:leave": (callback: (result: ActionResult) => void) => void;
+  "rematch:request": (callback: (result: ActionResult) => void) => void;
+  "rematch:cancel": (callback: (result: ActionResult) => void) => void;
   "attribute:select": (payload: { attribute: FiveElement }, callback: (result: ActionResult) => void) => void;
   "match:enter": (callback: (result: ActionResult) => void) => void;
-  "card:use": (payload: { instanceId: string; target: CardTarget }, callback: (result: ActionResult) => void) => void;
+  "card:use": (payload: { instanceId: string; target: CardTarget; choice?: string }, callback: (result: ActionResult) => void) => void;
+  "card:discard": (payload: { instanceId: string }, callback: (result: ActionResult) => void) => void;
   "reaction:respond": (payload: { instanceId?: string; target?: DefenseTarget }, callback: (result: ActionResult) => void) => void;
   "turn:end": (callback: (result: ActionResult) => void) => void;
   "session:reset": (callback: (result: ActionResult) => void) => void;
