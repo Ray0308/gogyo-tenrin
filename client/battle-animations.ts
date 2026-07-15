@@ -41,12 +41,14 @@ function unitChanges(
 }
 
 function actionSide(text: string): BattleSide {
+  if (/^(?:CPU|相手)が/.test(text)) return "cpu";
+  if (/^(?:プレイヤー|自分)が/.test(text)) return "player";
   return /CPU|相手/.test(text) ? "cpu" : "player";
 }
 
 function actionKind(text: string): "attack" | "defense" | "counter" | "effect" {
   if (/反撃|countered/.test(text)) return "counter";
-  if (/^(?:プレイヤー|CPU)が.+を使用した。$/.test(text)) return "defense";
+  if (/^(?:プレイヤー|CPU|自分|相手)が.+を使用した。$/.test(text)) return "defense";
   if (/ダメージ|攻撃|使用し、/.test(text)) return "attack";
   return "effect";
 }
@@ -82,7 +84,7 @@ export function deriveBattleVisualChanges(previous: SessionState, next: SessionS
 
   const addedLogs = nextBattle.log.slice(previousBattle.log.length);
   const actionLogs = addedLogs.filter((entry) =>
-    /(?:プレイヤー|CPU)が.+を使用|.+が.+へ\d+ダメージ|反撃|countered/.test(entry),
+    /(?:プレイヤー|CPU|自分|相手)が.+を使用|.+が.+へ\d+ダメージ|反撃|countered/.test(entry),
   ).slice(-6);
   for (const text of actionLogs) {
     const unit = actionUnit(text, previousBattle, nextBattle);

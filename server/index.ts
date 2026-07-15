@@ -1,5 +1,6 @@
 import express from "express";
 import { beginShikigamiAction, canCounterCardAttack, hasSelectableAttackUnit, isSelectableAttackUnit, reduceUnitDamage } from "./combat-rules.js";
+import { perspectiveLog } from "./perspective.js";
 import { readFileSync } from "node:fs";
 import { randomInt, randomUUID } from "node:crypto";
 import { createServer } from "node:http";
@@ -135,6 +136,7 @@ function publicStateForToken(session:StoredSession,token:string):SessionState{
   result.playerName=side==="player"?session.hostName:session.guestName;result.opponentName=side==="player"?session.guestName:session.hostName;
   result.roomReady=Boolean(session.guestToken);result.roomId=session.roomId;
   if(result.phase==="attribute_selection"){if(side==="player")result.cpuAttribute=undefined;else result.playerAttribute=undefined}
+  if(result.battle)result.battle.log=result.battle.log.map((entry)=>perspectiveLog(entry,side));
   if(side==="cpu"){
     const playerAttribute=result.playerAttribute;result.playerAttribute=result.cpuAttribute;result.cpuAttribute=playerAttribute;
     if(result.battle){

@@ -52,15 +52,17 @@ let state: SessionState = { phase: "title" };
 let busy = false;
 let errorMessage = "";
 let settings: Settings = loadSettings();
-interface BattleCue { title: string; detail?: string; side?: BattleSide }
+interface BattleCue { title: string; detail?: string; side?: BattleSide; key?: string }
 const battleCueQueue: BattleCue[] = [];
 let battleCuePlaying = false;
+let activeBattleCueKey: string | undefined;
 
 function animationDuration(): number {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return 80;
   return settings.speed === "fast" ? 420 : settings.speed === "slow" ? 950 : 650;
 }
 function enqueueBattleCue(cue: BattleCue): void {
+  if (cue.key && (activeBattleCueKey === cue.key || battleCueQueue.some((queued) => queued.key === cue.key))) return;
   battleCueQueue.push(cue);
   playNextBattleCue();
 }
@@ -68,6 +70,7 @@ function playNextBattleCue(): void {
   if (battleCuePlaying || battleCueQueue.length === 0) return;
   battleCuePlaying = true;
   const cue = battleCueQueue.shift()!;
+  activeBattleCueKey = cue.key;
   const layer = document.createElement("div");
   layer.className = `battle-cue-layer ${cue.side ?? "neutral"}`;
   const panel = document.createElement("div");
@@ -79,7 +82,7 @@ function playNextBattleCue(): void {
   layer.append(panel);document.body.append(layer);
   const duration = animationDuration();
   window.setTimeout(() => layer.classList.add("leaving"), Math.max(40, duration - 160));
-  window.setTimeout(() => { layer.remove();battleCuePlaying = false;playNextBattleCue(); }, duration);
+  window.setTimeout(() => { layer.remove();battleCuePlaying = false;activeBattleCueKey = undefined;playNextBattleCue(); }, duration);
 }
 function combatantElement(change: Extract<BattleVisualChange, { type: "damage" | "heal" }>): HTMLElement | null {
   if (change.unitId) return document.querySelector<HTMLElement>(`[data-unit-id="${CSS.escape(change.unitId)}"]`);
@@ -135,8 +138,8 @@ function showFloatingChange(target: HTMLElement, type: "damage" | "heal", amount
 }
 function animateBattleChanges(changes: BattleVisualChange[]): void {
   for (const change of changes) {
-    if (change.type === "battle_start") enqueueBattleCue({ title: "対戦開始", detail: change.side === "player" ? "自分のターン" : "相手のターン", side: change.side });
-    else if (change.type === "turn") enqueueBattleCue({ title: change.side === "player" ? "自分のターン" : "相手のターン", detail: `第${change.turnNumber}ターン・手札更新`, side: change.side });
+    if (change.type === "battle_start") enqueueBattleCue({ title: "対戦開始", detail: change.side === "player" ? "自分のターン" : "相手のターン", side: change.side, key: "battle-start" });
+    else if (change.type === "turn") enqueueBattleCue({ title: change.side === "player" ? "自分のターン" : "相手のターン", detail: `第${change.turnNumber}ターン・手札更新`, side: change.side, key: `turn:${change.turnNumber}:${change.side}` });
     else if (change.type === "action") {
       const title = change.kind === "defense" ? "防御発動" : change.kind === "counter" ? "反撃" : change.side === "player" ? "攻撃" : "相手の攻撃";
       enqueueBattleCue({ title, detail: change.text, side: change.side });
@@ -307,7 +310,7 @@ function renderBattle(): void {
     <section class="field ally" ${targetAttribute("player_field")}><p>味方式神</p>${renderUnits(battle.player.shikigami, pendingTarget, false, "player")}</section>
     <section class="barrier-display ${battle.player.barrier ? "" : "is-empty"}" ${targetAttribute("player_barrier")}><span>自分結界</span><strong>${battle.player.barrier ? escapeHtml(battle.player.barrier.name) : "未設置"}</strong><small>${battle.player.barrier ? escapeHtml(battle.player.barrier.effectText) : ""}</small></section>
     <header class="battle-player" data-combatant="player" ${targetAttribute("player") || (targeting && pendingCard?.cardId==="card_joka" ? 'data-target="player"' : "")}><div><span>${escapeHtml(state.playerName ?? "あなた")}</span><strong>HP ${battle.player.hp}</strong>${renderCurses(battle.player.curses)}</div>${elementBadge(state.playerAttribute)}<div class="resource"><span>MP ${battle.player.mp} / 30</span><span>COST ${battle.player.cost}</span><span>捨て札 ${battle.player.discard.length}</span></div></header>
-    </main><section class="hand battle-console"><div class="battle-command-row"><div class="phase-label">${finished ? "対戦終了" : `第${battle.turnNumber}ターン・${battle.activePlayer === "player" ? "自分" : "CPU"}・${battle.phase === "reaction" ? "反応受付" : battle.phase === "resolving" ? "処理中" : "カード使用"}`} ${battle.turnDeadline&&!finished?`<span>残り <b data-turn-countdown>${Math.max(0,Math.ceil((battle.turnDeadline-Date.now())/1000))}</b>秒</span>`:""}</div><button class="menu-button end-turn" data-action="end-turn" ${!canEndTurn || busy ? "disabled" : ""}>ターン終了</button></div>${result}${targetGuide}<div class="hand-cards" aria-label="自分の手札">${cards || '<p class="empty-hand">手札がありません。</p>'}</div><div class="battle-utility"><details class="battle-log"><summary>対戦ログ</summary><ol>${log}</ol></details><div class="battle-actions">${button("ルール", "rules", "small secondary")}${button("設定", "settings", "small secondary")}${button("退出", "reset", "small text")}</div></div></section>
+    </main><section class="hand battle-console"><div class="battle-command-row"><div class="phase-label">${finished ? "対戦終了" : `第${battle.turnNumber}ターン・${battle.activePlayer === "player" ? "自分" : "相手"}・${battle.phase === "reaction" ? "反応受付" : battle.phase === "resolving" ? "処理中" : "カード使用"}`} ${battle.turnDeadline&&!finished?`<span>残り <b data-turn-countdown>${Math.max(0,Math.ceil((battle.turnDeadline-Date.now())/1000))}</b>秒</span>`:""}</div><button class="menu-button end-turn" data-action="end-turn" ${!canEndTurn || busy ? "disabled" : ""}>ターン終了</button></div>${result}${targetGuide}<div class="hand-cards" aria-label="自分の手札">${cards || '<p class="empty-hand">手札がありません。</p>'}</div><div class="battle-utility"><details class="battle-log"><summary>対戦ログ</summary><ol>${log}</ol></details><div class="battle-actions">${button("ルール", "rules", "small secondary")}${button("設定", "settings", "small secondary")}${button("退出", "reset", "small text")}</div></div></section>
   </section>`;
 }
 function renderDialog(): void {
@@ -393,7 +396,7 @@ app.addEventListener("click", (event) => {
   else if (action === "rematch-cancel") { busy=true; render(); socket.emit("rematch:cancel",applyResult); }
   else if (action === "enter-match") { busy = true; render(); socket.emit("match:enter", applyResult); }
   else if (action === "reaction-pass") { busy = true; render(); socket.emit("reaction:respond", {}, applyResult); }
-  else if (action === "end-turn") { busy = true; pendingCardId = null; selectedCardId = null; enqueueBattleCue({ title: "CPUのターン", detail: "相手が行動中", side: "cpu" }); render(); socket.emit("turn:end", applyResult); }
+  else if (action === "end-turn") { busy = true; pendingCardId = null; selectedCardId = null; if (state.mode === "cpu") enqueueBattleCue({ title: "相手のターン", detail: "相手が行動中", side: "cpu", key: `turn:${state.battle?.turnNumber ?? 0}:cpu` }); render(); socket.emit("turn:end", applyResult); }
   else if (action === "reset") { busy = true; pendingCardId = null; selectedCardId = null; localStorage.removeItem(TOKEN_KEY); socket.emit("session:reset", (result) => { screen = "title"; applyResult(result); }); }
 });
 app.addEventListener("submit", (event) => {

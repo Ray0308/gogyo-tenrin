@@ -67,3 +67,11 @@ test("single-target attack animation identifies its damaged shikigami", () => {
   );
   assert.equal(attack?.targetUnitId, "target");
 });
+
+test("online perspective labels identify self and opponent actions", () => {
+  const previous = battleState();
+  const selfAction = battleState({ cpuHp: 27, log: ["自分が霊符術：霊弾を使用し、相手へ3ダメージ。"] });
+  const opponentAction = battleState({ playerHp: 27, log: ["相手が霊符術：霊弾を使用し、自分へ3ダメージ。"] });
+  assert.ok(deriveBattleVisualChanges(previous, selfAction).some((change) => change.type === "action" && change.side === "player"));
+  assert.ok(deriveBattleVisualChanges(previous, opponentAction).some((change) => change.type === "action" && change.side === "cpu"));
+});

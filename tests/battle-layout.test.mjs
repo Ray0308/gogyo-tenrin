@@ -33,3 +33,10 @@ test("target guidance and battle motion effects are present", async () => {
   assert.match(css, /\.reidan-projectile/);
   assert.match(css, /shikigami-lunge-up/);
 });
+
+test("turn labels use the local player perspective", async () => {
+  const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
+  assert.doesNotMatch(source, /title:\s*"CPUのターン"/);
+  assert.match(source, /battle\.activePlayer === "player" \? "自分" : "相手"/);
+  assert.match(source, /state\.mode === "cpu"/);
+});
