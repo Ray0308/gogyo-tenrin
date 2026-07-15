@@ -311,8 +311,6 @@ app.addEventListener("click", (event) => {
   const attribute = target.closest<HTMLElement>("[data-element]")?.dataset.element as FiveElement | undefined;
   if(discardInstanceId && state.battle?.pendingDiscard && !busy){busy=true;render();socket.emit("card:discard",{instanceId:discardInstanceId},applyResult);return;}
   if (reactionCard && !busy) {
-    const card = state.battle?.player.hand.find((item) => item.instanceId === reactionCard);
-    enqueueBattleCue({ title: "防御発動", detail: card?.name, side: "player" });
     busy = true; render(); socket.emit("reaction:respond", { instanceId: reactionCard, target: reactionTarget }, applyResult); return;
   }  if (targetType && pendingCardId && !busy) {
     const instanceId = pendingCardId;
