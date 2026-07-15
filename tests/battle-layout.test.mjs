@@ -54,7 +54,12 @@ test("all card systems have a shared presentation effect", async () => {
 
 test("battle presentation uses a more readable default pace", async () => {
   const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
-  assert.match(source, /settings\.speed === "fast" \? 600 : settings\.speed === "slow" \? 1250 : 900/);
+  const css = await readFile(path.join(repositoryRoot, "client", "battle-v2.css"), "utf8");
+  assert.match(source, /settings\.speed === "fast" \? 800 : settings\.speed === "slow" \? 1900 : 1350/);
+  assert.match(source, /function presentationGap/);
+  assert.match(css, /animation-duration:.*--combat-duration/);
+  assert.match(source, /orderBattleVisualChanges/);
+  assert.match(source, /variant: `impact \$\{change\.type\}`/);
 });
 
 test("dramatic battle HUD shows HP gauges and elemental tension", async () => {

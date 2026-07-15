@@ -476,12 +476,30 @@ body:has(.battle-v2) {
 }
 
 .battle-v2 .unit-slot[data-unit-side="player"].is-attacking .unit-portrait {
-  animation: shikigami-lunge-up .72s cubic-bezier(.18, .78, .24, 1) both;
+  animation: shikigami-lunge-up var(--combat-duration, 1.05s) cubic-bezier(.18, .78, .24, 1) both;
 }
 
 .battle-v2 .unit-slot[data-unit-side="cpu"].is-attacking .unit-portrait {
-  animation: shikigami-lunge-down .72s cubic-bezier(.18, .78, .24, 1) both;
+  animation: shikigami-lunge-down var(--combat-duration, 1.05s) cubic-bezier(.18, .78, .24, 1) both;
 }
+
+.battle-v2 .is-hit,
+.battle-v2 .is-healed,
+.battle-v2 .is-summoned,
+.battle-v2 .is-attacking,
+.battle-v2 .is-countering,
+.battle-v2 .is-defending {
+  animation-duration: var(--combat-duration, 1.05s) !important;
+}
+
+.battle-cue span {
+  white-space: normal;
+  line-height: 1.45;
+}
+
+.battle-cue-layer.impact.damage .battle-cue strong { color: #ff8b7d; }
+.battle-cue-layer.impact.heal .battle-cue strong { color: #79e6a0; }
+.battle-floating-change { animation-duration: var(--impact-duration, 1.3s); }
 
 .reidan-projectile {
   position: fixed;

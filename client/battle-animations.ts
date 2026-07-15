@@ -4,7 +4,7 @@ export type BattleSide = "player" | "cpu";
 export type BattleVisualChange =
   | { type: "battle_start"; side: BattleSide }
   | { type: "turn"; side: BattleSide; turnNumber: number }
-  | { type: "damage" | "heal"; side: BattleSide; amount: number; unitId?: string }
+  | { type: "damage" | "heal"; side: BattleSide; amount: number; unitId?: string; name?: string }
   | { type: "summon" | "retire"; side: BattleSide; unitId: string; name: string; imageId?: string }
   | {
       type: "action";
@@ -32,8 +32,8 @@ function unitChanges(
       continue;
     }
     const hpDifference = unit.hp - oldUnit.hp;
-    if (hpDifference < 0) changes.push({ type: "damage", side, unitId: unit.instanceId, amount: -hpDifference });
-    if (hpDifference > 0) changes.push({ type: "heal", side, unitId: unit.instanceId, amount: hpDifference });
+    if (hpDifference < 0) changes.push({ type: "damage", side, unitId: unit.instanceId, name: unit.name, amount: -hpDifference });
+    if (hpDifference > 0) changes.push({ type: "heal", side, unitId: unit.instanceId, name: unit.name, amount: hpDifference });
   }
   for (const unit of previous) {
     if (!nextById.has(unit.instanceId)) changes.push({ type: "retire", side, unitId: unit.instanceId, name: unit.name, imageId: unit.imageId });
@@ -113,4 +113,33 @@ export function deriveBattleVisualChanges(previous: SessionState, next: SessionS
   }
   if (turnChanged) changes.push({ type: "turn", side: nextBattle.activePlayer, turnNumber: nextBattle.turnNumber });
   return changes;
+}
+
+export function orderBattleVisualChanges(changes: BattleVisualChange[]): BattleVisualChange[] {
+  const starts = changes.filter((change) => change.type === "battle_start");
+  const turns = changes.filter((change) => change.type === "turn");
+  const actions = changes.filter((change): change is Extract<BattleVisualChange, { type: "action" }> => change.type === "action");
+  const regularActions = actions.filter((change) => change.kind !== "counter");
+  const counterActions = actions.filter((change) => change.kind === "counter");
+  const summons = changes.filter((change) => change.type === "summon");
+  const impacts = changes.filter((change) => change.type === "damage" || change.type === "heal");
+  const retirements = changes.filter((change) => change.type === "retire");
+  const primaryAttack = regularActions.find((change) => change.kind === "attack");
+
+  if (!primaryAttack) {
+    return [...starts, ...regularActions, ...summons, ...impacts, ...retirements, ...counterActions, ...turns];
+  }
+
+  const defenderSide: BattleSide = primaryAttack.side === "player" ? "cpu" : "player";
+  return [
+    ...starts,
+    ...regularActions,
+    ...summons,
+    ...impacts.filter((change) => change.side === defenderSide),
+    ...retirements.filter((change) => change.side === defenderSide),
+    ...counterActions,
+    ...impacts.filter((change) => change.side === primaryAttack.side),
+    ...retirements.filter((change) => change.side === primaryAttack.side),
+    ...turns,
+  ];
 }

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { deriveBattleVisualChanges } from "../dist/client/battle-animations.js";
+import { deriveBattleVisualChanges, orderBattleVisualChanges } from "../dist/client/battle-animations.js";
 
 const unit = (instanceId, hp = 5) => ({
   instanceId, shikigamiId: `master_${instanceId}`, name: instanceId, attribute: "木",
@@ -91,4 +91,18 @@ test("only explicit defense-card logs use the defense animation", () => {
   const utility = battleState({ log: ["CPUが陰陽秘術：浄化を使用した。"] });
   assert.ok(deriveBattleVisualChanges(previous, defense).some((change) => change.type === "action" && change.kind === "defense"));
   assert.ok(deriveBattleVisualChanges(previous, utility).some((change) => change.type === "action" && change.kind === "effect"));
+});
+
+test("battle presentation orders impact and retirement before counter and turn changes", () => {
+  const changes = [
+    { type: "turn", side: "player", turnNumber: 2 },
+    { type: "damage", side: "cpu", amount: 3, unitId: "target", name: "対象" },
+    { type: "retire", side: "cpu", unitId: "target", name: "対象" },
+    { type: "action", side: "cpu", text: "対象の反撃", kind: "counter", actorUnitId: "target" },
+    { type: "damage", side: "player", amount: 1 },
+    { type: "action", side: "player", text: "自分が攻撃", kind: "attack" },
+  ];
+  assert.deepEqual(orderBattleVisualChanges(changes).map((change) => change.type === "action" ? change.kind : change.type), [
+    "attack", "damage", "retire", "counter", "damage", "turn",
+  ]);
 });
