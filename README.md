@@ -1,4 +1,4 @@
-# 五行転輪
+﻿# 五行転輪
 
 『五行転輪』MVPのクライアント・サーバー共通リポジトリです。
 
@@ -33,3 +33,14 @@ npm start
 - Build Command: `npm install && npm run build`
 - Start Command: `npm start`
 - Health Check Path: `/health`
+## マスターデータ
+
+実装用マスターのスナップショットは `server/data/` に配置しています。カードの `effectText` は表示用文章であり、ゲーム処理では解析しません。
+
+Googleスプレッドシートから書き出したExcelを同期する場合:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/import-master.ps1 -WorkbookPath <xlsxファイル>
+```
+
+同期後は `npm run build` を実行してください。

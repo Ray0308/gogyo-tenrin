@@ -1,0 +1,66 @@
+[
+    {
+        "id":  "curse_poison",
+        "name":  "毒",
+        "effectText":  "対象側ターン終了時、スタック数と同じ固定ダメージ。",
+        "removalCondition":  "浄化・祓詞・浄化結界",
+        "stacking":  "可（最大5）",
+        "description":  "持続ターンなし。解除されるまで残る。"
+    },
+    {
+        "id":  "curse_burn",
+        "name":  "火傷",
+        "effectText":  "プレイヤーはカード使用後、式神は行動後に1ダメージ。",
+        "removalCondition":  "2回発動後、または解除効果",
+        "stacking":  "不可",
+        "description":  "再付与時は残り発動回数を2へ更新。"
+    },
+    {
+        "id":  "curse_freeze",
+        "name":  "凍結",
+        "effectText":  "式神の次回行動機会を1回失わせ、その後解除。",
+        "removalCondition":  "次回行動機会を失った後、または解除効果",
+        "stacking":  "不可",
+        "description":  "プレイヤーには付与しない。"
+    },
+    {
+        "id":  "curse_paralysis",
+        "name":  "麻痺",
+        "effectText":  "式神の行動開始時、50％で行動失敗。",
+        "removalCondition":  "2回判定後、または解除効果",
+        "stacking":  "不可",
+        "description":  "失敗・成功を問わず判定回数を消費。"
+    },
+    {
+        "id":  "curse_silence",
+        "name":  "沈黙",
+        "effectText":  "プレイヤーは術札を使用できない。",
+        "removalCondition":  "対象側ターン終了時、または解除効果",
+        "stacking":  "不可",
+        "description":  "防御札・式神札・結界札・地形札は使用可能。"
+    },
+    {
+        "id":  "curse_binding",
+        "name":  "呪縛",
+        "effectText":  "式神は祝詞命令を受けられず、固有AIで行動する。",
+        "removalCondition":  "対象側ターン終了時、または解除効果",
+        "stacking":  "不可",
+        "description":  "すでに受けた命令は解除しない。"
+    },
+    {
+        "id":  "curse_weakness",
+        "name":  "衰弱",
+        "effectText":  "受ける回復量を半減し、端数を切り捨てる。",
+        "removalCondition":  "2回回復処理後、または解除効果",
+        "stacking":  "不可",
+        "description":  "回復量0の処理でも回数を消費。"
+    },
+    {
+        "id":  "curse_impurity",
+        "name":  "穢れ",
+        "effectText":  "1スタックにつき、1回のMP増加量を1減少する。",
+        "removalCondition":  "浄化・祓詞・浄化結界",
+        "stacking":  "可（最大3）",
+        "description":  "MP増加量は最低0。"
+    }
+]

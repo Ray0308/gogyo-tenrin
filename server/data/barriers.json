@@ -1,0 +1,50 @@
+[
+    {
+        "id":  "barrier_guardian",
+        "name":  "守護結界",
+        "attribute":  "土",
+        "system":  "結界術",
+        "timing":  "ダメージ処理時",
+        "target":  "設置者",
+        "effectText":  "設置者が受ける攻撃ダメージ、貫通ダメージ、効果ダメージを1軽減。呪い継続ダメージと味方式神へのダメージには適用しない。",
+        "durability":  null,
+        "triggerCount":  null,
+        "description":  "各ダメージ処理ごとに適用。"
+    },
+    {
+        "id":  "barrier_spirit_vein",
+        "name":  "霊脈結界",
+        "attribute":  "水",
+        "system":  "結界術",
+        "timing":  "設置者のターン開始時",
+        "target":  "設置者",
+        "effectText":  "MP＋1。相生は発生しない。設置ターンには発動しない。",
+        "durability":  null,
+        "triggerCount":  null,
+        "description":  "次の自分ターン開始時から発動。"
+    },
+    {
+        "id":  "barrier_purification",
+        "name":  "浄化結界",
+        "attribute":  "金",
+        "system":  "結界術",
+        "timing":  "設置者のターン終了時",
+        "target":  "自分側",
+        "effectText":  "設置者のターン終了時、自分側の呪いを1つ解除する。対象はプレイヤーを最優先し、次に呪い保有数が最も多い味方式神、同数なら最も古く召喚された式神を選ぶ。対象に複数の呪いがある場合、最も古く付与された呪いを解除する。複数スタック型は1スタックだけ解除する。",
+        "durability":  null,
+        "triggerCount":  null,
+        "description":  "複数スタックは1スタックだけ解除。"
+    },
+    {
+        "id":  "barrier_binding",
+        "name":  "呪縛結界",
+        "attribute":  "木",
+        "system":  "結界術",
+        "timing":  "相手ターン開始時",
+        "target":  "相手式神1体",
+        "effectText":  "相手ターン開始時、相手式神をランダムに1体選び、そのターン終了まで呪い：呪縛を付与する。対象がすでに呪縛状態の場合、持続期間をそのターン終了まで更新する。3回発動で消滅し、対象不在・無効化でも回数を消費する。",
+        "durability":  null,
+        "triggerCount":  3,
+        "description":  "3回発動で消滅。対象不在・無効化でも回数消費。"
+    }
+]

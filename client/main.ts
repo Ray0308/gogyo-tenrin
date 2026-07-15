@@ -1,4 +1,4 @@
-import {
+﻿import {
   type ActionResult,
   type FiveElement,
   type SessionState,
@@ -31,10 +31,11 @@ const elements: Record<FiveElement, { name: string; mark: string }> = {
 };
 
 type LocalScreen = "connecting" | "title" | "cpu_setup" | "online";
-type Dialog = "rules" | "settings" | null;
+type Dialog = "rules" | "settings" | "card" | null;
 interface Settings { bgm: number; sound: number; vibration: boolean; speed: string; log: boolean }
 let screen: LocalScreen = "connecting";
 let dialog: Dialog = null;
+let selectedCardId: string | null = null;
 let state: SessionState = { phase: "title" };
 let busy = false;
 let errorMessage = "";
@@ -95,13 +96,29 @@ function renderReveal(): void {
   app.innerHTML = shell(`<header class="compact-header"><p class="eyebrow">ATTRIBUTE REVEAL</p><h1>属性公開</h1></header><div class="versus"><div>${elementBadge(state.playerAttribute)}<strong>${escapeHtml(state.playerName ?? "あなた")}</strong></div><b>対</b><div>${elementBadge(state.cpuAttribute)}<strong>CPU</strong></div></div>${error()}<div class="menu">${button("対戦を開始", "enter-match")}</div>`);
 }
 function unitSlots(): string { return `<div class="unit-slots"><div>式神枠</div><div>式神枠</div><div>式神枠</div></div>`; }
+function cardAttributeClass(attribute: string): string {
+  return ({ "木": "wood", "火": "fire", "土": "earth", "金": "metal", "水": "water", "無属性": "neutral" } as Record<string, string>)[attribute] ?? "neutral";
+}
 function renderBattle(): void {
-  app.innerHTML = `<section class="battle"><header class="battle-player opponent"><div><span>CPU</span><strong>HP 30</strong></div>${elementBadge(state.cpuAttribute)}<div class="resource"><span>MP 0 / 30</span><span>COST 5</span></div></header><section class="field enemy"><p>相手式神</p>${unitSlots()}</section><section class="terrain"><span>共有地形</span><strong>通常状態</strong><div class="field-ring"></div></section><section class="field ally"><p>味方式神</p>${unitSlots()}</section><header class="battle-player"><div><span>${escapeHtml(state.playerName ?? "あなた")}</span><strong>HP 30</strong></div>${elementBadge(state.playerAttribute)}<div class="resource"><span>MP 0 / 30</span><span>COST 5</span></div></header><section class="hand"><div class="phase-label">対戦準備完了</div><p>カードマスターデータとターン進行は次の工程で接続します。</p><div class="battle-actions">${button("ルール", "rules", "small secondary")}${button("設定", "settings", "small secondary")}${button("タイトルへ戻る", "reset", "small text")}</div></section></section>`;
+  const battle = state.battle;
+  if (!battle) {
+    app.innerHTML = shell(`<div class="notice-card"><h2>対戦状態を取得できません</h2><p>タイトルへ戻って対戦を開始し直してください。</p>${button("タイトルへ戻る", "reset")}</div>`);
+    return;
+  }
+  const cards = battle.player.hand.map((card) => `<button class="hand-card ${cardAttributeClass(card.attribute)}" data-card-instance="${card.instanceId}"><span class="hand-card-system">${escapeHtml(card.system)}</span><strong>${escapeHtml(card.name.split("：").at(-1) ?? card.name)}</strong><span class="hand-card-attribute">${escapeHtml(card.attribute)}</span><span class="hand-card-cost">C ${card.cost}</span>${card.mpCost > 0 ? `<span class="hand-card-mp">MP ${card.mpCost}</span>` : ""}<small>${escapeHtml(card.effectText)}</small></button>`).join("");
+  app.innerHTML = `<section class="battle"><header class="battle-player opponent"><div><span>CPU</span><strong>HP ${battle.cpu.hp}</strong></div>${elementBadge(state.cpuAttribute)}<div class="resource"><span>MP ${battle.cpu.mp} / 30</span><span>COST ${battle.cpu.cost}</span><span>手札 ${battle.cpu.handCount}</span></div></header><section class="field enemy"><p>相手式神</p>${unitSlots()}</section><section class="terrain"><span>共有地形</span><strong>通常状態</strong><div class="field-ring"></div></section><section class="field ally"><p>味方式神</p>${unitSlots()}</section><header class="battle-player"><div><span>${escapeHtml(state.playerName ?? "あなた")}</span><strong>HP ${battle.player.hp}</strong></div>${elementBadge(state.playerAttribute)}<div class="resource"><span>MP ${battle.player.mp} / 30</span><span>COST ${battle.player.cost}</span></div></header><section class="hand"><div class="phase-label">第${battle.turnNumber}ターン・カード使用フェーズ</div><div class="hand-cards" aria-label="自分の手札">${cards}</div><p>カードを選ぶと詳細を確認できます。カード使用処理は次の実装段階で接続します。</p><div class="battle-actions">${button("ルール", "rules", "small secondary")}${button("設定", "settings", "small secondary")}${button("タイトルへ戻る", "reset", "small text")}</div></section></section>`;
 }
 function renderDialog(): void {
-  const content = dialog === "rules"
-    ? `<h2>基本ルール</h2><p>木・火・土・金・水を巡らせ、カードと式神を用いて相手のHPを0にします。</p><p>ゲーム進行と判定はサーバーが管理します。</p>`
-    : `<h2>設定</h2><label>BGM音量 <input type="range" min="0" max="100" value="${settings.bgm}" data-setting="bgm"></label><label>効果音音量 <input type="range" min="0" max="100" value="${settings.sound}" data-setting="sound"></label><label class="check"><input type="checkbox" ${settings.vibration ? "checked" : ""} data-setting="vibration">振動</label><label>演出速度 <select data-setting="speed"><option value="slow" ${settings.speed === "slow" ? "selected" : ""}>ゆっくり</option><option value="normal" ${settings.speed === "normal" ? "selected" : ""}>標準</option><option value="fast" ${settings.speed === "fast" ? "selected" : ""}>速い</option></select></label><label class="check"><input type="checkbox" ${settings.log ? "checked" : ""} data-setting="log">対戦ログを表示</label>`;
+  let content: string;
+  if (dialog === "rules") {
+    content = `<h2>基本ルール</h2><p>木・火・土・金・水を巡らせ、カードと式神を用いて相手のHPを0にします。</p><p>ゲーム進行と判定はサーバーが管理します。</p>`;
+  } else if (dialog === "card") {
+    const card = state.battle?.player.hand.find((item) => item.instanceId === selectedCardId);
+    if (!card) { dialog = null; return; }
+    content = `<div class="card-detail ${cardAttributeClass(card.attribute)}"><p class="eyebrow">${escapeHtml(card.category)} / ${escapeHtml(card.system)}</p><h2>${escapeHtml(card.name)}</h2><div class="card-detail-meta"><span>属性 ${escapeHtml(card.attribute)}</span><span>コスト ${card.cost}</span><span>MP ${card.mpCost}</span></div><h3>効果</h3><p>${escapeHtml(card.effectText)}</p><h3>対象</h3><p>${escapeHtml(card.target)}</p><h3>使用タイミング</h3><p>${escapeHtml(card.timing)}</p><p class="flavor">${escapeHtml(card.flavorText)}</p></div>`;
+  } else {
+    content = `<h2>設定</h2><label>BGM音量<input type="range" min="0" max="100" value="${settings.bgm}" data-setting="bgm"></label><label>効果音音量<input type="range" min="0" max="100" value="${settings.sound}" data-setting="sound"></label><label class="check"><input type="checkbox" ${settings.vibration ? "checked" : ""} data-setting="vibration">振動</label><label>演出速度 <select data-setting="speed"><option value="slow" ${settings.speed === "slow" ? "selected" : ""}>ゆっくり</option><option value="normal" ${settings.speed === "normal" ? "selected" : ""}>標準</option><option value="fast" ${settings.speed === "fast" ? "selected" : ""}>速い</option></select></label><label class="check"><input type="checkbox" ${settings.log ? "checked" : ""} data-setting="log">対戦ログを表示</label>`;
+  }
   app.insertAdjacentHTML("beforeend", `<div class="modal-backdrop"><section class="modal">${content}<button class="menu-button" data-action="close-dialog">閉じる</button></section></div>`);
 }
 
@@ -130,7 +147,9 @@ socket.io.on("reconnect_attempt", () => { screen = "connecting"; render(); });
 app.addEventListener("click", (event) => {
   const target = event.target as HTMLElement;
   const action = target.closest<HTMLElement>("[data-action]")?.dataset.action;
+  const cardInstanceId = target.closest<HTMLElement>("[data-card-instance]")?.dataset.cardInstance;
   const attribute = target.closest<HTMLElement>("[data-element]")?.dataset.element as FiveElement | undefined;
+  if (cardInstanceId && !busy) { selectedCardId = cardInstanceId; dialog = "card"; render(); return; }
   if (attribute && !busy) { busy = true; render(); socket.emit("attribute:select", { attribute }, applyResult); return; }
   if (!action || busy) return;
   if (action === "retry") socket.connect();
@@ -138,7 +157,7 @@ app.addEventListener("click", (event) => {
   else if (action === "online") { screen = "online"; render(); }
   else if (action === "title") { screen = "title"; render(); }
   else if (action === "rules" || action === "settings") { dialog = action; render(); }
-  else if (action === "close-dialog") { dialog = null; render(); }
+  else if (action === "close-dialog") { dialog = null; selectedCardId = null; render(); }
   else if (action === "enter-match") { busy = true; render(); socket.emit("match:enter", applyResult); }
   else if (action === "reset") { busy = true; localStorage.removeItem(TOKEN_KEY); socket.emit("session:reset", (result) => { screen = "title"; applyResult(result); }); }
 });
