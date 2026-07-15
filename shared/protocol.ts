@@ -3,6 +3,7 @@ export type FiveElement = (typeof FIVE_ELEMENTS)[number];
 export type GamePhase = "title" | "attribute_selection" | "attribute_reveal" | "battle";
 export type CardPlayTarget = "cpu_player" | "cpu_unit" | "cpu_any" | "cpu_field" | "player" | "player_field";
 export type CardTarget = "cpu_player" | "cpu_field" | "player" | "player_field" | `cpu_unit:${string}`;
+export type DefenseTarget = "player" | `player_unit:${string}`;
 
 export interface CardView {
   instanceId: string;
@@ -58,10 +59,17 @@ export interface BattlePlayerState {
 export interface BattleState {
   turnNumber: number;
   activePlayer: "player" | "cpu";
-  phase: "card_use" | "resolving" | "finished";
+  phase: "card_use" | "reaction" | "resolving" | "finished";
   winner?: "player" | "cpu";
   player: BattlePlayerState & { hand: CardView[]; discard: CardView[] };
   cpu: BattlePlayerState & { handCount: number };
+  reaction?: {
+    sourceName: string;
+    attackerName: string;
+    targets: { id: DefenseTarget; label: string; predictedDamage: number }[];
+    eligibleCardIds: string[];
+    deadline: number;
+  };
   log: string[];
 }
 
@@ -86,6 +94,7 @@ export interface ClientToServerEvents {
   "attribute:select": (payload: { attribute: FiveElement }, callback: (result: ActionResult) => void) => void;
   "match:enter": (callback: (result: ActionResult) => void) => void;
   "card:use": (payload: { instanceId: string; target: CardTarget }, callback: (result: ActionResult) => void) => void;
+  "reaction:respond": (payload: { instanceId?: string; target?: DefenseTarget }, callback: (result: ActionResult) => void) => void;
   "turn:end": (callback: (result: ActionResult) => void) => void;
   "session:reset": (callback: (result: ActionResult) => void) => void;
 }

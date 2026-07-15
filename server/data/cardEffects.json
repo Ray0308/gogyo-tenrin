@@ -382,5 +382,50 @@
     "cardId": "card_summon_hinotori",
     "target": "self_field",
     "shikigamiId": "shikigami_hinotori"
+  },
+  {
+    "type": "defense", "cardId": "card_shufu_wood", "scope": "single", "mode": "reduce", "amount": 3, "postEffect": "heal"
+  },
+  {
+    "type": "defense", "cardId": "card_shufu_fire", "scope": "single", "mode": "reduce", "amount": 3, "postEffect": "retaliate"
+  },
+  {
+    "type": "defense", "cardId": "card_shufu_earth", "scope": "single", "mode": "reduce", "amount": 4
+  },
+  {
+    "type": "defense", "cardId": "card_shufu_metal", "scope": "single", "mode": "reduce", "amount": 3, "allowEffectDamage": true
+  },
+  {
+    "type": "defense", "cardId": "card_shufu_water", "scope": "single", "mode": "reduce", "amount": 3, "postEffect": "gain_mp"
+  },
+  {
+    "type": "defense", "cardId": "card_utsusemi_wood", "scope": "single", "mode": "nullify", "amount": 0, "postEffect": "heal"
+  },
+  {
+    "type": "defense", "cardId": "card_utsusemi_fire", "scope": "single", "mode": "nullify", "amount": 0, "postEffect": "retaliate"
+  },
+  {
+    "type": "defense", "cardId": "card_utsusemi_earth", "scope": "single", "mode": "nullify", "amount": 0, "postEffect": "next_reduction"
+  },
+  {
+    "type": "defense", "cardId": "card_utsusemi_metal", "scope": "single", "mode": "nullify", "amount": 0, "allowEffectDamage": true
+  },
+  {
+    "type": "defense", "cardId": "card_utsusemi_water", "scope": "single", "mode": "nullify", "amount": 0, "postEffect": "gain_mp"
+  },
+  {
+    "type": "defense", "cardId": "card_kekkaifu_wood", "scope": "all", "mode": "reduce", "amount": 1, "postEffect": "heal_lowest_damaged"
+  },
+  {
+    "type": "defense", "cardId": "card_kekkaifu_fire", "scope": "all", "mode": "reduce", "amount": 1, "postEffect": "retaliate"
+  },
+  {
+    "type": "defense", "cardId": "card_kekkaifu_earth", "scope": "all", "mode": "reduce", "amount": 2
+  },
+  {
+    "type": "defense", "cardId": "card_kekkaifu_metal", "scope": "all", "mode": "reduce", "amount": 1, "allowEffectDamage": true
+  },
+  {
+    "type": "defense", "cardId": "card_kekkaifu_water", "scope": "all", "mode": "reduce", "amount": 1, "postEffect": "gain_mp"
   }
 ]

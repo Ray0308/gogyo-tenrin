@@ -8,6 +8,7 @@ import { Server } from "socket.io";
 import {
   FIVE_ELEMENTS,
   type BattlePlayerState,
+  type DefenseTarget,
   type CardPlayTarget,
   type CardTarget,
   type CardView,
@@ -29,8 +30,14 @@ type AttributeMatchEffect =
 interface AttackDefinition { type:"attack"; cardId:string; target:"opponent_any"|"opponent_unit"|"opponent_units"; baseDamage:number; ignoreTaunt?:boolean; healSelf?:number; attributeMatchEffect?:AttributeMatchEffect }
 interface TurnDefinition { type:"turn"; cardId:string; target:"self_player"; steps:number }
 interface SummonDefinition { type:"summon"; cardId:string; target:"self_field"; shikigamiId:string }
-type CardEffectDefinition = AttackDefinition|TurnDefinition|SummonDefinition;
-interface StoredSession { state:SessionState; cpuHand:CardView[]; cpuDiscard:CardView[] }
+interface DefenseDefinition { type:"defense"; cardId:string; scope:"single"|"all"; mode:"reduce"|"nullify"; amount:number; postEffect?:"heal"|"retaliate"|"gain_mp"|"next_reduction"|"heal_lowest_damaged"; allowEffectDamage?:boolean }
+type CardEffectDefinition = AttackDefinition|TurnDefinition|SummonDefinition|DefenseDefinition;
+interface PendingReaction {
+  eligibleCardIds:string[]; remainingMs:number; timer?:ReturnType<typeof setTimeout>;
+  targets:{id:DefenseTarget;target:UnitTarget;predictedDamage:number}[];
+  resolve:(definition?:DefenseDefinition,target?:DefenseTarget)=>void;
+}
+interface StoredSession { state:SessionState; cpuHand:CardView[]; cpuDiscard:CardView[]; pendingReaction?:PendingReaction; cpuCardActions:number }
 type Side = "player"|"cpu";
 type UnitTarget = { type:"player" }|{ type:"unit"; unit:ShikigamiState };
 
@@ -68,6 +75,7 @@ validateMaster();
 function publicState(state:SessionState):SessionState{return structuredClone(state)}
 function currentSession(socketId:string):StoredSession|undefined{const token=socketTokens.get(socketId);return token?sessions.get(token):undefined}
 function sendState(socketId:string,state:SessionState):void{io.to(socketId).emit("session:state",publicState(state))}
+function sendSessionState(session:StoredSession):void{for(const [socketId,token] of socketTokens){if(sessions.get(token)===session)sendState(socketId,session.state)}}
 function drawCard():CardView{
   let cursor=(randomInt(0,1_000_000_000)/1_000_000_000)*totalCardWeight;let selected=cards[cards.length-1];
   for(const card of cards){cursor-=card.weight;if(cursor<0){selected=card;break}}
@@ -96,8 +104,9 @@ function isDefinitionUsable(state:SessionState,side:Side,card:CardView,definitio
 function refreshPlayability(state:SessionState):void{
   const battle=state.battle;if(!battle)return;
   for(const card of battle.player.hand){card.playTarget=undefined;card.ignoreTaunt=undefined;const definition=effectByCardId.get(card.cardId);
-    if(battle.phase!=="card_use"||battle.activePlayer!=="player"){card.playable=false;card.unusableReason="現在はカードを使用できません。"}
-    else if(!definition){card.playable=false;card.unusableReason="このカードの構造化効果データは未接続です。"}
+    if(battle.phase==="reaction"){card.playable=Boolean(battle.reaction?.eligibleCardIds.includes(card.instanceId));card.unusableReason=card.playable?undefined:"今回の反応受付では使用できません。"}
+    else if(battle.phase!=="card_use"||battle.activePlayer!=="player"){card.playable=false;card.unusableReason="現在はカードを使用できません。"}
+    else if(!definition||definition.type==="defense"){card.playable=false;card.unusableReason=definition?.type==="defense"?"防御札は反応受付中に使用します。":"このカードの構造化効果データは未接続です。"}
     else{const reason=isDefinitionUsable(state,"player",card,definition);card.playable=!reason;card.unusableReason=reason;card.playTarget=expectedPlayerTarget(definition);card.ignoreTaunt=definition.type==="attack"&&definition.ignoreTaunt}
   }
 }
@@ -149,29 +158,50 @@ function attackTargets(state:SessionState,side:Side,definition:AttackDefinition,
   const damage=applyDamageToPlayer(state,side,1);state.battle!.log.push(`火傷により${side==="player"?"プレイヤー":"CPU"}へ${damage}ダメージ。`);burn.remainingTriggers=(burn.remainingTriggers??2)-1;if(burn.remainingTriggers<=0)actor.curses=actor.curses.filter(curse=>curse!==burn);
 }
 function createShikigami(master:ShikigamiMaster):ShikigamiState{return {instanceId:randomUUID(),shikigamiId:master.id,name:master.name,attribute:master.attribute,hp:master.maxHp,maxHp:master.maxHp,attack:master.attack,aiProfile:master.aiProfile,keywords:master.keywords?master.keywords.split(/[・、,]/).filter(Boolean):[],ability:master.ability,curses:[],nextDamageReduction:0}}
-function executeCard(session:StoredSession,side:Side,index:number,externalTarget?:CardTarget):{ok:boolean;message?:string}{
-  const state=session.state,battle=state.battle!,hand=handForSide(session,side),card=hand[index],definition=card?effectByCardId.get(card.cardId):undefined;
-  if(!card)return {ok:false,message:"手札に存在しないカードです。"};if(!definition)return {ok:false,message:"このカードの効果処理はまだ接続されていません。"};
-  if(definition.type==="attack"){if(!validateAttackTarget(state,side,definition,externalTarget))return {ok:false,message:"対象が不正です。"}}
-  else if(side==="player"&&externalTarget!==expectedPlayerTarget(definition))return {ok:false,message:"対象が不正です。"};
-  const reason=isDefinitionUsable(state,side,card,definition);if(reason)return {ok:false,message:reason};
-  const actor=stateForSide(state,side),defenderSide=otherSide(side),actorAttribute=attributeForSide(state,side),cardElement=cardAttributeToElement[card.attribute];
-  if(!cardElement&&definition.type!=="summon")return {ok:false,message:"カード属性が不正です。"};
-  actor.cost-=card.cost;actor.mp-=card.mpCost;
-  if(definition.type==="attack"){
-    const match=cardElement===actorAttribute,targets=attackTargets(state,side,definition,externalTarget),ignore=match?applySelfMatchEffect(state,side,definition.attributeMatchEffect):0;
-    for(const target of targets){const targetElement=targetAttribute(state,side,target),overcoming=Boolean(targetElement&&overcomes[cardElement!]===targetElement),amount=definition.baseDamage+(match?1:0)+(overcoming?2:0);const damage=target.type==="player"?applyDamageToPlayer(state,defenderSide,amount,ignore):applyDamageToUnit(target.unit,amount,ignore);battle.log.push(`${side==="player"?"プレイヤー":"CPU"}が${card.name}を使用し、${target.type==="player"?(side==="player"?"CPU":"プレイヤー"):target.unit.name}へ${damage}ダメージ。`);if(match&&definition.attributeMatchEffect)applyTargetCurse(state,side,target,definition.attributeMatchEffect);if(overcoming)battle.log.push("相剋成立：ダメージに＋2。")}
-    if(match)battle.log.push("属性一致：基本効果量に＋1。");if(definition.healSelf)actor.hp=Math.min(30,actor.hp+definition.healSelf);cleanupUnits(state,defenderSide);
-  }else if(definition.type==="turn"){
-    const current=FIVE_ELEMENTS.indexOf(actorAttribute),next=FIVE_ELEMENTS[(current+definition.steps%5+5)%5];setAttributeForSide(state,side,next);battle.log.push(`${side==="player"?"プレイヤー":"CPU"}が${card.name}を使用し、${elementName[actorAttribute]}から${elementName[next]}へ転輪した。`);
-  }else{
-    const master=shikigamiById.get(definition.shikigamiId)!;actor.shikigami.push(createShikigami(master));battle.log.push(`${side==="player"?"プレイヤー":"CPU"}が${master.name}を召喚した。`);
-  }
-  if(cardElement&&generates[actorAttribute]===cardElement){actor.mp=Math.min(30,actor.mp+1);battle.log.push("相生成立：MPが1増加した。")}
-  const [used]=hand.splice(index,1);used.playable=false;used.unusableReason="使用済みです。";used.playTarget=undefined;discardForSide(session,side).push(used);if(side==="cpu")battle.cpu.handCount=session.cpuHand.length;triggerBurnAfterCard(state,side);finishIfNeeded(state);refreshPlayability(state);return {ok:true};
-}function usePlayerCard(session:StoredSession,instanceId:string,target:CardTarget):{ok:boolean;message?:string}{
-  const battle=session.state.battle;if(!battle||session.state.phase!=="battle"||battle.phase!=="card_use"||battle.activePlayer!=="player")return {ok:false,message:"現在はカードを使用できません。"};const index=battle.player.hand.findIndex(card=>card.instanceId===instanceId);return executeCard(session,"player",index,target);
+function defenseTargetId(target:UnitTarget):DefenseTarget{return target.type==="player"?"player":`player_unit:${target.unit.instanceId}`}
+function defenseTargetLabel(target:UnitTarget):string{return target.type==="player"?"プレイヤー":target.unit.name}
+function defenseCards(session:StoredSession,side:Side):{card:CardView;definition:DefenseDefinition}[]{
+  const actor=stateForSide(session.state,side);return handForSide(session,side).flatMap(card=>{const definition=effectByCardId.get(card.cardId);return definition?.type==="defense"&&card.cost===0&&actor.mp>=card.mpCost?[{card,definition}]:[]});
 }
+function consumeUsedCard(session:StoredSession,side:Side,index:number):CardView{
+  const battle=session.state.battle!,hand=handForSide(session,side),[used]=hand.splice(index,1);used.playable=false;used.unusableReason="使用済みです。";used.playTarget=undefined;discardForSide(session,side).push(used);if(side==="cpu")battle.cpu.handCount=session.cpuHand.length;return used;
+}
+function applyDefensePostEffect(state:SessionState,defenderSide:Side,definition:DefenseDefinition,protectedTargets:UnitTarget[],damagedTargets:UnitTarget[],prevented:number,attackerSide:Side):void{
+  const battle=state.battle!,defender=stateForSide(state,defenderSide);
+  if(definition.postEffect==="heal"&&protectedTargets[0]){const target=protectedTargets[0];if(target.type==="player")defender.hp=Math.min(30,defender.hp+1);else target.unit.hp=Math.min(target.unit.maxHp,target.unit.hp+1);battle.log.push(`${defenseTargetLabel(target)}のHPが1回復した。`)}
+  else if(definition.postEffect==="heal_lowest_damaged"&&damagedTargets.length){const sorted=[...damagedTargets].sort((a,b)=>{const ar=a.type==="player"?defender.hp/30:a.unit.hp/a.unit.maxHp,br=b.type==="player"?defender.hp/30:b.unit.hp/b.unit.maxHp;return ar-br});const target=sorted[0];if(target.type==="player")defender.hp=Math.min(30,defender.hp+1);else target.unit.hp=Math.min(target.unit.maxHp,target.unit.hp+1);battle.log.push(`${defenseTargetLabel(target)}のHPが1回復した。`)}
+  else if(definition.postEffect==="gain_mp"){defender.mp=Math.min(30,defender.mp+1);battle.log.push(`${defenderSide==="player"?"プレイヤー":"CPU"}のMPが1増加した。`)}
+  else if(definition.postEffect==="next_reduction"&&protectedTargets[0]){const target=protectedTargets[0];if(target.type==="player")defender.nextDamageReduction=Math.max(defender.nextDamageReduction,1);else target.unit.nextDamageReduction=Math.max(target.unit.nextDamageReduction,1);battle.log.push(`${defenseTargetLabel(target)}は次に受けるダメージを1軽減する。`)}
+  else if(definition.postEffect==="retaliate"&&prevented>0){const damage=applyDamageToPlayer(state,attackerSide,1);battle.log.push(`防御札の反撃により${attackerSide==="player"?"プレイヤー":"CPU"}へ${damage}ダメージ。`)}
+}
+function resolveCardAttack(state:SessionState,side:Side,card:CardView,definition:AttackDefinition,targets:UnitTarget[],cardElement:FiveElement,match:boolean,ignore:number,defense?:DefenseDefinition,selectedTarget?:DefenseTarget):void{
+  const battle=state.battle!,defenderSide=otherSide(side),protectedTargets=defense?(defense.scope==="all"?targets:targets.filter(target=>defenseTargetId(target)===selectedTarget)):[],damagedTargets:UnitTarget[]=[];let prevented=0;
+  for(const target of targets){const targetElement=targetAttribute(state,side,target),overcoming=Boolean(targetElement&&overcomes[cardElement]===targetElement),raw=definition.baseDamage+(match?1:0)+(overcoming?2:0),protectedTarget=protectedTargets.includes(target),adjusted=protectedTarget?(defense!.mode==="nullify"?0:Math.max(0,raw-defense!.amount)):raw;prevented+=raw-adjusted;const damage=target.type==="player"?applyDamageToPlayer(state,defenderSide,adjusted,ignore):applyDamageToUnit(target.unit,adjusted,ignore);if(damage>0)damagedTargets.push(target);battle.log.push(`${side==="player"?"プレイヤー":"CPU"}が${card.name}を使用し、${target.type==="player"?(side==="player"?"CPU":"プレイヤー"):target.unit.name}へ${damage}ダメージ。`);if(match&&definition.attributeMatchEffect)applyTargetCurse(state,side,target,definition.attributeMatchEffect);if(overcoming)battle.log.push("相剋成立：ダメージに＋2。");}
+  if(match)battle.log.push("属性一致：基本効果量に＋1。");if(definition.healSelf)stateForSide(state,side).hp=Math.min(30,stateForSide(state,side).hp+definition.healSelf);if(defense)applyDefensePostEffect(state,defenderSide,defense,protectedTargets,damagedTargets,prevented,side);cleanupUnits(state,defenderSide);cleanupUnits(state,side);
+}
+function armReactionTimer(session:StoredSession,pending:PendingReaction):void{const battle=session.state.battle!;const duration=Math.max(0,pending.remainingMs);if(battle.reaction)battle.reaction.deadline=Date.now()+duration;pending.timer=setTimeout(()=>{if(session.pendingReaction!==pending)return;battle.log.push("反応受付が時間切れとなった。");finishReaction(session);sendSessionState(session)},duration)}
+function beginReaction(session:StoredSession,card:CardView,targets:UnitTarget[],predictions:number[],resolve:(definition?:DefenseDefinition,target?:DefenseTarget)=>void):void{
+  const battle=session.state.battle!,eligible=defenseCards(session,"player");battle.phase="reaction";battle.log.push(`${card.name}に対する反応受付を開始した。`);battle.reaction={sourceName:card.name,attackerName:"CPU",targets:targets.map((target,index)=>({id:defenseTargetId(target),label:defenseTargetLabel(target),predictedDamage:predictions[index]})),eligibleCardIds:eligible.map(item=>item.card.instanceId),deadline:Date.now()+10_000};const pending:PendingReaction={eligibleCardIds:battle.reaction.eligibleCardIds,remainingMs:10_000,targets:targets.map((target,index)=>({id:defenseTargetId(target),target,predictedDamage:predictions[index]})),resolve};session.pendingReaction=pending;armReactionTimer(session,pending);refreshPlayability(session.state);
+}
+function finishReaction(session:StoredSession,instanceId?:string,targetId?:DefenseTarget):{ok:boolean;message?:string}{
+  const pending=session.pendingReaction,battle=session.state.battle;if(!pending||!battle||battle.phase!=="reaction")return {ok:false,message:"現在は反応受付中ではありません。"};let definition:DefenseDefinition|undefined;
+  if(instanceId){if(!pending.eligibleCardIds.includes(instanceId))return {ok:false,message:"この防御札は使用できません。"};const index=battle.player.hand.findIndex(card=>card.instanceId===instanceId);const card=battle.player.hand[index],effect=card?effectByCardId.get(card.cardId):undefined;if(!card||effect?.type!=="defense")return {ok:false,message:"防御札が見つかりません。"};if(effect.scope==="single"){if(pending.targets.length===1)targetId=pending.targets[0].id;if(!targetId||!pending.targets.some(target=>target.id===targetId))return {ok:false,message:"防御する対象を選択してください。"}}stateForSide(session.state,"player").mp-=card.mpCost;consumeUsedCard(session,"player",index);definition=effect;battle.log.push(`プレイヤーが${card.name}を使用した。`)}else battle.log.push("プレイヤーは防御札を使用しなかった。");
+  if(pending.timer)clearTimeout(pending.timer);delete session.pendingReaction;delete battle.reaction;pending.resolve(definition,targetId);return {ok:true};
+}
+function executeCard(session:StoredSession,side:Side,index:number,externalTarget?:CardTarget):{ok:boolean;message?:string;paused?:boolean}{
+  const state=session.state,battle=state.battle!,hand=handForSide(session,side),card=hand[index],definition=card?effectByCardId.get(card.cardId):undefined;
+  if(!card)return {ok:false,message:"手札に存在しないカードです。"};if(!definition||definition.type==="defense")return {ok:false,message:"このカードの効果処理はまだ接続されていません。"};
+  if(definition.type==="attack"){if(!validateAttackTarget(state,side,definition,externalTarget))return {ok:false,message:"対象が不正です。"}}else if(side==="player"&&externalTarget!==expectedPlayerTarget(definition))return {ok:false,message:"対象が不正です。"};
+  const reason=isDefinitionUsable(state,side,card,definition);if(reason)return {ok:false,message:reason};const actor=stateForSide(state,side),actorAttribute=attributeForSide(state,side),cardElement=cardAttributeToElement[card.attribute];if(!cardElement&&definition.type!=="summon")return {ok:false,message:"カード属性が不正です。"};actor.cost-=card.cost;actor.mp-=card.mpCost;
+  if(definition.type==="attack"){
+    const match=cardElement===actorAttribute,targets=attackTargets(state,side,definition,externalTarget),ignore=match?applySelfMatchEffect(state,side,definition.attributeMatchEffect):0;consumeUsedCard(session,side,index);const resolve=(defense?:DefenseDefinition,defenseTarget?:DefenseTarget)=>{resolveCardAttack(state,side,card,definition,targets,cardElement!,match,ignore,defense,defenseTarget);if(cardElement&&generates[actorAttribute]===cardElement){actor.mp=Math.min(30,actor.mp+1);battle.log.push("相生成立：MPが1増加した。")}triggerBurnAfterCard(state,side);finishIfNeeded(state);refreshPlayability(state)};
+    if(side==="cpu"&&defenseCards(session,"player").length){const predictions=targets.map(target=>{const targetElement=targetAttribute(state,side,target);return definition.baseDamage+(match?1:0)+(targetElement&&overcomes[cardElement!]===targetElement?2:0)});beginReaction(session,card,targets,predictions,(defense,defenseTarget)=>{resolve(defense,defenseTarget);if(!finishIfNeeded(state))continueCpuTurn(session)});return {ok:true,paused:true}}
+    if(side==="player"){const choices=defenseCards(session,"cpu"),choice=choices.find(item=>item.definition.scope==="all"||targets.length===1);if(choice&&targets.some(target=>target.type==="player"?stateForSide(state,"cpu").hp<=definition.baseDamage+2:target.unit.hp<=definition.baseDamage+2)){const cpuIndex=session.cpuHand.findIndex(item=>item.instanceId===choice.card.instanceId);stateForSide(state,"cpu").mp-=choice.card.mpCost;consumeUsedCard(session,"cpu",cpuIndex);battle.log.push(`CPUが${choice.card.name}を使用した。`);resolve(choice.definition,choice.definition.scope==="single"?defenseTargetId(targets[0]):undefined)}else resolve()}else resolve();return {ok:true};
+  }
+  if(definition.type==="turn"){const current=FIVE_ELEMENTS.indexOf(actorAttribute),next=FIVE_ELEMENTS[(current+definition.steps%5+5)%5];setAttributeForSide(state,side,next);battle.log.push(`${side==="player"?"プレイヤー":"CPU"}が${card.name}を使用し、${elementName[actorAttribute]}から${elementName[next]}へ転輪した。`)}else{const master=shikigamiById.get(definition.shikigamiId)!;actor.shikigami.push(createShikigami(master));battle.log.push(`${side==="player"?"プレイヤー":"CPU"}が${master.name}を召喚した。`)}
+  if(cardElement&&generates[actorAttribute]===cardElement){actor.mp=Math.min(30,actor.mp+1);battle.log.push("相生成立：MPが1増加した。")}consumeUsedCard(session,side,index);triggerBurnAfterCard(state,side);finishIfNeeded(state);refreshPlayability(state);return {ok:true};
+}
+function usePlayerCard(session:StoredSession,instanceId:string,target:CardTarget):{ok:boolean;message?:string}{const battle=session.state.battle;if(!battle||session.state.phase!=="battle"||battle.phase!=="card_use"||battle.activePlayer!=="player")return {ok:false,message:"現在はカードを使用できません。"};const index=battle.player.hand.findIndex(card=>card.instanceId===instanceId);return executeCard(session,"player",index,target)}
 function chooseUnitTarget(state:SessionState,side:Side,unit:ShikigamiState):UnitTarget{
   const opponent=stateForSide(state,otherSide(side));const taunts=opponent.shikigami.filter(target=>target.keywords.includes("挑発"));let units=taunts.length?taunts:opponent.shikigami.filter(target=>!target.keywords.includes("ステルス"));if(taunts.length)return {type:"unit",unit:taunts[randomInt(taunts.length)]};
   if(unit.aiProfile.includes("相手式神")||unit.aiProfile.includes("攻撃力が最も高い")){if(units.length){if(unit.aiProfile.includes("攻撃力"))units=[...units].sort((a,b)=>b.attack-a.attack);return {type:"unit",unit:units[0]}}}
@@ -200,27 +230,27 @@ function resolvePoisonAtTurnEnd(state:SessionState,side:Side):void{
   const battle=state.battle!,owner=stateForSide(state,side),poison=owner.curses.find(curse=>curse.id==="curse_poison");if(poison){const damage=applyDamageToPlayer(state,side,poison.stacks);battle.log.push(`毒により${side==="player"?"プレイヤー":"CPU"}へ${damage}ダメージ。`)}
   for(const unit of owner.shikigami){const curse=unit.curses.find(item=>item.id==="curse_poison");if(curse){const damage=applyDamageToUnit(unit,curse.stacks);battle.log.push(`毒により${unit.name}へ${damage}ダメージ。`)}}cleanupUnits(state,side);finishIfNeeded(state);
 }
-function cpuUseCards(session:StoredSession):void{
-  const state=session.state,battle=state.battle!;for(let action=0;action<5&&!finishIfNeeded(state);action++){
-    const candidates=session.cpuHand.map((card,index)=>({card,index,definition:effectByCardId.get(card.cardId)})).filter(item=>item.definition&&!isDefinitionUsable(state,"cpu",item.card,item.definition));if(!candidates.length)break;
-    const score=(item:typeof candidates[number])=>item.definition!.type==="attack"?3:item.definition!.type==="summon"?2:1;const best=Math.max(...candidates.map(score)),choices=candidates.filter(item=>score(item)===best),chosen=choices[randomInt(choices.length)];executeCard(session,"cpu",chosen.index);
-  }battle.cpu.handCount=session.cpuHand.length;
+function continueCpuTurn(session:StoredSession):void{
+  const state=session.state,battle=state.battle!;
+  while(session.cpuCardActions<5&&!finishIfNeeded(state)){const candidates=session.cpuHand.map((card,index)=>({card,index,definition:effectByCardId.get(card.cardId)})).filter(item=>item.definition&&item.definition.type!=="defense"&&!isDefinitionUsable(state,"cpu",item.card,item.definition));if(!candidates.length)break;const score=(item:typeof candidates[number])=>item.definition!.type==="attack"?3:item.definition!.type==="summon"?2:1;const best=Math.max(...candidates.map(score)),choices=candidates.filter(item=>score(item)===best),chosen=choices[randomInt(choices.length)];session.cpuCardActions+=1;const result=executeCard(session,"cpu",chosen.index);if(result.paused){battle.cpu.handCount=session.cpuHand.length;refreshPlayability(state);return}}
+  battle.cpu.handCount=session.cpuHand.length;runShikigamiPhase(state,"cpu");resolvePoisonAtTurnEnd(state,"cpu");if(finishIfNeeded(state)){refreshPlayability(state);return}
+  battle.turnNumber+=1;battle.activePlayer="player";battle.phase="card_use";battle.player.cost=5;drawToLimit(battle.player.hand,5);battle.log.push(`第${battle.turnNumber}ターン開始。手札とコストを更新した。`);refreshPlayability(state);
 }
 function endPlayerTurn(session:StoredSession):{ok:boolean;message?:string}{
   const state=session.state,battle=state.battle;if(!battle||battle.phase!=="card_use"||battle.activePlayer!=="player")return {ok:false,message:"現在はターンを終了できません。"};battle.phase="resolving";battle.log.push("プレイヤーの式神行動フェーズ。");runShikigamiPhase(state,"player");resolvePoisonAtTurnEnd(state,"player");if(finishIfNeeded(state)){refreshPlayability(state);return {ok:true}}
-  battle.activePlayer="cpu";stateForSide(state,"cpu").cost=5;drawToLimit(session.cpuHand,5);battle.cpu.handCount=session.cpuHand.length;battle.log.push("CPUターン開始。");cpuUseCards(session);runShikigamiPhase(state,"cpu");resolvePoisonAtTurnEnd(state,"cpu");if(finishIfNeeded(state)){refreshPlayability(state);return {ok:true}}
-  battle.turnNumber+=1;battle.activePlayer="player";battle.phase="card_use";battle.player.cost=5;drawToLimit(battle.player.hand,5);battle.log.push(`第${battle.turnNumber}ターン開始。手札とコストを更新した。`);refreshPlayability(state);return {ok:true};
+  battle.activePlayer="cpu";stateForSide(state,"cpu").cost=5;drawToLimit(session.cpuHand,5);battle.cpu.handCount=session.cpuHand.length;battle.log.push("CPUターン開始。");session.cpuCardActions=0;continueCpuTurn(session);return {ok:true};
 }
 
 app.get("/health",(_request,response)=>response.json({status:"ok"}));app.use(express.static(distributionDirectory));app.get("/",(_request,response)=>response.type("html").send(rootDocument));
 io.on("connection",socket=>{
   sendState(socket.id,{phase:"title"});
-  socket.on("session:resume",(token,callback)=>{const session=sessions.get(token);if(!session){callback({ok:false,message:"復帰できる対戦がありません。"});return}socketTokens.set(socket.id,token);refreshPlayability(session.state);callback({ok:true,state:publicState(session.state)});sendState(socket.id,session.state)});
-  socket.on("cpu:start",({playerName},callback)=>{const name=playerName.trim();if(!name){callback({ok:false,message:"プレイヤー名を入力してください。"});return}const previous=socketTokens.get(socket.id);if(previous)sessions.delete(previous);const token=randomUUID(),state:SessionState={phase:"attribute_selection",reconnectToken:token,playerName:name};sessions.set(token,{state,cpuHand:[],cpuDiscard:[]});socketTokens.set(socket.id,token);callback({ok:true,state:publicState(state)});sendState(socket.id,state)});
+  socket.on("session:resume",(token,callback)=>{const session=sessions.get(token);if(!session){callback({ok:false,message:"復帰できる対戦がありません。"});return}socketTokens.set(socket.id,token);if(session.pendingReaction&&!session.pendingReaction.timer)armReactionTimer(session,session.pendingReaction);refreshPlayability(session.state);callback({ok:true,state:publicState(session.state)});sendState(socket.id,session.state)});
+  socket.on("cpu:start",({playerName},callback)=>{const name=playerName.trim();if(!name){callback({ok:false,message:"プレイヤー名を入力してください。"});return}const previous=socketTokens.get(socket.id);if(previous)sessions.delete(previous);const token=randomUUID(),state:SessionState={phase:"attribute_selection",reconnectToken:token,playerName:name};sessions.set(token,{state,cpuHand:[],cpuDiscard:[],cpuCardActions:0});socketTokens.set(socket.id,token);callback({ok:true,state:publicState(state)});sendState(socket.id,state)});
   socket.on("attribute:select",({attribute},callback)=>{const session=currentSession(socket.id);if(!session||session.state.phase!=="attribute_selection"){callback({ok:false,message:"現在は属性を選択できません。"});return}if(!FIVE_ELEMENTS.includes(attribute)){callback({ok:false,message:"選択した属性が不正です。"});return}session.state.playerAttribute=attribute;session.state.cpuAttribute=FIVE_ELEMENTS[randomInt(FIVE_ELEMENTS.length)];session.state.phase="attribute_reveal";callback({ok:true,state:publicState(session.state)});sendState(socket.id,session.state)});
   socket.on("match:enter",callback=>{const session=currentSession(socket.id);if(!session||session.state.phase!=="attribute_reveal"){callback({ok:false,message:"対戦を開始できません。"});return}const hand=drawCards(5);session.cpuHand=drawCards(5);session.state.phase="battle";session.state.battle={turnNumber:1,activePlayer:"player",phase:"card_use",player:{hp:30,mp:0,cost:5,curses:[],nextDamageReduction:0,shikigami:[],hand,discard:[]},cpu:{hp:30,mp:0,cost:5,curses:[],nextDamageReduction:0,shikigami:[],handCount:session.cpuHand.length},log:["対戦を開始した。双方が5枚引いた。"]};refreshPlayability(session.state);callback({ok:true,state:publicState(session.state)});sendState(socket.id,session.state)});
   socket.on("card:use",({instanceId,target},callback)=>{const session=currentSession(socket.id);if(!session){callback({ok:false,message:"対戦情報がありません。"});return}const result=usePlayerCard(session,instanceId,target);if(!result.ok){callback(result);return}callback({ok:true,state:publicState(session.state)});sendState(socket.id,session.state)});
+  socket.on("reaction:respond",({instanceId,target},callback)=>{const session=currentSession(socket.id);if(!session){callback({ok:false,message:"対戦情報がありません。"});return}const result=finishReaction(session,instanceId,target);if(!result.ok){callback(result);return}callback({ok:true,state:publicState(session.state)});sendState(socket.id,session.state)});
   socket.on("turn:end",callback=>{const session=currentSession(socket.id);if(!session){callback({ok:false,message:"対戦情報がありません。"});return}const result=endPlayerTurn(session);if(!result.ok){callback(result);return}callback({ok:true,state:publicState(session.state)});sendState(socket.id,session.state)});
-  socket.on("session:reset",callback=>{const token=socketTokens.get(socket.id);if(token)sessions.delete(token);socketTokens.delete(socket.id);const state:SessionState={phase:"title"};callback({ok:true,state});sendState(socket.id,state)});socket.on("disconnect",()=>socketTokens.delete(socket.id));
+  socket.on("session:reset",callback=>{const session=currentSession(socket.id);if(session?.pendingReaction?.timer)clearTimeout(session.pendingReaction.timer);const token=socketTokens.get(socket.id);if(token)sessions.delete(token);socketTokens.delete(socket.id);const state:SessionState={phase:"title"};callback({ok:true,state});sendState(socket.id,state)});socket.on("disconnect",()=>{const session=currentSession(socket.id),pending=session?.pendingReaction,battle=session?.state.battle;if(pending?.timer&&battle?.reaction){pending.remainingMs=Math.max(0,battle.reaction.deadline-Date.now());clearTimeout(pending.timer);pending.timer=undefined}socketTokens.delete(socket.id)});
 });
 server.listen(port,()=>console.log(`五行転輪 server listening on port ${port}`));

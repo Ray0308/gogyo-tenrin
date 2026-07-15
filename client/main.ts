@@ -2,6 +2,7 @@ import {
   type ActionResult,
   type CardPlayTarget,
   type CardTarget,
+  type DefenseTarget,
   type FiveElement,
   type SessionState,
 } from "../shared/protocol.js";
@@ -16,6 +17,7 @@ interface BrowserSocket {
   emit(event: "attribute:select", payload: { attribute: FiveElement }, callback: Acknowledge): void;
   emit(event: "match:enter" | "session:reset", callback: Acknowledge): void;
   emit(event: "card:use", payload: { instanceId: string; target: CardTarget }, callback: Acknowledge): void;
+  emit(event: "reaction:respond", payload: { instanceId?: string; target?: DefenseTarget }, callback: Acknowledge): void;
   emit(event: "turn:end", callback: Acknowledge): void;
   connect(): void;
   io: { on(event: "reconnect_attempt", listener: () => void): void };
@@ -137,13 +139,23 @@ function renderBattle(): void {
   const finished = battle.phase === "finished";
   const result = finished ? `<div class="battle-result"><strong>${battle.winner === "player" ? "勝利" : "敗北"}</strong><span>対戦が終了しました</span></div>` : "";
   const canEndTurn = !finished && battle.phase === "card_use" && battle.activePlayer === "player";
-  app.innerHTML = `<section class="battle">
+  const reaction = battle.reaction;
+  const reactionCards = reaction ? battle.player.hand.filter((card) => reaction.eligibleCardIds.includes(card.instanceId)) : [];
+  const reactionOptions = reactionCards.map((card) => {
+    const isAll = card.target === "自分側全体";
+    const choices = isAll || reaction!.targets.length === 1
+      ? `<button class="reaction-card" data-reaction-card="${card.instanceId}"><strong>${escapeHtml(card.name.split("：").at(-1) ?? card.name)}</strong><span>${escapeHtml(card.effectText)}</span></button>`
+      : reaction!.targets.map((item) => `<button class="reaction-card" data-reaction-card="${card.instanceId}" data-reaction-target="${item.id}"><strong>${escapeHtml(card.name.split("：").at(-1) ?? card.name)} → ${escapeHtml(item.label)}</strong><span>${escapeHtml(card.effectText)}</span></button>`).join("");
+    return choices;
+  }).join("");
+  const reactionPanel = reaction ? `<section class="reaction-panel"><div><p class="eyebrow">REACTION</p><h2>防御・反応受付中</h2><strong>${escapeHtml(reaction.attackerName)}の${escapeHtml(reaction.sourceName)}</strong><p>${reaction.targets.map((item) => `${escapeHtml(item.label)}：予測 ${item.predictedDamage}ダメージ`).join(" / ")}</p><div class="reaction-time">残り <b data-reaction-countdown>${Math.max(0, Math.ceil((reaction.deadline - Date.now()) / 1000))}</b> 秒</div></div><div class="reaction-options">${reactionOptions || '<p class="muted">使用可能な防御札はありません。</p>'}</div><button class="menu-button secondary" data-action="reaction-pass">使用しない</button></section>` : "";
+  app.innerHTML = `<section class="battle">${reactionPanel}
     <header class="battle-player opponent" ${targetAttribute("cpu_player")}><div><span>CPU</span><strong>HP ${battle.cpu.hp}</strong>${renderCurses(battle.cpu.curses)}</div>${elementBadge(state.cpuAttribute)}<div class="resource"><span>MP ${battle.cpu.mp} / 30</span><span>COST ${battle.cpu.cost}</span><span>手札 ${battle.cpu.handCount}</span></div></header>
     <section class="field enemy" ${targetAttribute("cpu_field")}><p>相手式神</p>${renderUnits(battle.cpu.shikigami, pendingTarget, pendingCard?.ignoreTaunt)}</section>
     <section class="terrain"><span>共有地形</span><strong>通常状態</strong><div class="field-ring"></div></section>
     <section class="field ally" ${targetAttribute("player_field")}><p>味方式神</p>${renderUnits(battle.player.shikigami)}</section>
     <header class="battle-player" ${targetAttribute("player")}><div><span>${escapeHtml(state.playerName ?? "あなた")}</span><strong>HP ${battle.player.hp}</strong>${renderCurses(battle.player.curses)}</div>${elementBadge(state.playerAttribute)}<div class="resource"><span>MP ${battle.player.mp} / 30</span><span>COST ${battle.player.cost}</span><span>捨て札 ${battle.player.discard.length}</span></div></header>
-    <section class="hand"><div class="phase-label">${finished ? "対戦終了" : `第${battle.turnNumber}ターン・${battle.activePlayer === "player" ? "自分" : "CPU"}の${battle.phase === "resolving" ? "処理中" : "カード使用フェーズ"}`}</div>${result}${targetGuide}<div class="hand-cards" aria-label="自分の手札">${cards || '<p class="empty-hand">手札がありません。</p>'}</div><button class="menu-button end-turn" data-action="end-turn" ${!canEndTurn || busy ? "disabled" : ""}>ターン終了</button><details class="battle-log" ${settings.log ? "open" : ""}><summary>対戦ログ</summary><ol>${log}</ol></details><div class="battle-actions">${button("ルール", "rules", "small secondary")}${button("設定", "settings", "small secondary")}${button("タイトルへ戻る", "reset", "small text")}</div></section>
+    <section class="hand"><div class="phase-label">${finished ? "対戦終了" : `第${battle.turnNumber}ターン・${battle.activePlayer === "player" ? "自分" : "CPU"}の${battle.phase === "reaction" ? "反応受付中" : battle.phase === "resolving" ? "処理中" : "カード使用フェーズ"}`}</div>${result}${targetGuide}<div class="hand-cards" aria-label="自分の手札">${cards || '<p class="empty-hand">手札がありません。</p>'}</div><button class="menu-button end-turn" data-action="end-turn" ${!canEndTurn || busy ? "disabled" : ""}>ターン終了</button><details class="battle-log" ${settings.log ? "open" : ""}><summary>対戦ログ</summary><ol>${log}</ol></details><div class="battle-actions">${button("ルール", "rules", "small secondary")}${button("設定", "settings", "small secondary")}${button("タイトルへ戻る", "reset", "small text")}</div></section>
   </section>`;
 }
 function renderDialog(): void {
@@ -153,10 +165,11 @@ function renderDialog(): void {
   } else if (dialog === "card") {
     const card = state.battle?.player.hand.find((item) => item.instanceId === selectedCardId);
     if (!card) { dialog = null; return; }
-    const useControl = card.playable
+    const useControl = state.battle?.phase === "reaction"
+      ? `<p class="target-guide">反応受付パネルから防御対象を選択してください。</p>`
+      : card.playable
       ? `<button class="menu-button" data-action="prepare-card">使用する</button>`
-      : `<p class="unusable-message">使用不可：${escapeHtml(card.unusableReason ?? "現在は使用できません。")}</p>`;
-    content = `<div class="card-detail ${cardAttributeClass(card.attribute)}"><p class="eyebrow">${escapeHtml(card.category)} / ${escapeHtml(card.system)}</p><h2>${escapeHtml(card.name)}</h2><div class="card-detail-meta"><span>属性 ${escapeHtml(card.attribute)}</span><span>コスト ${card.cost}</span><span>MP ${card.mpCost}</span></div><h3>効果</h3><p>${escapeHtml(card.effectText)}</p><h3>対象</h3><p>${escapeHtml(card.target)}</p><h3>使用タイミング</h3><p>${escapeHtml(card.timing)}</p><p class="flavor">${escapeHtml(card.flavorText)}</p>${useControl}</div>`;
+      : `<p class="unusable-message">使用不可：${escapeHtml(card.unusableReason ?? "現在は使用できません。")}</p>`;    content = `<div class="card-detail ${cardAttributeClass(card.attribute)}"><p class="eyebrow">${escapeHtml(card.category)} / ${escapeHtml(card.system)}</p><h2>${escapeHtml(card.name)}</h2><div class="card-detail-meta"><span>属性 ${escapeHtml(card.attribute)}</span><span>コスト ${card.cost}</span><span>MP ${card.mpCost}</span></div><h3>効果</h3><p>${escapeHtml(card.effectText)}</p><h3>対象</h3><p>${escapeHtml(card.target)}</p><h3>使用タイミング</h3><p>${escapeHtml(card.timing)}</p><p class="flavor">${escapeHtml(card.flavorText)}</p>${useControl}</div>`;
   } else {
     content = `<h2>設定</h2><label>BGM音量<input type="range" min="0" max="100" value="${settings.bgm}" data-setting="bgm"></label><label>効果音音量<input type="range" min="0" max="100" value="${settings.sound}" data-setting="sound"></label><label class="check"><input type="checkbox" ${settings.vibration ? "checked" : ""} data-setting="vibration">振動</label><label>演出速度 <select data-setting="speed"><option value="slow" ${settings.speed === "slow" ? "selected" : ""}>ゆっくり</option><option value="normal" ${settings.speed === "normal" ? "selected" : ""}>標準</option><option value="fast" ${settings.speed === "fast" ? "selected" : ""}>速い</option></select></label><label class="check"><input type="checkbox" ${settings.log ? "checked" : ""} data-setting="log">対戦ログを表示</label>`;
   }
@@ -189,9 +202,13 @@ app.addEventListener("click", (event) => {
   const target = event.target as HTMLElement;
   const action = target.closest<HTMLElement>("[data-action]")?.dataset.action;
   const cardInstanceId = target.closest<HTMLElement>("[data-card-instance]")?.dataset.cardInstance;
+  const reactionCard = target.closest<HTMLElement>("[data-reaction-card]")?.dataset.reactionCard;
+  const reactionTarget = target.closest<HTMLElement>("[data-reaction-target]")?.dataset.reactionTarget as DefenseTarget | undefined;
   const targetType = target.closest<HTMLElement>("[data-target]")?.dataset.target as CardTarget | undefined;
   const attribute = target.closest<HTMLElement>("[data-element]")?.dataset.element as FiveElement | undefined;
-  if (targetType && pendingCardId && !busy) {
+  if (reactionCard && !busy) {
+    busy = true; render(); socket.emit("reaction:respond", { instanceId: reactionCard, target: reactionTarget }, applyResult); return;
+  }  if (targetType && pendingCardId && !busy) {
     const instanceId = pendingCardId;
     busy = true;
     render();
@@ -213,6 +230,7 @@ app.addEventListener("click", (event) => {
   else if (action === "prepare-card" && selectedCardId) { pendingCardId = selectedCardId; dialog = null; render(); }
   else if (action === "cancel-target") { pendingCardId = null; selectedCardId = null; render(); }
   else if (action === "enter-match") { busy = true; render(); socket.emit("match:enter", applyResult); }
+  else if (action === "reaction-pass") { busy = true; render(); socket.emit("reaction:respond", {}, applyResult); }
   else if (action === "end-turn") { busy = true; pendingCardId = null; selectedCardId = null; render(); socket.emit("turn:end", applyResult); }
   else if (action === "reset") { busy = true; pendingCardId = null; selectedCardId = null; localStorage.removeItem(TOKEN_KEY); socket.emit("session:reset", (result) => { screen = "title"; applyResult(result); }); }
 });
@@ -237,3 +255,4 @@ app.addEventListener("change", (event) => {
 
 render();
 socket.connect();
+setInterval(() => { const countdown = document.querySelector<HTMLElement>('[data-reaction-countdown]'); const deadline = state.battle?.reaction?.deadline; if (countdown && deadline) countdown.textContent = String(Math.max(0, Math.ceil((deadline - Date.now()) / 1000))); }, 250);
