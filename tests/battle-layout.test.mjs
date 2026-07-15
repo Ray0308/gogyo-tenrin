@@ -55,7 +55,7 @@ test("all card systems have a shared presentation effect", async () => {
 test("battle presentation uses a more readable default pace", async () => {
   const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
   const css = await readFile(path.join(repositoryRoot, "client", "battle-v2.css"), "utf8");
-  assert.match(source, /settings\.speed === "fast" \? 800 : settings\.speed === "slow" \? 1900 : 1350/);
+  assert.match(source, /settings\.speed === "fast" \? 650 : settings\.speed === "slow" \? 1500 : 1000/);
   assert.match(source, /function presentationGap/);
   assert.match(css, /animation-duration:.*--combat-duration/);
   assert.match(source, /orderBattleVisualChanges/);
@@ -101,6 +101,9 @@ test("reaction decisions preempt presentation and do not run behind animations",
   assert.match(server, /pausedTurnRemainingMs/);
   assert.match(server, /if\(pausedTurnSide\)clearTurnTimer\(session\)/);
   assert.match(server, /pending\.pausedTurnSide===battle\.activePlayer/);
+  assert.match(server, /if\(session\.pendingReaction\|\|battle\.phase==="reaction"\)return/);
+  assert.match(server, /if\(session\.pendingReaction\|\|state\.battle\?\.phase==="reaction"\)return/);
+  assert.match(client, /選択完了まで対戦処理は停止中/);
 });
 
 test("field attacks make each shikigami visibly tappable and cancelling fully resets selection", async () => {
@@ -133,7 +136,7 @@ test("rules explain curses, keywords, reactions, and counterattack order", async
 
 test("CPU turn presents a deliberate start pause", async () => {
   const server = await readFile(path.join(repositoryRoot, "server", "index.ts"), "utf8");
-  assert.match(server, /CPU_TURN_START_DELAY_MS=Number\(process\.env\.CPU_TURN_START_DELAY_MS\?\?1_800\)/);
+  assert.match(server, /CPU_TURN_START_DELAY_MS=Number\(process\.env\.CPU_TURN_START_DELAY_MS\?\?1_200\)/);
   assert.match(server, /scheduleCpuTurn\(session\)/);
 });
 

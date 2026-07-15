@@ -104,11 +104,11 @@ function cancelBattlePresentation(): void {
 
 function animationDuration(): number {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return 80;
-  return settings.speed === "fast" ? 800 : settings.speed === "slow" ? 1900 : 1350;
+  return settings.speed === "fast" ? 650 : settings.speed === "slow" ? 1500 : 1000;
 }
 function presentationGap(): number {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return 0;
-  return settings.speed === "fast" ? 90 : settings.speed === "slow" ? 320 : 220;
+  return settings.speed === "fast" ? 50 : settings.speed === "slow" ? 220 : 120;
 }
 function impactDuration(): number {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return 120;
@@ -510,7 +510,7 @@ function renderBattle(): void {
     return choices;
   }).join("");
   const pausedPanel = state.connectionPaused ? `<section class="connection-pause"><h2>\u518d\u63a5\u7d9a\u5f85\u6a5f\u4e2d</h2><p>\u76f8\u624b\u306e\u5fa9\u5e30\u3092\u5f85\u3063\u3066\u3044\u307e\u3059\u3002\u5bfe\u6226\u306f\u4e00\u6642\u505c\u6b62\u4e2d\u3067\u3059\u3002</p></section>` : "";
-  const reactionPanel = reaction ? `<section class="reaction-panel"><div><p class="eyebrow">REACTION</p><h2>防御・反応受付中</h2><strong>${escapeHtml(reaction.attackerName)}の${escapeHtml(reaction.sourceName)}</strong><p>${reaction.targets.map((item) => `${escapeHtml(item.label)}：予測 ${item.predictedDamage}ダメージ`).join(" / ")}</p><div class="reaction-time">残り <b data-reaction-countdown>${Math.max(0, Math.ceil((reaction.deadline - Date.now()) / 1000))}</b> 秒</div></div><div class="reaction-options">${reactionOptions || '<p class="muted">使用可能な防御札はありません。</p>'}</div><button class="menu-button secondary" data-action="reaction-pass">使用しない</button></section>` : "";
+  const reactionPanel = reaction ? `<section class="reaction-panel"><div><p class="eyebrow">REACTION</p><h2>防御・反応受付中</h2><p class="reaction-paused-label">選択完了まで対戦処理は停止中</p><strong>${escapeHtml(reaction.attackerName)}の${escapeHtml(reaction.sourceName)}</strong><p>${reaction.targets.map((item) => `${escapeHtml(item.label)}：予測 ${item.predictedDamage}ダメージ`).join(" / ")}</p><div class="reaction-time">残り <b data-reaction-countdown>${Math.max(0, Math.ceil((reaction.deadline - Date.now()) / 1000))}</b> 秒</div></div><div class="reaction-options">${reactionOptions || '<p class="muted">使用可能な防御札はありません。</p>'}</div><button class="menu-button secondary" data-action="reaction-pass">使用しない</button></section>` : "";
   app.innerHTML = `<section class="battle battle-v2">${pausedPanel}${reactionPanel}<main class="battle-board">
     <header class="battle-player opponent ${battle.cpu.hp <= MAX_PLAYER_HP * .25 ? "is-critical" : ""}" data-combatant="cpu" ${targetAttribute("cpu_player")}><div><span>${escapeHtml(state.opponentName ?? "CPU")}</span><strong>HP ${battle.cpu.hp} / ${MAX_PLAYER_HP}</strong>${hpGauge(battle.cpu.hp)}${renderCurses(battle.cpu.curses)}</div>${elementBadge(state.cpuAttribute)}<div class="resource"><span>霊気 ${battle.cpu.mp} / ${MAX_PLAYER_MP}</span><span>COST ${battle.cpu.cost}</span><span>手札 ${battle.cpu.handCount}</span></div></header>
     <section class="barrier-display ${battle.cpu.barrier ? "" : "is-empty"}" ${targetAttribute("cpu_barrier") || (targeting && pendingCard?.cardId==="card_fuin" && battle.cpu.barrier ? 'data-target="cpu_barrier"' : "")}><span>相手結界</span><strong>${battle.cpu.barrier ? escapeHtml(battle.cpu.barrier.name) : "未設置"}</strong><small>${battle.cpu.barrier ? escapeHtml(battle.cpu.barrier.effectText) : ""}</small></section>

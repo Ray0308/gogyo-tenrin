@@ -12,6 +12,18 @@ const emit = (socket, event, payload) => new Promise((resolve) => {
   else socket.emit(event, payload, resolve);
 });
 
+const expectNoEvent = (socket, event, duration = 60) => new Promise((resolve, reject) => {
+  const onEvent = () => {
+    clearTimeout(timeout);
+    reject(new Error(`Unexpected ${event} while reaction input is pending`));
+  };
+  const timeout = setTimeout(() => {
+    socket.off(event, onEvent);
+    resolve();
+  }, duration);
+  socket.once(event, onEvent);
+});
+
 test("CPU turn completes after the player ends the turn", async () => {
   process.env.PORT = "0";
   process.env.CPU_TURN_START_DELAY_MS = "20";
@@ -52,9 +64,10 @@ test("CPU turn completes after the player ends the turn", async () => {
         assert.ok(Date.now() - cpuStartedAt >= 15, "CPU should pause before taking its first action");
 
         for (let reactions = 0; result.state.battle.phase === "reaction" && reactions < 20; reactions += 1) {
+          await expectNoEvent(socket, "session:state");
           const reactionUpdate = waitFor(socket, "session:state");
           const response = await emit(socket, "reaction:respond", {});
-          assert.equal(response.ok, true);
+          assert.equal(response.ok, true, response.message);
           const [reactionState] = await reactionUpdate;
           result = { ok: true, state: reactionState };
         }

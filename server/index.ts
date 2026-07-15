@@ -75,7 +75,7 @@ const app=express();
 export const server=createServer(app);
 export const io=new Server<ClientToServerEvents,ServerToClientEvents>(server);
 const port=Number(process.env.PORT??3000);
-const CPU_TURN_START_DELAY_MS=Number(process.env.CPU_TURN_START_DELAY_MS??1_800);
+const CPU_TURN_START_DELAY_MS=Number(process.env.CPU_TURN_START_DELAY_MS??1_200);
 const currentDirectory=path.dirname(fileURLToPath(import.meta.url));
 const distributionDirectory=path.resolve(currentDirectory,"..");
 const clientDirectory=path.join(distributionDirectory,"client");
@@ -347,9 +347,17 @@ function beginReaction(session:StoredSession,defenderSide:Side,sourceName:string
   battle.phase="reaction";battle.log.push(`${sourceName}に対する反応受付を開始した。`);battle.reaction={sourceName,attackerName,targets:targets.map((target,index)=>({id:defenseTargetId(target),label:defenseTargetLabel(target),predictedDamage:predictions[index]})),eligibleCardIds:eligible.map(item=>item.card.instanceId),deadline:Date.now()+10_000};const pending:PendingReaction={defenderSide,eligibleCardIds:battle.reaction.eligibleCardIds,remainingMs:10_000,pausedTurnSide,pausedTurnRemainingMs,targets:targets.map((target,index)=>({id:defenseTargetId(target),target,predictedDamage:predictions[index]})),resolve};session.pendingReaction=pending;armReactionTimer(session,pending);refreshPlayability(session.state);
 }
 function finishReaction(session:StoredSession,respondingSide:Side,instanceId?:string,targetId?:DefenseTarget):{ok:boolean;message?:string}{
-  const pending=session.pendingReaction,battle=session.state.battle;if(!pending||pending.defenderSide!==respondingSide||!battle||battle.phase!=="reaction")return {ok:false,message:"現在は反応受付中ではありません。"};let definition:DefenseDefinition|undefined;
+  const pending=session.pendingReaction,battle=session.state.battle;
+  if(!pending)return {ok:false,message:"現在は反応受付中ではありません。"};
+  if(pending.defenderSide!==respondingSide)return {ok:false,message:"このプレイヤーは現在の反応を選択できません。"};
+  if(!battle||battle.phase!=="reaction")return {ok:false,message:"反応受付の状態が一致しません。"};
+  let definition:DefenseDefinition|undefined;
   if(instanceId){if(!pending.eligibleCardIds.includes(instanceId))return {ok:false,message:"この防御札は使用できません。"};const hand=handForSide(session,respondingSide),index=hand.findIndex(card=>card.instanceId===instanceId);const card=hand[index],effect=card?effectByCardId.get(card.cardId):undefined;if(!card||effect?.type!=="defense")return {ok:false,message:"防御札が見つかりません。"};if(effect.scope==="single"){if(pending.targets.length===1)targetId=pending.targets[0].id;if(!targetId||!pending.targets.some(target=>target.id===targetId))return {ok:false,message:"防御する対象を選択してください。"}}stateForSide(session.state,respondingSide).mp-=card.mpCost;consumeUsedCard(session,respondingSide,index);definition=effect;battle.log.push(`${respondingSide==="player"?"プレイヤー":"CPU"}が防御札 ${card.name}を使用した。`)}else battle.log.push(`${respondingSide==="player"?"プレイヤー":"CPU"}は防御札を使用しなかった。`);
-  if(pending.timer)clearTimeout(pending.timer);delete session.pendingReaction;delete battle.reaction;pending.resolve(definition,targetId);if(session.mode==="online"&&battle.phase==="reaction")battle.phase="card_use";
+  if(pending.timer)clearTimeout(pending.timer);
+  delete session.pendingReaction;
+  delete battle.reaction;
+  if(battle.phase==="reaction")battle.phase=battle.activePlayer==="cpu"?"resolving":"card_use";
+  pending.resolve(definition,targetId);
   if(session.mode==="online"&&pending.pausedTurnSide===battle.activePlayer&&battle.phase==="card_use"&&!session.state.connectionPaused)armOnlineTurnTimer(session,pending.pausedTurnRemainingMs??60_000);
   return {ok:true};
 }
@@ -494,13 +502,14 @@ function armPlayerTurnTimer(session:StoredSession,duration=60_000):void{
 
 function continueCpuTurn(session:StoredSession):void{
   const state=session.state,battle=state.battle!;
+  if(session.pendingReaction||battle.phase==="reaction")return;
   if(!session.cpuShikigamiQueue){while(session.cpuCardActions<5&&!finishIfNeeded(state)){const candidates=session.cpuHand.map((card,index)=>({card,index,definition:effectByCardId.get(card.cardId)})).filter(item=>item.definition&&item.definition.type!=="defense"&&!isDefinitionUsable(state,"cpu",item.card,item.definition));if(!candidates.length)break;const scored=candidates.map(item=>({item,value:cpuCardScore(session,item.card,item.definition!)}));const best=Math.max(...scored.map(candidate=>candidate.value)),choices=scored.filter(candidate=>candidate.value===best),chosen=choices[randomInt(choices.length)].item;session.cpuCardActions+=1;const result=executeCard(session,"cpu",chosen.index,undefined,cpuChoice(chosen.definition!));if(result.paused){battle.cpu.handCount=session.cpuHand.length;refreshPlayability(state);return}}battle.cpu.handCount=session.cpuHand.length;session.cpuShikigamiQueue=stateForSide(state,"cpu").shikigami.map(unit=>unit.instanceId);battle.phase="resolving";battle.log.push("CPUの式神行動フェーズ。")}
   while(session.cpuShikigamiQueue.length&&!finishIfNeeded(state)){const instanceId=session.cpuShikigamiQueue.shift()!,unit=stateForSide(state,"cpu").shikigami.find(candidate=>candidate.instanceId===instanceId);if(!unit)continue;const result=runOneShikigamiAction(session,"cpu",unit);if(result.paused){refreshPlayability(state);return}}
   delete session.cpuShikigamiQueue;processTurnEnd(state,"cpu");resolvePoisonAtTurnEnd(state,"cpu");if(finishIfNeeded(state)){refreshPlayability(state);return}
   battle.turnNumber+=1;battle.activePlayer="player";battle.phase="card_use";refreshTurnHand(session,"player");battle.player.cost=5;processTurnStart(state,"player");battle.log.push(`第${battle.turnNumber}ターン開始。手札とコストを更新した。`);refreshPlayability(state);armPlayerTurnTimer(session);
 }
 function scheduleCpuTurn(session:StoredSession):void{
-  clearCpuStartTimer(session);session.cpuStartTimer=setTimeout(()=>{session.cpuStartTimer=undefined;const battle=session.state.battle;if(!battle||battle.phase==="finished"||battle.activePlayer!=="cpu")return;continueCpuTurn(session);sendSessionState(session)},CPU_TURN_START_DELAY_MS);
+  clearCpuStartTimer(session);session.cpuStartTimer=setTimeout(()=>{session.cpuStartTimer=undefined;const battle=session.state.battle;if(!battle||battle.phase!=="resolving"||battle.activePlayer!=="cpu"||session.pendingReaction)return;continueCpuTurn(session);sendSessionState(session)},CPU_TURN_START_DELAY_MS);
 }
 function endPlayerTurn(session:StoredSession):{ok:boolean;message?:string}{
   const state=session.state,battle=state.battle;if(session.turnTimer)clearTurnTimer(session);if(!battle||battle.phase!=="card_use"||battle.activePlayer!=="player")return {ok:false,message:"現在はターンを終了できません。"};battle.phase="resolving";battle.log.push("プレイヤーの式神行動フェーズ。");runPlayerShikigamiPhase(session);processTurnEnd(state,"player");resolvePoisonAtTurnEnd(state,"player");if(finishIfNeeded(state)){refreshPlayability(state);return {ok:true}}
@@ -542,6 +551,7 @@ function completeOnlineTurn(session:StoredSession,side:Side):void{
 }
 function continueOnlineTurn(session:StoredSession):void{
   const side=session.onlineTurnSide,queue=session.onlineShikigamiQueue;if(!side||!queue)return;const state=session.state;
+  if(session.pendingReaction||state.battle?.phase==="reaction")return;
   while(queue.length&&!finishIfNeeded(state)){const id=queue.shift()!,unit=stateForSide(state,side).shikigami.find(item=>item.instanceId===id);if(!unit)continue;const result=runOneShikigamiAction(session,side,unit,()=>{continueOnlineTurn(session);sendSessionState(session)});if(result.paused){refreshPlayability(state);return}}
   delete session.onlineTurnSide;delete session.onlineShikigamiQueue;completeOnlineTurn(session,side);sendSessionState(session);
 }
