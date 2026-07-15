@@ -428,4 +428,15 @@
   {
     "type": "defense", "cardId": "card_kekkaifu_water", "scope": "all", "mode": "reduce", "amount": 1, "postEffect": "gain_mp"
   }
+,
+  { "type": "barrier", "cardId": "card_barrier_guardian", "target": "self_field", "fieldId": "barrier_guardian" },
+  { "type": "barrier", "cardId": "card_barrier_spirit_vein", "target": "self_field", "fieldId": "barrier_spirit_vein" },
+  { "type": "barrier", "cardId": "card_barrier_purification", "target": "self_field", "fieldId": "barrier_purification" },
+  { "type": "barrier", "cardId": "card_barrier_binding", "target": "self_field", "fieldId": "barrier_binding" },
+  { "type": "terrain", "cardId": "card_terrain_chinju_forest", "target": "shared_field", "fieldId": "terrain_chinju_forest" },
+  { "type": "terrain", "cardId": "card_terrain_scorched_earth", "target": "shared_field", "fieldId": "terrain_scorched_earth" },
+  { "type": "terrain", "cardId": "card_terrain_clear_stream", "target": "shared_field", "fieldId": "terrain_clear_stream" },
+  { "type": "terrain", "cardId": "card_terrain_mineral_vein", "target": "shared_field", "fieldId": "terrain_mineral_vein" },
+  { "type": "terrain", "cardId": "card_terrain_sacred_domain", "target": "shared_field", "fieldId": "terrain_sacred_domain" },
+  { "type": "terrain", "cardId": "card_terrain_yomi_road", "target": "shared_field", "fieldId": "terrain_yomi_road" }
 ]

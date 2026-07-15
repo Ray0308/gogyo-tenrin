@@ -1,8 +1,8 @@
 export const FIVE_ELEMENTS = ["wood", "fire", "earth", "metal", "water"] as const;
 export type FiveElement = (typeof FIVE_ELEMENTS)[number];
 export type GamePhase = "title" | "attribute_selection" | "attribute_reveal" | "battle";
-export type CardPlayTarget = "cpu_player" | "cpu_unit" | "cpu_any" | "cpu_field" | "player" | "player_field";
-export type CardTarget = "cpu_player" | "cpu_field" | "player" | "player_field" | `cpu_unit:${string}`;
+export type CardPlayTarget = "cpu_player" | "cpu_unit" | "cpu_any" | "cpu_field" | "player" | "player_field" | "shared_field";
+export type CardTarget = "cpu_player" | "cpu_field" | "player" | "player_field" | "shared_field" | `cpu_unit:${string}`;
 export type DefenseTarget = "player" | `player_unit:${string}`;
 
 export interface CardView {
@@ -48,6 +48,14 @@ export interface ShikigamiState {
   nextAttackBonus: number;
 }
 
+export interface FieldObjectState {
+  id: string;
+  name: string;
+  attribute: string;
+  effectText: string;
+  triggerCount?: number;
+}
+
 export interface BattlePlayerState {
   hp: number;
   mp: number;
@@ -55,6 +63,7 @@ export interface BattlePlayerState {
   curses: CurseState[];
   nextDamageReduction: number;
   shikigami: ShikigamiState[];
+  barrier?: FieldObjectState;
 }
 
 export interface BattleState {
@@ -64,6 +73,7 @@ export interface BattleState {
   winner?: "player" | "cpu";
   player: BattlePlayerState & { hand: CardView[]; discard: CardView[] };
   cpu: BattlePlayerState & { handCount: number };
+  terrain?: FieldObjectState;
   reaction?: {
     sourceName: string;
     attackerName: string;
