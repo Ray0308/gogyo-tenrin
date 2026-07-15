@@ -5,6 +5,7 @@ import {
   canCounterCardAttack,
   hasSelectableAttackUnit,
   isSelectableAttackUnit,
+  randomAttackCandidates,
   reduceUnitDamage,
 } from "../dist/server/combat-rules.js";
 
@@ -17,6 +18,13 @@ test("Genki shell reduction persists across damage until its next action starts"
   beginShikigamiAction(unit);
   assert.equal(unit.shellDamageReduction, 0);
   assert.equal(reduceUnitDamage(4, unit), 4);
+});
+
+test("random attacks include stealth and taunt units in their candidate pool", () => {
+  const stealth = { id: "stealth", keywords: ["ステルス"] };
+  const taunt = { id: "taunt", keywords: ["挑発"] };
+  const ordinary = { id: "ordinary", keywords: [] };
+  assert.deepEqual(randomAttackCandidates([stealth, taunt, ordinary]), [stealth, taunt, ordinary]);
 });
 
 test("one-shot reduction is consumed without consuming shell reduction", () => {

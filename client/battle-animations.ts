@@ -5,7 +5,7 @@ export type BattleVisualChange =
   | { type: "battle_start"; side: BattleSide }
   | { type: "turn"; side: BattleSide; turnNumber: number }
   | { type: "damage" | "heal"; side: BattleSide; amount: number; unitId?: string }
-  | { type: "summon" | "retire"; side: BattleSide; unitId: string; name: string }
+  | { type: "summon" | "retire"; side: BattleSide; unitId: string; name: string; imageId?: string }
   | {
       type: "action";
       side: BattleSide;
@@ -28,7 +28,7 @@ function unitChanges(
   for (const unit of next) {
     const oldUnit = previousById.get(unit.instanceId);
     if (!oldUnit) {
-      changes.push({ type: "summon", side, unitId: unit.instanceId, name: unit.name });
+      changes.push({ type: "summon", side, unitId: unit.instanceId, name: unit.name, imageId: unit.imageId });
       continue;
     }
     const hpDifference = unit.hp - oldUnit.hp;
@@ -36,7 +36,7 @@ function unitChanges(
     if (hpDifference > 0) changes.push({ type: "heal", side, unitId: unit.instanceId, amount: hpDifference });
   }
   for (const unit of previous) {
-    if (!nextById.has(unit.instanceId)) changes.push({ type: "retire", side, unitId: unit.instanceId, name: unit.name });
+    if (!nextById.has(unit.instanceId)) changes.push({ type: "retire", side, unitId: unit.instanceId, name: unit.name, imageId: unit.imageId });
   }
   return changes;
 }

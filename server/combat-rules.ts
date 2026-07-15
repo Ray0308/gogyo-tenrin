@@ -7,6 +7,10 @@ export interface AttackTargetUnit {
   keywords: string[];
 }
 
+export function randomAttackCandidates<T extends AttackTargetUnit>(units: T[]): T[] {
+  return [...units];
+}
+
 export function isSelectableAttackUnit(
   units: AttackTargetUnit[],
   unit: AttackTargetUnit,

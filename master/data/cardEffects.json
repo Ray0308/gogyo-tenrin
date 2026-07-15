@@ -24,9 +24,8 @@
   {
     "type": "attack",
     "cardId": "card_senfu_wood",
-    "target": "opponent_unit",
+    "target": "opponent_random_unit",
     "baseDamage": 2,
-    "ignoreTaunt": true,
     "attributeMatchEffect": {
       "type": "apply_curse",
       "curseId": "curse_poison",
@@ -87,9 +86,8 @@
   {
     "type": "attack",
     "cardId": "card_senfu_fire",
-    "target": "opponent_unit",
+    "target": "opponent_random_unit",
     "baseDamage": 2,
-    "ignoreTaunt": true,
     "attributeMatchEffect": {
       "type": "apply_curse",
       "curseId": "curse_burn",
@@ -148,9 +146,8 @@
   {
     "type": "attack",
     "cardId": "card_senfu_earth",
-    "target": "opponent_unit",
+    "target": "opponent_random_unit",
     "baseDamage": 2,
-    "ignoreTaunt": true,
     "attributeMatchEffect": {
       "type": "next_damage_reduction",
       "amount": 1
@@ -206,9 +203,8 @@
   {
     "type": "attack",
     "cardId": "card_senfu_metal",
-    "target": "opponent_unit",
+    "target": "opponent_random_unit",
     "baseDamage": 2,
-    "ignoreTaunt": true,
     "attributeMatchEffect": {
       "type": "ignore_damage_reduction",
       "amount": 1
@@ -264,9 +260,8 @@
   {
     "type": "attack",
     "cardId": "card_senfu_water",
-    "target": "opponent_unit",
+    "target": "opponent_random_unit",
     "baseDamage": 2,
-    "ignoreTaunt": true,
     "attributeMatchEffect": {
       "type": "gain_mp",
       "amount": 1

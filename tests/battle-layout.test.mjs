@@ -66,3 +66,13 @@ test("dramatic battle HUD shows HP gauges and elemental tension", async () => {
   assert.match(css, /\.hp-gauge/);
   assert.match(css, /\.element-tension\.danger/);
 });
+
+test("battle presentation locks input and gives retired shikigami a dedicated effect", async () => {
+  const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
+  const css = await readFile(path.join(repositoryRoot, "client", "battle-v2.css"), "utf8");
+  assert.match(source, /battlePresentationLocked/);
+  assert.match(source, /showRetireEffect/);
+  assert.match(css, /battle-presentation-locked/);
+  assert.match(css, /shikigami-retire-layer/);
+  assert.match(css, /shikigami-dissolve/);
+});

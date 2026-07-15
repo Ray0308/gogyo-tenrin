@@ -4,6 +4,7 @@ import { deriveBattleVisualChanges } from "../dist/client/battle-animations.js";
 
 const unit = (instanceId, hp = 5) => ({
   instanceId, shikigamiId: `master_${instanceId}`, name: instanceId, attribute: "木",
+  imageId: `image_${instanceId}`,
   hp, maxHp: 5, attack: 1, aiProfile: "random", keywords: [], ability: "",
   curses: [], nextDamageReduction: 0, shellDamageReduction: 0, nextAttackBonus: 0,
 });
@@ -26,7 +27,7 @@ test("battle animation changes describe turn, damage, summon, and retirement", (
   assert.ok(changes.some((change) => change.type === "turn" && change.turnNumber === 2));
   assert.ok(changes.some((change) => change.type === "damage" && change.side === "player" && change.amount === 3));
   assert.ok(changes.some((change) => change.type === "damage" && change.unitId === "enemy" && change.amount === 2));
-  assert.ok(changes.some((change) => change.type === "retire" && change.unitId === "old"));
+  assert.ok(changes.some((change) => change.type === "retire" && change.unitId === "old" && change.imageId === "image_old"));
   assert.ok(changes.some((change) => change.type === "summon" && change.unitId === "new"));
   assert.ok(changes.some((change) => change.type === "action" && change.side === "cpu"));
   assert.ok(changes.some((change) => change.type === "action" && change.kind === "attack"));

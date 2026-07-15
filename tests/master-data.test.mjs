@@ -38,9 +38,16 @@ test("マスターから仕様どおりの実装JSONを生成できる", async (
     assert.equal(forbidden.find((card) => card.id === "card_forbidden_tamashii_gui")?.effects[0].heal, 12);
     assert.equal(forbidden.find((card) => card.id === "card_forbidden_kamioroshi")?.effects[0].attack, 4);
 
+    const randomPiercingCards = dataset.cards.filter((card) => card.id.startsWith("card_senfu_"));
+    assert.equal(randomPiercingCards.length, 5);
+    assert.ok(randomPiercingCards.every((card) => card.effects[0].target === "opponent_random_unit"));
+    const areaAttackCards = dataset.cards.filter((card) => card.id.startsWith("card_bakufu_"));
+    assert.equal(areaAttackCards.length, 5);
+    assert.ok(areaAttackCards.every((card) => card.weight === 6));
+
     const { manifest } = await readGeneratedData(outputDirectory);
     assert.equal(manifest.schemaVersion, "1.0.0");
-    assert.equal(manifest.dataVersion, "0.2.0");
+    assert.equal(manifest.dataVersion, "0.3.0");
   } finally {
     await rm(outputDirectory, { recursive: true, force: true });
   }

@@ -1,5 +1,5 @@
 import express from "express";
-import { beginShikigamiAction, canCounterCardAttack, hasSelectableAttackUnit, isSelectableAttackUnit, reduceUnitDamage } from "./combat-rules.js";
+import { beginShikigamiAction, canCounterCardAttack, hasSelectableAttackUnit, isSelectableAttackUnit, randomAttackCandidates, reduceUnitDamage } from "./combat-rules.js";
 import { perspectiveLog } from "./perspective.js";
 import { readFileSync } from "node:fs";
 import { randomInt, randomUUID } from "node:crypto";
@@ -41,7 +41,7 @@ type AttributeMatchEffect =
   | { type:"next_damage_reduction"; amount:number }
   | { type:"ignore_damage_reduction"; amount:number }
   | { type:"gain_mp"; amount:number };
-interface AttackDefinition { type:"attack"; cardId:string; target:"opponent_any"|"opponent_unit"|"opponent_units"; baseDamage:number; ignoreTaunt?:boolean; healSelf?:number; attributeMatchEffect?:AttributeMatchEffect }
+interface AttackDefinition { type:"attack"; cardId:string; target:"opponent_any"|"opponent_unit"|"opponent_random_unit"|"opponent_units"; baseDamage:number; ignoreTaunt?:boolean; healSelf?:number; attributeMatchEffect?:AttributeMatchEffect }
 interface TurnDefinition { type:"turn"; cardId:string; target:"self_player"; steps:number }
 interface SummonDefinition { type:"summon"; cardId:string; target:"self_field"; shikigamiId:string }
 interface FieldDefinition { type:"barrier"|"terrain"; cardId:string; target:"self_field"|"shared_field"; fieldId:string }
@@ -103,7 +103,7 @@ const overcomes:Record<FiveElement,FiveElement>={wood:"earth",earth:"water",wate
 
 function loadJson<T>(name:string):T{return JSON.parse(readFileSync(path.join(currentDirectory,"data",name),"utf8")) as T}
 function validateMaster():void{
-  if(manifest.schemaVersion!=="1.0.0"||manifest.dataVersion!=="0.2.0")throw new Error("Master data version mismatch.");
+  if(manifest.schemaVersion!=="1.0.0"||manifest.dataVersion!=="0.3.0")throw new Error("Master data version mismatch.");
   const collections:Record<string,IdMaster[]>={cards,cardTemplates,shikigami,barriers,terrains,forbiddenArts,keywords,curses,aiScores};
   const filenames:Record<string,string>={cards:"cards.json",cardTemplates:"cardTemplates.json",shikigami:"shikigami.json",barriers:"barriers.json",terrains:"terrains.json",forbiddenArts:"forbiddenArts.json",keywords:"keywords.json",curses:"curses.json",aiScores:"aiScores.json"};
   const ids=new Set<string>();
@@ -217,7 +217,7 @@ function isDefinitionUsable(state:SessionState,side:Side,card:CardView,definitio
   if((definition.type==="sacrifice"||definition.type==="buff_unit")&&actor.shikigami.length===0)return "No allied shikigami is available.";
   if(definition.type==="cleanse"&&!actor.curses.length&&!actor.shikigami.some(unit=>unit.curses.length))return "There is no curse to remove.";
   if(definition.type==="seal"&&!opponent.shikigami.length&&!opponent.barrier)return "There is no valid seal target.";
-  if(definition.type==="attack"&&definition.target==="opponent_units"&&opponent.shikigami.length===0)return "攻撃対象となる相手式神がいません。";
+  if(definition.type==="attack"&&(definition.target==="opponent_units"||definition.target==="opponent_random_unit")&&opponent.shikigami.length===0)return "攻撃対象となる相手式神がいません。";
   if(definition.type==="attack"&&definition.target==="opponent_unit"&&!hasSelectableAttackUnit(opponent.shikigami,Boolean(definition.ignoreTaunt)))return "ステルスまたは挑発により選択可能な相手式神がいません。";
   return undefined;
 }
@@ -286,12 +286,13 @@ function validUnitAttackTarget(state:SessionState,side:Side,definition:AttackDef
   return isSelectableAttackUnit(units,unit,Boolean(definition.ignoreTaunt));
 }
 function validateAttackTarget(state:SessionState,side:Side,definition:AttackDefinition,target:CardTarget|undefined):boolean{
-  if(side==="cpu"&&state.mode!=="online")return true;if(definition.target==="opponent_units")return target==="cpu_field";
+  if(side==="cpu"&&state.mode!=="online")return true;if(definition.target==="opponent_units"||definition.target==="opponent_random_unit")return target==="cpu_field";
   if(target==="cpu_player")return definition.target==="opponent_any"&&(Boolean(definition.ignoreTaunt)||!stateForSide(state,otherSide(side)).shikigami.some(unit=>unit.keywords.includes("挑発")));
   const unit=findUnitTarget(state,side,target);return Boolean(unit&&validUnitAttackTarget(state,side,definition,unit));
 }
 function attackTargets(state:SessionState,side:Side,definition:AttackDefinition,target:CardTarget|undefined):UnitTarget[]{
   const opponent=stateForSide(state,otherSide(side));if(definition.target==="opponent_units")return opponent.shikigami.map(unit=>({type:"unit",unit}));
+  if(definition.target==="opponent_random_unit"){const candidates=randomAttackCandidates(opponent.shikigami),unit=candidates[randomInt(candidates.length)];return unit?[{type:"unit",unit}]:[]}
   if(side==="player"||state.mode==="online"){if(target==="cpu_player")return [{type:"player"}];const unit=findUnitTarget(state,side,target);return unit?[{type:"unit",unit}]:[]}
   let units=opponent.shikigami.filter(unit=>validUnitAttackTarget(state,side,definition,unit));const taunts=units.filter(unit=>unit.keywords.includes("挑発"));
   if(!definition.ignoreTaunt&&taunts.length)units=taunts;

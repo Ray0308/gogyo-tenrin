@@ -23,7 +23,7 @@
     "category": "攻撃札",
     "system": "霊符術",
     "imageId": "img_card_senfu",
-    "description": "基本効果：2ダメージ。この攻撃は挑発を無視して対象を選べる。 属性別追加効果を持つ。",
+    "description": "基本効果：相手式神からランダムに1体を選び2ダメージ。ステルスと挑発を無視する。 属性別追加効果を持つ。",
     "hasAttributeVariants": true
   },
   {
