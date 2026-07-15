@@ -1,7 +1,7 @@
 ﻿export const FIVE_ELEMENTS = ["wood", "fire", "earth", "metal", "water"] as const;
 export type FiveElement = (typeof FIVE_ELEMENTS)[number];
 export type GamePhase = "title" | "attribute_selection" | "attribute_reveal" | "battle";
-export type CardTarget = "cpu_player";
+export type CardTarget = "cpu_player" | "player" | "player_field";
 
 export interface CardView {
   instanceId: string;
@@ -19,6 +19,7 @@ export interface CardView {
   flavorText: string;
   playable: boolean;
   unusableReason?: string;
+  playTarget?: CardTarget;
 }
 
 export interface CurseState {
@@ -28,18 +29,34 @@ export interface CurseState {
   remainingTriggers?: number;
 }
 
+export interface ShikigamiState {
+  instanceId: string;
+  shikigamiId: string;
+  name: string;
+  attribute: string;
+  hp: number;
+  maxHp: number;
+  attack: number;
+  aiProfile: string;
+  keywords: string[];
+  ability: string;
+  curses: CurseState[];
+  nextDamageReduction: number;
+}
+
 export interface BattlePlayerState {
   hp: number;
   mp: number;
   cost: number;
   curses: CurseState[];
   nextDamageReduction: number;
+  shikigami: ShikigamiState[];
 }
 
 export interface BattleState {
   turnNumber: number;
   activePlayer: "player" | "cpu";
-  phase: "card_use" | "finished";
+  phase: "card_use" | "resolving" | "finished";
   winner?: "player" | "cpu";
   player: BattlePlayerState & { hand: CardView[]; discard: CardView[] };
   cpu: BattlePlayerState & { handCount: number };
@@ -67,6 +84,7 @@ export interface ClientToServerEvents {
   "attribute:select": (payload: { attribute: FiveElement }, callback: (result: ActionResult) => void) => void;
   "match:enter": (callback: (result: ActionResult) => void) => void;
   "card:use": (payload: { instanceId: string; target: CardTarget }, callback: (result: ActionResult) => void) => void;
+  "turn:end": (callback: (result: ActionResult) => void) => void;
   "session:reset": (callback: (result: ActionResult) => void) => void;
 }
 

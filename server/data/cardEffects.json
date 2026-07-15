@@ -1,32 +1,138 @@
 [
   {
+    "type": "attack",
     "cardId": "card_reidan_wood",
     "target": "opponent_player",
     "baseDamage": 2,
-    "attributeMatchEffect": { "type": "apply_curse", "curseId": "curse_poison", "stacks": 1 }
+    "attributeMatchEffect": {
+      "type": "apply_curse",
+      "curseId": "curse_poison",
+      "stacks": 1
+    }
   },
   {
+    "type": "attack",
     "cardId": "card_reidan_fire",
     "target": "opponent_player",
     "baseDamage": 2,
-    "attributeMatchEffect": { "type": "apply_curse", "curseId": "curse_burn", "stacks": 1 }
+    "attributeMatchEffect": {
+      "type": "apply_curse",
+      "curseId": "curse_burn",
+      "stacks": 1
+    }
   },
   {
+    "type": "attack",
     "cardId": "card_reidan_earth",
     "target": "opponent_player",
     "baseDamage": 2,
-    "attributeMatchEffect": { "type": "next_damage_reduction", "amount": 1 }
+    "attributeMatchEffect": {
+      "type": "next_damage_reduction",
+      "amount": 1
+    }
   },
   {
+    "type": "attack",
     "cardId": "card_reidan_metal",
     "target": "opponent_player",
     "baseDamage": 2,
-    "attributeMatchEffect": { "type": "ignore_damage_reduction", "amount": 1 }
+    "attributeMatchEffect": {
+      "type": "ignore_damage_reduction",
+      "amount": 1
+    }
   },
   {
+    "type": "attack",
     "cardId": "card_reidan_water",
     "target": "opponent_player",
     "baseDamage": 2,
-    "attributeMatchEffect": { "type": "gain_mp", "amount": 1 }
+    "attributeMatchEffect": {
+      "type": "gain_mp",
+      "amount": 1
+    }
+  },
+  {
+    "type": "turn",
+    "cardId": "card_tenrin_wood",
+    "target": "self_player",
+    "steps": 1
+  },
+  {
+    "type": "turn",
+    "cardId": "card_tenrin_fire",
+    "target": "self_player",
+    "steps": -1
+  },
+  {
+    "type": "turn",
+    "cardId": "card_tenrin_earth",
+    "target": "self_player",
+    "steps": 2
+  },
+  {
+    "type": "turn",
+    "cardId": "card_tenrin_metal",
+    "target": "self_player",
+    "steps": -2
+  },
+  {
+    "type": "summon",
+    "cardId": "card_summon_kanko",
+    "target": "self_field",
+    "shikigamiId": "shikigami_kanko"
+  },
+  {
+    "type": "summon",
+    "cardId": "card_summon_hakuro",
+    "target": "self_field",
+    "shikigamiId": "shikigami_hakuro"
+  },
+  {
+    "type": "summon",
+    "cardId": "card_summon_orochi",
+    "target": "self_field",
+    "shikigamiId": "shikigami_orochi"
+  },
+  {
+    "type": "summon",
+    "cardId": "card_summon_kappa",
+    "target": "self_field",
+    "shikigamiId": "shikigami_kappa"
+  },
+  {
+    "type": "summon",
+    "cardId": "card_summon_karasutengu",
+    "target": "self_field",
+    "shikigamiId": "shikigami_karasutengu"
+  },
+  {
+    "type": "summon",
+    "cardId": "card_summon_kamaitachi",
+    "target": "self_field",
+    "shikigamiId": "shikigami_kamaitachi"
+  },
+  {
+    "type": "summon",
+    "cardId": "card_summon_komainu",
+    "target": "self_field",
+    "shikigamiId": "shikigami_komainu"
+  },
+  {
+    "type": "summon",
+    "cardId": "card_summon_shirozaru",
+    "target": "self_field",
+    "shikigamiId": "shikigami_shirozaru"
+  },
+  {
+    "type": "summon",
+    "cardId": "card_summon_genki",
+    "target": "self_field",
+    "shikigamiId": "shikigami_genki"
+  },
+  {
+    "type": "summon",
+    "cardId": "card_summon_hinotori",
+    "target": "self_field",
+    "shikigamiId": "shikigami_hinotori"
   }
 ]

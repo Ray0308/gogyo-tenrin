@@ -1,4 +1,4 @@
-﻿import {
+import {
   type ActionResult,
   type CardTarget,
   type FiveElement,
@@ -15,6 +15,7 @@ interface BrowserSocket {
   emit(event: "attribute:select", payload: { attribute: FiveElement }, callback: Acknowledge): void;
   emit(event: "match:enter" | "session:reset", callback: Acknowledge): void;
   emit(event: "card:use", payload: { instanceId: string; target: CardTarget }, callback: Acknowledge): void;
+  emit(event: "turn:end", callback: Acknowledge): void;
   connect(): void;
   io: { on(event: "reconnect_attempt", listener: () => void): void };
 }
@@ -98,7 +99,16 @@ function elementBadge(attribute?: FiveElement): string {
 function renderReveal(): void {
   app.innerHTML = shell(`<header class="compact-header"><p class="eyebrow">ATTRIBUTE REVEAL</p><h1>属性公開</h1></header><div class="versus"><div>${elementBadge(state.playerAttribute)}<strong>${escapeHtml(state.playerName ?? "あなた")}</strong></div><b>対</b><div>${elementBadge(state.cpuAttribute)}<strong>CPU</strong></div></div>${error()}<div class="menu">${button("対戦を開始", "enter-match")}</div>`);
 }
-function unitSlots(): string { return `<div class="unit-slots"><div>式神枠</div><div>式神枠</div><div>式神枠</div></div>`; }
+function renderUnits(units: NonNullable<SessionState["battle"]>["player"]["shikigami"]): string {
+  const slots = Array.from({ length: 3 }, (_, index) => {
+    const unit = units[index];
+    if (!unit) return `<div class="unit-slot empty">式神枠</div>`;
+    const keywords = unit.keywords.length > 0 ? `<small>${unit.keywords.map(escapeHtml).join("・")}</small>` : "";
+    const reduction = unit.nextDamageReduction > 0 ? `<span class="unit-effect">軽減 ${unit.nextDamageReduction}</span>` : "";
+    return `<article class="unit-slot ${cardAttributeClass(unit.attribute)}"><strong>${escapeHtml(unit.name)}</strong><span>${escapeHtml(unit.attribute)}</span><b>HP ${unit.hp} / ${unit.maxHp}</b><span>攻撃 ${unit.attack}</span>${keywords}${renderCurses(unit.curses)}${reduction}</article>`;
+  }).join("");
+  return `<div class="unit-slots">${slots}</div>`;
+}
 function cardAttributeClass(attribute: string): string {
   return ({ "木": "wood", "火": "fire", "土": "earth", "金": "metal", "水": "water", "無属性": "neutral" } as Record<string, string>)[attribute] ?? "neutral";
 }
@@ -113,10 +123,24 @@ function renderBattle(): void {
     return;
   }
   const cards = battle.player.hand.map((card) => `<button class="hand-card ${cardAttributeClass(card.attribute)} ${card.playable ? "" : "unplayable"}" data-card-instance="${card.instanceId}"><span class="hand-card-system">${escapeHtml(card.system)}</span><strong>${escapeHtml(card.name.split("：").at(-1) ?? card.name)}</strong><span class="hand-card-attribute">${escapeHtml(card.attribute)}</span><span class="hand-card-cost">C ${card.cost}</span>${card.mpCost > 0 ? `<span class="hand-card-mp">MP ${card.mpCost}</span>` : ""}<small>${escapeHtml(card.effectText)}</small></button>`).join("");
-  const targeting = pendingCardId !== null;
-  const targetGuide = targeting ? `<div class="target-guide">相手プレイヤーを選択してください。${button("キャンセル", "cancel-target", "small text")}</div>` : "";
-  const log = battle.log.slice(-5).map((entry) => `<li>${escapeHtml(entry)}</li>`).join("");
-  app.innerHTML = `<section class="battle"><header class="battle-player opponent ${targeting ? "targetable" : ""}" ${targeting ? 'data-target="cpu_player"' : ""}><div><span>CPU</span><strong>HP ${battle.cpu.hp}</strong>${renderCurses(battle.cpu.curses)}</div>${elementBadge(state.cpuAttribute)}<div class="resource"><span>MP ${battle.cpu.mp} / 30</span><span>COST ${battle.cpu.cost}</span><span>手札 ${battle.cpu.handCount}</span></div></header><section class="field enemy"><p>相手式神</p>${unitSlots()}</section><section class="terrain"><span>共有地形</span><strong>通常状態</strong><div class="field-ring"></div></section><section class="field ally"><p>味方式神</p>${unitSlots()}</section><header class="battle-player"><div><span>${escapeHtml(state.playerName ?? "あなた")}</span><strong>HP ${battle.player.hp}</strong>${renderCurses(battle.player.curses)}</div>${elementBadge(state.playerAttribute)}<div class="resource"><span>MP ${battle.player.mp} / 30</span><span>COST ${battle.player.cost}</span><span>捨て札 ${battle.player.discard.length}</span></div></header><section class="hand"><div class="phase-label">${battle.phase === "finished" ? "対戦終了" : `第${battle.turnNumber}ターン・カード使用フェーズ`}</div>${targetGuide}<div class="hand-cards" aria-label="自分の手札">${cards || '<p class="empty-hand">手札がありません。</p>'}</div><details class="battle-log" ${settings.log ? "open" : ""}><summary>対戦ログ</summary><ol>${log}</ol></details><div class="battle-actions">${button("ルール", "rules", "small secondary")}${button("設定", "settings", "small secondary")}${button("タイトルへ戻る", "reset", "small text")}</div></section></section>`;
+  const pendingCard = battle.player.hand.find((card) => card.instanceId === pendingCardId);
+  const pendingTarget = pendingCard?.playTarget;
+  const targeting = pendingCard !== undefined;
+  const targetLabels: Record<CardTarget, string> = { cpu_player: "相手プレイヤー", player: "自分プレイヤー", player_field: "味方式神エリア" };
+  const targetGuide = targeting && pendingTarget ? `<div class="target-guide">${targetLabels[pendingTarget]}を選択してください。${button("キャンセル", "cancel-target", "small text")}</div>` : "";
+  const targetAttribute = (target: CardTarget): string => targeting && pendingTarget === target ? 'data-target="' + target + '"' : "";
+  const log = battle.log.slice(-8).map((entry) => `<li>${escapeHtml(entry)}</li>`).join("");
+  const finished = battle.phase === "finished";
+  const result = finished ? `<div class="battle-result"><strong>${battle.winner === "player" ? "勝利" : "敗北"}</strong><span>対戦が終了しました</span></div>` : "";
+  const canEndTurn = !finished && battle.phase === "card_use" && battle.activePlayer === "player";
+  app.innerHTML = `<section class="battle">
+    <header class="battle-player opponent" ${targetAttribute("cpu_player")}><div><span>CPU</span><strong>HP ${battle.cpu.hp}</strong>${renderCurses(battle.cpu.curses)}</div>${elementBadge(state.cpuAttribute)}<div class="resource"><span>MP ${battle.cpu.mp} / 30</span><span>COST ${battle.cpu.cost}</span><span>手札 ${battle.cpu.handCount}</span></div></header>
+    <section class="field enemy"><p>相手式神</p>${renderUnits(battle.cpu.shikigami)}</section>
+    <section class="terrain"><span>共有地形</span><strong>通常状態</strong><div class="field-ring"></div></section>
+    <section class="field ally" ${targetAttribute("player_field")}><p>味方式神</p>${renderUnits(battle.player.shikigami)}</section>
+    <header class="battle-player" ${targetAttribute("player")}><div><span>${escapeHtml(state.playerName ?? "あなた")}</span><strong>HP ${battle.player.hp}</strong>${renderCurses(battle.player.curses)}</div>${elementBadge(state.playerAttribute)}<div class="resource"><span>MP ${battle.player.mp} / 30</span><span>COST ${battle.player.cost}</span><span>捨て札 ${battle.player.discard.length}</span></div></header>
+    <section class="hand"><div class="phase-label">${finished ? "対戦終了" : `第${battle.turnNumber}ターン・${battle.activePlayer === "player" ? "自分" : "CPU"}の${battle.phase === "resolving" ? "処理中" : "カード使用フェーズ"}`}</div>${result}${targetGuide}<div class="hand-cards" aria-label="自分の手札">${cards || '<p class="empty-hand">手札がありません。</p>'}</div><button class="menu-button end-turn" data-action="end-turn" ${!canEndTurn || busy ? "disabled" : ""}>ターン終了</button><details class="battle-log" ${settings.log ? "open" : ""}><summary>対戦ログ</summary><ol>${log}</ol></details><div class="battle-actions">${button("ルール", "rules", "small secondary")}${button("設定", "settings", "small secondary")}${button("タイトルへ戻る", "reset", "small text")}</div></section>
+  </section>`;
 }
 function renderDialog(): void {
   let content: string;
@@ -185,6 +209,7 @@ app.addEventListener("click", (event) => {
   else if (action === "prepare-card" && selectedCardId) { pendingCardId = selectedCardId; dialog = null; render(); }
   else if (action === "cancel-target") { pendingCardId = null; selectedCardId = null; render(); }
   else if (action === "enter-match") { busy = true; render(); socket.emit("match:enter", applyResult); }
+  else if (action === "end-turn") { busy = true; pendingCardId = null; selectedCardId = null; render(); socket.emit("turn:end", applyResult); }
   else if (action === "reset") { busy = true; pendingCardId = null; selectedCardId = null; localStorage.removeItem(TOKEN_KEY); socket.emit("session:reset", (result) => { screen = "title"; applyResult(result); }); }
 });
 app.addEventListener("submit", (event) => {
