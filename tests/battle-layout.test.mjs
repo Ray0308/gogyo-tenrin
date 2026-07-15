@@ -105,4 +105,6 @@ test("title uses shikigami artwork and a five-element circle with an overcoming 
   for (const element of ["wood", "fire", "earth", "metal", "water"]) {
     assert.match(css, new RegExp(`\\.five-node-${element}`));
   }
+  assert.match(css, /\.title-lobby[\s\S]*align-items:\s*stretch/);
+  assert.match(css, /\.title-character figcaption[\s\S]*display:\s*none/);
 });

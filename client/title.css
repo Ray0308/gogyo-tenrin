@@ -3,7 +3,7 @@
   min-height: calc(100svh - 100px);
   display: grid;
   grid-template-rows: minmax(430px, 1fr) auto auto;
-  align-items: end;
+  align-items: stretch;
   position: relative;
 }
 
@@ -350,6 +350,10 @@
     min-height: 390px;
   }
 
+  .title-character figcaption {
+    display: none;
+  }
+
   .title-character {
     bottom: 62px;
     width: 43vw;
@@ -365,7 +369,7 @@
   }
 
   .five-star {
-    top: 2px;
+    top: 8px;
     width: 158px;
   }
 
