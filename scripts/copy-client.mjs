@@ -1,4 +1,8 @@
-import { copyFile, mkdir } from "node:fs/promises";
+import { copyFileSync, mkdirSync } from "node:fs";
+import path from "node:path";
 
-await mkdir("dist/client", { recursive: true });
-await copyFile("client/index.html", "dist/client/index.html");
+const output = path.resolve("dist", "client");
+mkdirSync(output, { recursive: true });
+for (const file of ["index.html", "styles.css"]) {
+  copyFileSync(path.resolve("client", file), path.join(output, file));
+}
