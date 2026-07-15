@@ -106,11 +106,14 @@ test("title and in-battle rules expose the shared card catalog", async () => {
   assert.match(css, /\.catalog-grid/);
 });
 
-test("title uses shikigami artwork and a five-element circle with an overcoming star", async () => {
+test("title cycles five elemental shikigami around a five-element circle and overcoming star", async () => {
   const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
   const css = await readFile(path.join(repositoryRoot, "client", "title.css"), "utf8");
-  assert.match(source, /title-character-center/);
-  assert.match(source, /img_shikigami_hinotori\.png/);
+  assert.match(source, /class="title-gallery"/);
+  for (const shikigami of ["kanko", "hinotori", "genki", "hakuro", "kappa"]) {
+    assert.match(source, new RegExp(`img_shikigami_${shikigami}\\.png`));
+  }
+  assert.equal((source.match(/class="title-slide title-slide-/g) ?? []).length, 5);
   assert.match(source, /five-star-cycle/);
   assert.match(source, /five-star-overcome/);
   assert.match(source, /polyline/);
@@ -118,7 +121,8 @@ test("title uses shikigami artwork and a five-element circle with an overcoming 
     assert.match(css, new RegExp(`\\.five-node-${element}`));
   }
   assert.match(css, /\.title-lobby[\s\S]*align-items:\s*stretch/);
-  assert.match(css, /\.title-character figcaption[\s\S]*display:\s*none/);
+  assert.match(css, /@keyframes title-slide-cycle/);
+  assert.match(css, /\.title-slide:first-child[\s\S]*opacity:\s*\.96/);
 });
 
 test("initial attribute selection uses a compact five-element wheel", async () => {

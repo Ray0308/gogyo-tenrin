@@ -330,9 +330,13 @@ function renderTitle(): void {
   app.innerHTML = shell(`<div class="title-lobby">
     <section class="title-hero" aria-label="五行転輪">
       <div class="title-mist" aria-hidden="true"></div>
-      <figure class="title-character title-character-left"><img src="/client/assets/shikigami/img_shikigami_kanko.png" alt="管狐"><figcaption>木・管狐</figcaption></figure>
-      <figure class="title-character title-character-center"><img src="/client/assets/shikigami/img_shikigami_hinotori.png" alt="火鳥"><figcaption>火・火鳥</figcaption></figure>
-      <figure class="title-character title-character-right"><img src="/client/assets/shikigami/img_shikigami_genki.png" alt="玄亀"><figcaption>土・玄亀</figcaption></figure>
+      <div class="title-gallery" aria-label="五行を象徴する式神">
+        <figure class="title-slide title-slide-wood"><img src="/client/assets/shikigami/img_shikigami_kanko.png" alt="木属性の式神・管狐"><figcaption><span>木</span><b>管狐</b></figcaption></figure>
+        <figure class="title-slide title-slide-fire"><img src="/client/assets/shikigami/img_shikigami_hinotori.png" alt="火属性の式神・火鳥"><figcaption><span>火</span><b>火鳥</b></figcaption></figure>
+        <figure class="title-slide title-slide-earth"><img src="/client/assets/shikigami/img_shikigami_genki.png" alt="土属性の式神・玄亀"><figcaption><span>土</span><b>玄亀</b></figcaption></figure>
+        <figure class="title-slide title-slide-metal"><img src="/client/assets/shikigami/img_shikigami_hakuro.png" alt="金属性の式神・白狼"><figcaption><span>金</span><b>白狼</b></figcaption></figure>
+        <figure class="title-slide title-slide-water"><img src="/client/assets/shikigami/img_shikigami_kappa.png" alt="水属性の式神・河童"><figcaption><span>水</span><b>河童</b></figcaption></figure>
+      </div>
       <div class="five-star" aria-label="五行の相生円環と相剋五芒星">
         <svg viewBox="0 0 200 200" role="img" aria-hidden="true">
           <circle class="five-star-cycle" cx="100" cy="100" r="88"></circle>
