@@ -140,3 +140,22 @@
     grid-template-columns: 1fr;
   }
 }
+
+.rules-guide > header { padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.rules-guide > header h2 { margin-bottom: 8px; }
+.rules-guide > header p:last-child { margin-bottom: 0; }
+.rules-guide section { padding: 17px 0 15px; border-bottom: 1px solid rgba(214, 190, 126, 0.16); }
+.rules-guide h3 { margin: 0 0 9px; color: #f0cf79; font-size: 1rem; }
+.rules-guide ul, .rules-guide ol { margin: 0; padding-left: 1.25rem; color: #cbd3df; font: 500 0.75rem/1.75 system-ui, sans-serif; }
+.rules-guide li + li { margin-top: 4px; }
+.rule-cycle { margin: 0 0 10px !important; padding: 9px; border: 1px solid rgba(240, 207, 121, 0.35); border-radius: 999px; color: #f3dfaa !important; text-align: center; letter-spacing: 0.12em; }
+.rule-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.rule-grid p { margin: 0; padding: 9px; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; background: rgba(4, 12, 23, 0.34); }
+.rule-grid b, .rule-grid span { display: block; }
+.rule-grid b { color: #f3dfaa; font-size: 0.76rem; }
+.rule-grid span { color: #aeb8c7; font: 500 0.66rem/1.5 system-ui, sans-serif; }
+.rule-note { margin: 10px 0 0 !important; padding-left: 9px; border-left: 2px solid rgba(240, 207, 121, 0.5); font-size: 0.7rem; }
+.rule-flow { display: grid; gap: 4px; list-style-position: inside; padding: 0 !important; }
+.rule-flow li { padding: 7px 9px; border-radius: 8px; background: rgba(255, 255, 255, 0.045); }
+.rules-guide > .menu-button { margin-top: 18px; }
+@media (max-width: 390px) { .rule-grid { grid-template-columns: 1fr; } }

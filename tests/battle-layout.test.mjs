@@ -111,6 +111,23 @@ test("title and in-battle rules expose the shared card catalog", async () => {
   assert.match(css, /\.catalog-grid/);
 });
 
+test("rules explain curses, keywords, reactions, and counterattack order", async () => {
+  const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
+  const css = await readFile(path.join(repositoryRoot, "client", "catalog.css"), "utf8");
+  for (const topic of ["呪いと状態", "キーワード能力", "防御・反応", "攻撃と反撃の順序", "貫通", "反撃から反撃は発生しません"]) {
+    assert.match(source, new RegExp(topic));
+  }
+  assert.match(css, /\.rules-guide/);
+  assert.match(css, /\.rule-grid/);
+  assert.match(css, /\.rule-flow/);
+});
+
+test("CPU turn presents a deliberate start pause", async () => {
+  const server = await readFile(path.join(repositoryRoot, "server", "index.ts"), "utf8");
+  assert.match(server, /CPU_TURN_START_DELAY_MS=Number\(process\.env\.CPU_TURN_START_DELAY_MS\?\?1_800\)/);
+  assert.match(server, /scheduleCpuTurn\(session\)/);
+});
+
 test("title cycles five elemental shikigami around a five-element circle and overcoming star", async () => {
   const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
   const css = await readFile(path.join(repositoryRoot, "client", "title.css"), "utf8");

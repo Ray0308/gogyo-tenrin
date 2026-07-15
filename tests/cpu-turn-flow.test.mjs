@@ -14,6 +14,7 @@ const emit = (socket, event, payload) => new Promise((resolve) => {
 
 test("CPU turn completes after the player ends the turn", async () => {
   process.env.PORT = "0";
+  process.env.CPU_TURN_START_DELAY_MS = "20";
   const serverModule = await import("../dist/server/index.js");
   if (!serverModule.server.listening) await new Promise((resolve) => serverModule.server.once("listening", resolve));
   const address = serverModule.server.address();
@@ -38,12 +39,24 @@ test("CPU turn completes after the player ends the turn", async () => {
         assert.equal(entered.state.battle.cpu.mp, 10);
         const openingHandIds = new Set(entered.state.battle.player.hand.map((card) => card.instanceId));
 
+        const cpuStartUpdate = waitFor(socket, "session:state");
         let result = await emit(socket, "turn:end");
         assert.equal(result.ok, true);
+        assert.equal(result.state.battle.activePlayer, "cpu");
+        assert.equal(result.state.battle.phase, "resolving");
+        await cpuStartUpdate;
+
+        const cpuStartedAt = Date.now();
+        const [cpuState] = await waitFor(socket, "session:state");
+        result = { ok: true, state: cpuState };
+        assert.ok(Date.now() - cpuStartedAt >= 15, "CPU should pause before taking its first action");
 
         for (let reactions = 0; result.state.battle.phase === "reaction" && reactions < 20; reactions += 1) {
-          result = await emit(socket, "reaction:respond", {});
-          assert.equal(result.ok, true);
+          const reactionUpdate = waitFor(socket, "session:state");
+          const response = await emit(socket, "reaction:respond", {});
+          assert.equal(response.ok, true);
+          const [reactionState] = await reactionUpdate;
+          result = { ok: true, state: reactionState };
         }
 
         assert.equal(result.state.battle.turnNumber, 2);
