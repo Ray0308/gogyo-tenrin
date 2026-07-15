@@ -7,6 +7,7 @@ import {
   type SessionState,
 } from "../shared/protocol.js";
 import { deriveBattleVisualChanges, type BattleSide, type BattleVisualChange } from "./battle-animations.js";
+import { MAX_PLAYER_HP, MAX_PLAYER_MP } from "../shared/game-balance.js";
 
 type Acknowledge = (result: ActionResult) => void;
 interface BrowserSocket {
@@ -296,6 +297,19 @@ function shikigamiImagePath(imageId: string): string {
 function cardAttributeClass(attribute: string): string {
   return ({ "木": "wood", "火": "fire", "土": "earth", "金": "metal", "水": "water", "無属性": "neutral" } as Record<string, string>)[attribute] ?? "neutral";
 }
+const elementOvercomes: Record<FiveElement, FiveElement> = { wood: "earth", earth: "water", water: "fire", fire: "metal", metal: "wood" };
+function hpGauge(hp: number): string {
+  const percentage = Math.max(0, Math.min(100, hp / MAX_PLAYER_HP * 100));
+  return `<i class="hp-gauge" aria-hidden="true"><em style="width:${percentage}%"></em></i>`;
+}
+function elementTension(): string {
+  const self = state.playerAttribute;
+  const opponent = state.cpuAttribute;
+  if (!self || !opponent) return `<div class="element-tension neutral"><span>五行相関</span><b>属性確認中</b></div>`;
+  if (elementOvercomes[self] === opponent) return `<div class="element-tension advantage"><span>相剋優勢 ＋4</span><b>${elements[self].mark} 剋 ${elements[opponent].mark}</b></div>`;
+  if (elementOvercomes[opponent] === self) return `<div class="element-tension danger"><span>相剋警戒 ＋4</span><b>${elements[opponent].mark} 剋 ${elements[self].mark}</b></div>`;
+  return `<div class="element-tension neutral"><span>五行拮抗</span><b>転輪で相剋を狙う</b></div>`;
+}
 function renderCurses(curses: { name: string; stacks: number }[]): string {
   if (curses.length === 0) return "";
   return `<div class="curse-row">${curses.map((curse) => `<span>呪い：${escapeHtml(curse.name)}${curse.stacks > 1 ? ` ×${curse.stacks}` : ""}</span>`).join("")}</div>`;
@@ -332,13 +346,13 @@ function renderBattle(): void {
   const pausedPanel = state.connectionPaused ? `<section class="connection-pause"><h2>\u518d\u63a5\u7d9a\u5f85\u6a5f\u4e2d</h2><p>\u76f8\u624b\u306e\u5fa9\u5e30\u3092\u5f85\u3063\u3066\u3044\u307e\u3059\u3002\u5bfe\u6226\u306f\u4e00\u6642\u505c\u6b62\u4e2d\u3067\u3059\u3002</p></section>` : "";
   const reactionPanel = reaction ? `<section class="reaction-panel"><div><p class="eyebrow">REACTION</p><h2>防御・反応受付中</h2><strong>${escapeHtml(reaction.attackerName)}の${escapeHtml(reaction.sourceName)}</strong><p>${reaction.targets.map((item) => `${escapeHtml(item.label)}：予測 ${item.predictedDamage}ダメージ`).join(" / ")}</p><div class="reaction-time">残り <b data-reaction-countdown>${Math.max(0, Math.ceil((reaction.deadline - Date.now()) / 1000))}</b> 秒</div></div><div class="reaction-options">${reactionOptions || '<p class="muted">使用可能な防御札はありません。</p>'}</div><button class="menu-button secondary" data-action="reaction-pass">使用しない</button></section>` : "";
   app.innerHTML = `<section class="battle battle-v2">${pausedPanel}${reactionPanel}<main class="battle-board">
-    <header class="battle-player opponent" data-combatant="cpu" ${targetAttribute("cpu_player")}><div><span>${escapeHtml(state.opponentName ?? "CPU")}</span><strong>HP ${battle.cpu.hp}</strong>${renderCurses(battle.cpu.curses)}</div>${elementBadge(state.cpuAttribute)}<div class="resource"><span>MP ${battle.cpu.mp} / 30</span><span>COST ${battle.cpu.cost}</span><span>手札 ${battle.cpu.handCount}</span></div></header>
+    <header class="battle-player opponent ${battle.cpu.hp <= MAX_PLAYER_HP * .25 ? "is-critical" : ""}" data-combatant="cpu" ${targetAttribute("cpu_player")}><div><span>${escapeHtml(state.opponentName ?? "CPU")}</span><strong>HP ${battle.cpu.hp} / ${MAX_PLAYER_HP}</strong>${hpGauge(battle.cpu.hp)}${renderCurses(battle.cpu.curses)}</div>${elementBadge(state.cpuAttribute)}<div class="resource"><span>霊気 ${battle.cpu.mp} / ${MAX_PLAYER_MP}</span><span>COST ${battle.cpu.cost}</span><span>手札 ${battle.cpu.handCount}</span></div></header>
     <section class="barrier-display ${battle.cpu.barrier ? "" : "is-empty"}" ${targetAttribute("cpu_barrier") || (targeting && pendingCard?.cardId==="card_fuin" && battle.cpu.barrier ? 'data-target="cpu_barrier"' : "")}><span>相手結界</span><strong>${battle.cpu.barrier ? escapeHtml(battle.cpu.barrier.name) : "未設置"}</strong><small>${battle.cpu.barrier ? escapeHtml(battle.cpu.barrier.effectText) : ""}</small></section>
     <section class="field enemy" ${targetAttribute("cpu_field")}><p>相手式神</p>${renderUnits(battle.cpu.shikigami, pendingTarget, pendingCard?.ignoreTaunt, "cpu")}</section>
-    <section class="terrain" ${targetAttribute("shared_field")}><span>共有地形</span><strong>${battle.terrain ? escapeHtml(battle.terrain.name) : "通常状態"}</strong><small>${battle.terrain ? escapeHtml(battle.terrain.effectText) : ""}</small><div class="field-ring"></div></section>
+    <section class="terrain" ${targetAttribute("shared_field")}><div class="terrain-name"><span>共有地形</span><strong>${battle.terrain ? escapeHtml(battle.terrain.name) : "通常状態"}</strong></div>${elementTension()}<small>${battle.terrain ? escapeHtml(battle.terrain.effectText) : ""}</small><div class="field-ring"></div></section>
     <section class="field ally" ${targetAttribute("player_field")}><p>味方式神</p>${renderUnits(battle.player.shikigami, pendingTarget, false, "player")}</section>
     <section class="barrier-display ${battle.player.barrier ? "" : "is-empty"}" ${targetAttribute("player_barrier")}><span>自分結界</span><strong>${battle.player.barrier ? escapeHtml(battle.player.barrier.name) : "未設置"}</strong><small>${battle.player.barrier ? escapeHtml(battle.player.barrier.effectText) : ""}</small></section>
-    <header class="battle-player" data-combatant="player" ${targetAttribute("player") || (targeting && pendingCard?.cardId==="card_joka" ? 'data-target="player"' : "")}><div><span>${escapeHtml(state.playerName ?? "あなた")}</span><strong>HP ${battle.player.hp}</strong>${renderCurses(battle.player.curses)}</div>${elementBadge(state.playerAttribute)}<div class="resource"><span>MP ${battle.player.mp} / 30</span><span>COST ${battle.player.cost}</span><span>捨て札 ${battle.player.discard.length}</span></div></header>
+    <header class="battle-player ${battle.player.hp <= MAX_PLAYER_HP * .25 ? "is-critical" : ""}" data-combatant="player" ${targetAttribute("player") || (targeting && pendingCard?.cardId==="card_joka" ? 'data-target="player"' : "")}><div><span>${escapeHtml(state.playerName ?? "あなた")}</span><strong>HP ${battle.player.hp} / ${MAX_PLAYER_HP}</strong>${hpGauge(battle.player.hp)}${renderCurses(battle.player.curses)}</div>${elementBadge(state.playerAttribute)}<div class="resource"><span>霊気 ${battle.player.mp} / ${MAX_PLAYER_MP}</span><span>COST ${battle.player.cost}</span><span>捨て札 ${battle.player.discard.length}</span></div></header>
     </main><section class="hand battle-console"><div class="battle-command-row"><div class="phase-label">${finished ? "対戦終了" : `第${battle.turnNumber}ターン・${battle.activePlayer === "player" ? "自分" : "相手"}・${battle.phase === "reaction" ? "反応受付" : battle.phase === "resolving" ? "処理中" : "カード使用"}`} ${battle.turnDeadline&&!finished?`<span>残り <b data-turn-countdown>${Math.max(0,Math.ceil((battle.turnDeadline-Date.now())/1000))}</b>秒</span>`:""}</div><button class="menu-button end-turn" data-action="end-turn" ${!canEndTurn || busy ? "disabled" : ""}>ターン終了</button></div>${result}${targetGuide}<div class="hand-cards" aria-label="自分の手札">${cards || '<p class="empty-hand">手札がありません。</p>'}</div><div class="battle-utility"><details class="battle-log"><summary>対戦ログ</summary><ol>${log}</ol></details><div class="battle-actions">${button("ルール", "rules", "small secondary")}${button("設定", "settings", "small secondary")}${button("退出", "reset", "small text")}</div></div></section>
   </section>`;
 }

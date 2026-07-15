@@ -31,10 +31,16 @@ test("マスターから仕様どおりの実装JSONを生成できる", async (
     assert.ok(dataset.cards.every((card) => Array.isArray(card.timings)));
     assert.ok(dataset.cards.every((card) => Array.isArray(card.effects)));
     assert.ok(dataset.cards.every((card) => card.effects.length === 1), "all MVP cards must have one structured effect");
+    const forbidden = dataset.cards.filter((card) => card.system === "禁術");
+    assert.equal(forbidden.length, 6);
+    assert.ok(forbidden.every((card) => card.weight === 1.5));
+    assert.equal(forbidden.find((card) => card.id === "card_forbidden_yomigaeshi")?.effects[0].hpRatio, 1);
+    assert.equal(forbidden.find((card) => card.id === "card_forbidden_tamashii_gui")?.effects[0].heal, 12);
+    assert.equal(forbidden.find((card) => card.id === "card_forbidden_kamioroshi")?.effects[0].attack, 4);
 
     const { manifest } = await readGeneratedData(outputDirectory);
     assert.equal(manifest.schemaVersion, "1.0.0");
-    assert.equal(manifest.dataVersion, "0.1.0");
+    assert.equal(manifest.dataVersion, "0.2.0");
   } finally {
     await rm(outputDirectory, { recursive: true, force: true });
   }

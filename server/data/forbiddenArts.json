@@ -7,9 +7,9 @@
     "system": "禁術",
     "cost": 5,
     "mpCost": 7,
-    "weight": 1,
+    "weight": 1.5,
     "target": "自分の退場した式神1体",
-    "effectText": "最大HP50％（端数切上げ）で復活。復活ターン行動不可。",
+    "effectText": "最大HPで復活。復活ターン行動不可。",
     "description": "禁術タグあり。消滅した式神は対象外。空き枠が必要。"
   },
   {
@@ -20,7 +20,7 @@
     "system": "禁術",
     "cost": 5,
     "mpCost": 6,
-    "weight": 1,
+    "weight": 1.5,
     "target": "全体",
     "effectText": "地形および結界をすべて消滅させる。",
     "description": "禁術タグあり。"
@@ -33,9 +33,9 @@
     "system": "禁術",
     "cost": 5,
     "mpCost": 6,
-    "weight": 1,
+    "weight": 1.5,
     "target": "自分の式神1体",
-    "effectText": "対象を消滅させ、自分プレイヤーのHPを5回復しMPを3回復する。",
+    "effectText": "対象を消滅させ、自分プレイヤーのHPを12回復しMPを6回復する。",
     "description": "禁術タグあり。消滅した式神は復活対象外。"
   },
   {
@@ -46,7 +46,7 @@
     "system": "禁術",
     "cost": 5,
     "mpCost": 7,
-    "weight": 1,
+    "weight": 1.5,
     "target": "共有地形",
     "effectText": "現在の地形を消滅させ、任意の地形1つを選んで展開する。",
     "description": "禁術タグあり。"
@@ -59,9 +59,9 @@
     "system": "禁術",
     "cost": 5,
     "mpCost": 7,
-    "weight": 1,
+    "weight": 1.5,
     "target": "味方式神1体",
-    "effectText": "対象の最大HPと現在HPを4増加し、攻撃力を2増加する。",
+    "effectText": "対象の最大HPと現在HPを8増加し、攻撃力を4増加する。",
     "description": "禁術タグあり。強化は退場まで継続。"
   },
   {
@@ -72,7 +72,7 @@
     "system": "禁術",
     "cost": 5,
     "mpCost": 5,
-    "weight": 1,
+    "weight": 1.5,
     "target": "全体",
     "effectText": "すべての結界を消滅させる。",
     "description": "禁術タグあり。相生・相剋の影響を受けない。"

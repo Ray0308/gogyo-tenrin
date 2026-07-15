@@ -35,6 +35,10 @@ test("online room reaches a shared battle with private hands", async () => {
     assert.equal(selected.state.phase, "attribute_reveal");
     const hostBattle = await emit(host, "match:enter");
     const guestBattle = await emit(guest, "match:enter");
+    assert.equal(hostBattle.state.battle.player.hp, 40);
+    assert.equal(hostBattle.state.battle.player.mp, 10);
+    assert.equal(guestBattle.state.battle.player.hp, 40);
+    assert.equal(guestBattle.state.battle.player.mp, 10);
     assert.equal(hostBattle.state.battle.player.hand.length, 5);
     assert.equal(guestBattle.state.battle.player.hand.length, 5);
     assert.equal(Object.hasOwn(guestBattle.state.battle.cpu, "hand"), false);

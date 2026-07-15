@@ -32,6 +32,10 @@ test("CPU turn completes after the player ends the turn", async () => {
         assert.equal((await emit(socket, "attribute:select", { attribute: "wood" })).ok, true);
         const entered = await emit(socket, "match:enter");
         assert.equal(entered.state.battle.activePlayer, "player");
+        assert.equal(entered.state.battle.player.hp, 40);
+        assert.equal(entered.state.battle.cpu.hp, 40);
+        assert.equal(entered.state.battle.player.mp, 10);
+        assert.equal(entered.state.battle.cpu.mp, 10);
         const openingHandIds = new Set(entered.state.battle.player.hand.map((card) => card.instanceId));
 
         let result = await emit(socket, "turn:end");

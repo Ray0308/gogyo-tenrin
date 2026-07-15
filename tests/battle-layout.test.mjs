@@ -56,3 +56,13 @@ test("battle presentation uses a more readable default pace", async () => {
   const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
   assert.match(source, /settings\.speed === "fast" \? 600 : settings\.speed === "slow" \? 1250 : 900/);
 });
+
+test("dramatic battle HUD shows HP gauges and elemental tension", async () => {
+  const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
+  const css = await readFile(path.join(repositoryRoot, "client", "battle-v2.css"), "utf8");
+  assert.match(source, /hpGauge/);
+  assert.match(source, /elementTension/);
+  assert.match(source, /相剋優勢 ＋4/);
+  assert.match(css, /\.hp-gauge/);
+  assert.match(css, /\.element-tension\.danger/);
+});

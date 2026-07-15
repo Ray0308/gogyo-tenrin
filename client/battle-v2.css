@@ -33,6 +33,7 @@ body:has(.battle-v2) {
 
 .battle-v2 .battle-player > div:first-child {
   gap: 0;
+  min-width: 0;
 }
 
 .battle-v2 .battle-player > div:first-child > span {
@@ -45,6 +46,33 @@ body:has(.battle-v2) {
 
 .battle-v2 .battle-player strong {
   font-size: 1.04rem;
+}
+
+.hp-gauge {
+  position: relative;
+  display: block;
+  width: min(150px, 28vw);
+  height: 4px;
+  margin-top: 2px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgba(1, 5, 10, .72);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08);
+}
+
+.hp-gauge em {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #9e253e, #e8ca6f 65%, #eff3cf);
+  box-shadow: 0 0 8px rgba(232, 202, 111, .5);
+  transition: width .55s cubic-bezier(.2, .7, .2, 1);
+}
+
+.battle-v2 .battle-player.is-critical {
+  border-color: rgba(213, 65, 82, .65);
+  box-shadow: inset 0 0 24px rgba(116, 14, 34, .2), 0 0 16px rgba(162, 28, 49, .2);
+  animation: critical-player-pulse 1.5s ease-in-out infinite alternate;
 }
 
 .battle-v2 .battle-player .attribute {
@@ -130,12 +158,43 @@ body:has(.battle-v2) {
 .battle-v2 .terrain {
   height: 40px;
   min-height: 40px;
-  grid-template-columns: auto auto;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   place-content: center;
   align-items: center;
   gap: 7px;
   border-block: 1px solid rgba(201, 169, 95, .12);
 }
+
+.terrain-name {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  justify-items: end;
+  line-height: 1.05;
+}
+
+.terrain-name span { color: #8795a8; font-size: .48rem; }
+.terrain-name strong { font-size: .64rem; }
+
+.element-tension {
+  position: relative;
+  z-index: 3;
+  min-width: 106px;
+  padding: 3px 9px;
+  border: 1px solid rgba(218, 193, 123, .34);
+  border-radius: 999px;
+  text-align: center;
+  line-height: 1.05;
+  background: rgba(4, 11, 20, .82);
+  box-shadow: 0 0 18px rgba(0, 0, 0, .32);
+}
+
+.element-tension span { display: block; color: #b8c2cf; font: 700 .43rem system-ui, sans-serif; letter-spacing: .08em; }
+.element-tension b { color: #f1dda1; font-size: .57rem; }
+.element-tension.advantage { border-color: rgba(95, 213, 144, .66); box-shadow: 0 0 18px rgba(50, 177, 105, .2); }
+.element-tension.advantage span { color: #88e8ac; }
+.element-tension.danger { border-color: rgba(232, 76, 94, .7); box-shadow: 0 0 20px rgba(206, 41, 67, .25); animation: danger-relation-pulse 1.2s ease-in-out infinite alternate; }
+.element-tension.danger span { color: #ff8d9e; }
 
 .battle-v2 .terrain span,
 .battle-v2 .terrain strong {
@@ -519,6 +578,14 @@ body:has(.battle-v2) {
 @keyframes card-caster-pulse {
   0%, 100% { filter: none; }
   38% { filter: brightness(1.45) drop-shadow(0 0 12px rgba(245, 213, 110, .65)); }
+}
+
+@keyframes critical-player-pulse {
+  to { box-shadow: inset 0 0 28px rgba(143, 16, 38, .32), 0 0 20px rgba(200, 35, 58, .28); }
+}
+
+@keyframes danger-relation-pulse {
+  to { transform: scale(1.035); border-color: #ff7185; }
 }
 
 @keyframes selectable-target-pulse {

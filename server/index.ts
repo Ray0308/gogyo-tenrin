@@ -8,6 +8,15 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Server } from "socket.io";
 import {
+  ATTRIBUTE_GENERATION_MP,
+  ATTRIBUTE_MATCH_BONUS,
+  ATTRIBUTE_OVERCOME_BONUS,
+  INITIAL_PLAYER_HP,
+  INITIAL_PLAYER_MP,
+  MAX_PLAYER_HP,
+  MAX_PLAYER_MP,
+} from "../shared/game-balance.js";
+import {
   FIVE_ELEMENTS,
   type BattlePlayerState,
   type DefenseTarget,
@@ -94,7 +103,7 @@ const overcomes:Record<FiveElement,FiveElement>={wood:"earth",earth:"water",wate
 
 function loadJson<T>(name:string):T{return JSON.parse(readFileSync(path.join(currentDirectory,"data",name),"utf8")) as T}
 function validateMaster():void{
-  if(manifest.schemaVersion!=="1.0.0"||manifest.dataVersion!=="0.1.0")throw new Error("Master data version mismatch.");
+  if(manifest.schemaVersion!=="1.0.0"||manifest.dataVersion!=="0.2.0")throw new Error("Master data version mismatch.");
   const collections:Record<string,IdMaster[]>={cards,cardTemplates,shikigami,barriers,terrains,forbiddenArts,keywords,curses,aiScores};
   const filenames:Record<string,string>={cards:"cards.json",cardTemplates:"cardTemplates.json",shikigami:"shikigami.json",barriers:"barriers.json",terrains:"terrains.json",forbiddenArts:"forbiddenArts.json",keywords:"keywords.json",curses:"curses.json",aiScores:"aiScores.json"};
   const ids=new Set<string>();
@@ -241,7 +250,7 @@ function applyDamageToPlayer(state:SessionState,side:Side,amount:number,ignoreRe
   const target=stateForSide(state,side),barrierReduction=!curseDamage&&target.barrier?.id==="barrier_guardian"?1:0,reduction=Math.max(0,target.nextDamageReduction+barrierReduction-ignoreReduction),damage=Math.max(0,amount-reduction);if(target.nextDamageReduction>0)target.nextDamageReduction=0;target.hp=Math.max(0,target.hp-damage);return damage;
 }
 function applyDamageToUnit(state:SessionState,unit:ShikigamiState,amount:number,ignoreReduction=0):number{const terrainReduction=state.battle?.terrain?.id==="terrain_sacred_domain"?1:0,damage=reduceUnitDamage(amount,unit,terrainReduction,ignoreReduction);unit.hp=Math.max(0,unit.hp-damage);return damage}
-function cleanupUnits(state:SessionState,side:Side):void{const owner=stateForSide(state,side),dead=owner.shikigami.filter(unit=>unit.hp<=0);for(const unit of dead){state.battle!.log.push(`${unit.name} retired.`);owner.retiredShikigami.push({...structuredClone(unit),curses:[],nextDamageReduction:0,shellDamageReduction:0,nextAttackBonus:0});if(state.battle!.terrain?.id==="terrain_yomi_road"){owner.mp=Math.min(30,owner.mp+1);state.battle!.log.push(`Yomi Road granted ${side==="player"?"Player":"CPU"} 1 MP.`)}}owner.shikigami=owner.shikigami.filter(unit=>unit.hp>0)}
+function cleanupUnits(state:SessionState,side:Side):void{const owner=stateForSide(state,side),dead=owner.shikigami.filter(unit=>unit.hp<=0);for(const unit of dead){state.battle!.log.push(`${unit.name} retired.`);owner.retiredShikigami.push({...structuredClone(unit),curses:[],nextDamageReduction:0,shellDamageReduction:0,nextAttackBonus:0});if(state.battle!.terrain?.id==="terrain_yomi_road"){owner.mp=Math.min(MAX_PLAYER_MP,owner.mp+1);state.battle!.log.push(`Yomi Road granted ${side==="player"?"Player":"CPU"} 1 MP.`)}}owner.shikigami=owner.shikigami.filter(unit=>unit.hp>0)}
 function applyTargetCurse(state:SessionState,side:Side,target:UnitTarget,effect:AttributeMatchEffect):void{
   if(effect.type!=="apply_curse")return;const curses=target.type==="player"?stateForSide(state,otherSide(side)).curses:target.unit.curses;addCurse(curses,effect.curseId,effect.stacks);state.battle!.log.push(`${target.type==="player"?(side==="player"?"CPU":"プレイヤー"):target.unit.name}に呪い：${effect.curseId==="curse_poison"?"毒":"火傷"}を付与した。`);
 }
@@ -249,7 +258,7 @@ function applySelfMatchEffect(state:SessionState,side:Side,effect:AttributeMatch
   if(!effect||effect.type==="apply_curse")return 0;const battle=state.battle!,actor=stateForSide(state,side);
   if(effect.type==="next_damage_reduction"){actor.nextDamageReduction=Math.max(actor.nextDamageReduction,effect.amount);battle.log.push(`次に受けるダメージを${effect.amount}軽減する効果を得た。`)}
   else if(effect.type==="ignore_damage_reduction"){battle.log.push(`この攻撃はダメージ軽減を${effect.amount}無視する。`);return effect.amount}
-  else{actor.mp=Math.min(30,actor.mp+effect.amount);battle.log.push(`属性固有効果でMPが${effect.amount}増加した。`)}
+  else{actor.mp=Math.min(MAX_PLAYER_MP,actor.mp+effect.amount);battle.log.push(`属性固有効果でMPが${effect.amount}増加した。`)}
   return 0;
 }
 function findUnitTarget(state:SessionState,side:Side,target:CardTarget|undefined):ShikigamiState|undefined{
@@ -304,17 +313,17 @@ function consumeUsedCard(session:StoredSession,side:Side,index:number):CardView{
 }
 function applyDefensePostEffect(state:SessionState,defenderSide:Side,definition:DefenseDefinition,protectedTargets:UnitTarget[],damagedTargets:UnitTarget[],prevented:number,attackerSide:Side,source:AttackSource={type:"player"}):void{
   const battle=state.battle!,defender=stateForSide(state,defenderSide);
-  if(definition.postEffect==="heal"&&protectedTargets[0]){const target=protectedTargets[0];if(target.type==="player")defender.hp=Math.min(30,defender.hp+1);else target.unit.hp=Math.min(target.unit.maxHp,target.unit.hp+1);battle.log.push(`${defenseTargetLabel(target)}のHPが1回復した。`)}
-  else if(definition.postEffect==="heal_lowest_damaged"&&damagedTargets.length){const sorted=[...damagedTargets].sort((a,b)=>{const ar=a.type==="player"?defender.hp/30:a.unit.hp/a.unit.maxHp,br=b.type==="player"?defender.hp/30:b.unit.hp/b.unit.maxHp;return ar-br});const target=sorted[0];if(target.type==="player")defender.hp=Math.min(30,defender.hp+1);else target.unit.hp=Math.min(target.unit.maxHp,target.unit.hp+1);battle.log.push(`${defenseTargetLabel(target)}のHPが1回復した。`)}
-  else if(definition.postEffect==="gain_mp"){defender.mp=Math.min(30,defender.mp+1);battle.log.push(`${defenderSide==="player"?"プレイヤー":"CPU"}のMPが1増加した。`)}
+  if(definition.postEffect==="heal"&&protectedTargets[0]){const target=protectedTargets[0];if(target.type==="player")defender.hp=Math.min(MAX_PLAYER_HP,defender.hp+1);else target.unit.hp=Math.min(target.unit.maxHp,target.unit.hp+1);battle.log.push(`${defenseTargetLabel(target)}のHPが1回復した。`)}
+  else if(definition.postEffect==="heal_lowest_damaged"&&damagedTargets.length){const sorted=[...damagedTargets].sort((a,b)=>{const ar=a.type==="player"?defender.hp/MAX_PLAYER_HP:a.unit.hp/a.unit.maxHp,br=b.type==="player"?defender.hp/MAX_PLAYER_HP:b.unit.hp/b.unit.maxHp;return ar-br});const target=sorted[0];if(target.type==="player")defender.hp=Math.min(MAX_PLAYER_HP,defender.hp+1);else target.unit.hp=Math.min(target.unit.maxHp,target.unit.hp+1);battle.log.push(`${defenseTargetLabel(target)}のHPが1回復した。`)}
+  else if(definition.postEffect==="gain_mp"){defender.mp=Math.min(MAX_PLAYER_MP,defender.mp+1);battle.log.push(`${defenderSide==="player"?"プレイヤー":"CPU"}のMPが1増加した。`)}
   else if(definition.postEffect==="next_reduction"&&protectedTargets[0]){const target=protectedTargets[0];if(target.type==="player")defender.nextDamageReduction=Math.max(defender.nextDamageReduction,1);else target.unit.nextDamageReduction=Math.max(target.unit.nextDamageReduction,1);battle.log.push(`${defenseTargetLabel(target)}は次に受けるダメージを1軽減する。`)}
   else if(definition.postEffect==="retaliate"&&prevented>0){const damage=source.type==="player"?applyDamageToPlayer(state,attackerSide,1):applyDamageToUnit(state,source.unit,1);battle.log.push(`防御札の反撃により${source.type==="player"?(attackerSide==="player"?"プレイヤー":"CPU"):source.unit.name}へ${damage}ダメージ。`)}
 }
 function resolveCardAttack(state:SessionState,side:Side,card:CardView,definition:AttackDefinition,targets:UnitTarget[],cardElement:FiveElement,match:boolean,ignore:number,defense?:DefenseDefinition,selectedTarget?:DefenseTarget):void{
   const battle=state.battle!,defenderSide=otherSide(side),protectedTargets=defense?(defense.scope==="all"?targets:targets.filter(target=>defenseTargetId(target)===selectedTarget)):[],damagedTargets:UnitTarget[]=[];let prevented=0;
-  for(const target of targets){const targetElement=targetAttribute(state,side,target),overcoming=Boolean(targetElement&&overcomes[cardElement]===targetElement),raw=definition.baseDamage+(match?1:0)+(overcoming?2:0),protectedTarget=protectedTargets.includes(target),adjusted=protectedTarget?(defense!.mode==="nullify"?0:Math.max(0,raw-defense!.amount)):raw;prevented+=raw-adjusted;const damage=target.type==="player"?applyDamageToPlayer(state,defenderSide,adjusted,ignore):applyDamageToUnit(state,target.unit,adjusted,ignore);if(damage>0)damagedTargets.push(target);battle.log.push(`${side==="player"?"プレイヤー":"CPU"}が${card.name}を使用し、${target.type==="player"?(side==="player"?"CPU":"プレイヤー"):target.unit.name}へ${damage}ダメージ。`);if(match&&definition.attributeMatchEffect)applyTargetCurse(state,side,target,definition.attributeMatchEffect);if(overcoming)battle.log.push("相剋成立：ダメージに＋2。");}
-  if(match)battle.log.push("属性一致：基本効果量に＋1。");
-  if(definition.healSelf)stateForSide(state,side).hp=Math.min(30,stateForSide(state,side).hp+definition.healSelf);
+  for(const target of targets){const targetElement=targetAttribute(state,side,target),overcoming=Boolean(targetElement&&overcomes[cardElement]===targetElement),raw=definition.baseDamage+(match?ATTRIBUTE_MATCH_BONUS:0)+(overcoming?ATTRIBUTE_OVERCOME_BONUS:0),protectedTarget=protectedTargets.includes(target),adjusted=protectedTarget?(defense!.mode==="nullify"?0:Math.max(0,raw-defense!.amount)):raw;prevented+=raw-adjusted;const damage=target.type==="player"?applyDamageToPlayer(state,defenderSide,adjusted,ignore):applyDamageToUnit(state,target.unit,adjusted,ignore);if(damage>0)damagedTargets.push(target);battle.log.push(`${side==="player"?"プレイヤー":"CPU"}が${card.name}を使用し、${target.type==="player"?(side==="player"?"CPU":"プレイヤー"):target.unit.name}へ${damage}ダメージ。`);if(match&&definition.attributeMatchEffect)applyTargetCurse(state,side,target,definition.attributeMatchEffect);if(overcoming)battle.log.push(`相剋成立：ダメージに＋${ATTRIBUTE_OVERCOME_BONUS}。`);}
+  if(match)battle.log.push(`属性一致：基本効果量に＋${ATTRIBUTE_MATCH_BONUS}。`);
+  if(definition.healSelf)stateForSide(state,side).hp=Math.min(MAX_PLAYER_HP,stateForSide(state,side).hp+definition.healSelf);
   if(defense)applyDefensePostEffect(state,defenderSide,defense,protectedTargets,damagedTargets,prevented,side);
   cleanupUnits(state,defenderSide);cleanupUnits(state,side);
   for(const target of damagedTargets){
@@ -342,11 +351,11 @@ function resolveUtilityCard(session:StoredSession,side:Side,definition:Exclude<C
   const state=session.state,battle=state.battle!,actor=stateForSide(state,side),opponent=stateForSide(state,otherSide(side)),manual=side==="player"||state.mode==="online";
   if(definition.type==="turn")rotateAttribute(state,side,definition.steps);
   else if(definition.type==="turn_choice")rotateAttribute(state,side,Number(choice));
-  else if(definition.type==="generate"){if(attributeForSide(state,side)===definition.requiredAttribute){actor.mp=Math.min(30,actor.mp+definition.successMp);rotateAttribute(state,side,definition.steps)}else actor.mp=Math.min(30,actor.mp+definition.failureMp)}
+  else if(definition.type==="generate"){if(attributeForSide(state,side)===definition.requiredAttribute){actor.mp=Math.min(MAX_PLAYER_MP,actor.mp+definition.successMp);rotateAttribute(state,side,definition.steps)}else actor.mp=Math.min(MAX_PLAYER_MP,actor.mp+definition.failureMp)}
   else if(definition.type==="cycle")rotateAttribute(state,side,Number(definition.steps));
   else if(definition.type==="cycle_choice")rotateAttribute(state,side,Number(choice));
   else if(definition.type==="cleanse"){const unit=manual?findAllyUnitTarget(state,side,target):actor.shikigami.find(item=>item.curses.length);removeOneCurse(unit?.curses??actor.curses)}
-  else if(definition.type==="restore"){actor.hp=Math.min(30,actor.hp+definition.hp);actor.mp=Math.min(30,actor.mp+definition.mp)}
+  else if(definition.type==="restore"){actor.hp=Math.min(MAX_PLAYER_HP,actor.hp+definition.hp);actor.mp=Math.min(MAX_PLAYER_MP,actor.mp+definition.mp)}
   else if(definition.type==="seal"){const unit=manual?findUnitTarget(state,side,target):opponent.shikigami[0];if(unit)unit.abilityDisabledUntilTurn=battle.turnNumber+(side==="cpu"?1:0);else if(opponent.barrier)opponent.barrier.skipNextTrigger=true}
   else if(definition.type==="cleanse_all_units"){for(const owner of [battle.player,battle.cpu])for(const unit of owner.shikigami)removeOneCurse(unit.curses)}
   else if(definition.type==="summon"){actor.shikigami.push(createShikigami(shikigamiById.get(definition.shikigamiId)!))}
@@ -354,7 +363,7 @@ function resolveUtilityCard(session:StoredSession,side:Side,definition:Exclude<C
   else if(definition.type==="terrain"){battle.terrain=createFieldState(terrainById.get(definition.fieldId)!)}
   else if(definition.type==="revive"){const retired=manual?findRetiredTarget(state,side,target):actor.retiredShikigami[0];if(retired){actor.retiredShikigami=actor.retiredShikigami.filter(unit=>unit.instanceId!==retired.instanceId);actor.shikigami.push({...structuredClone(retired),instanceId:randomUUID(),hp:Math.ceil(retired.maxHp*definition.hpRatio),curses:[],nextDamageReduction:0,shellDamageReduction:0,nextAttackBonus:0,cannotActTurn:battle.turnNumber})}}
   else if(definition.type==="clear_fields"){if(definition.barriers){delete battle.player.barrier;delete battle.cpu.barrier}if(definition.terrain)delete battle.terrain}
-  else if(definition.type==="sacrifice"){const unit=manual?findAllyUnitTarget(state,side,target):actor.shikigami[0];if(unit){actor.shikigami=actor.shikigami.filter(item=>item.instanceId!==unit.instanceId);actor.hp=Math.min(30,actor.hp+definition.heal);actor.mp=Math.min(30,actor.mp+definition.mp)}}
+  else if(definition.type==="sacrifice"){const unit=manual?findAllyUnitTarget(state,side,target):actor.shikigami[0];if(unit){actor.shikigami=actor.shikigami.filter(item=>item.instanceId!==unit.instanceId);actor.hp=Math.min(MAX_PLAYER_HP,actor.hp+definition.heal);actor.mp=Math.min(MAX_PLAYER_MP,actor.mp+definition.mp)}}
   else if(definition.type==="choose_terrain"){const terrainId=choice??terrains[0]?.id;if(terrainId)battle.terrain=createFieldState(terrainById.get(terrainId)!)}
   else if(definition.type==="buff_unit"){const unit=side==="player"?findAllyUnitTarget(state,side,target):actor.shikigami[0];if(unit){unit.maxHp+=definition.maxHp;unit.hp+=definition.hp;unit.attack+=definition.attack}}
 }
@@ -365,14 +374,14 @@ function executeCard(session:StoredSession,side:Side,index:number,externalTarget
   if(definition.type==="attack"){if(!validateAttackTarget(state,side,definition,externalTarget))return {ok:false,message:"Invalid target."}}else if(!validateUtilityTarget(state,side,definition,externalTarget,choice))return {ok:false,message:"Invalid target or choice."};
   const reason=isDefinitionUsable(state,side,card,definition);if(reason)return {ok:false,message:reason};const actor=stateForSide(state,side),actorAttribute=attributeForSide(state,side),cardElement=cardAttributeToElement[card.attribute];if(!cardElement&&definition.type==="attack")return {ok:false,message:"カード属性が不正です。"};actor.cost-=card.cost;actor.mp-=card.mpCost;
   if(definition.type==="attack"){
-    const match=cardElement===actorAttribute,selectedTargets=attackTargets(state,side,definition,externalTarget),targets=selectedTargets.length===1?[redirectCover(state,side,selectedTargets[0])]:selectedTargets,ignore=match?applySelfMatchEffect(state,side,definition.attributeMatchEffect):0;consumeUsedCard(session,side,index);const resolve=(defense?:DefenseDefinition,defenseTarget?:DefenseTarget)=>{resolveCardAttack(state,side,card,definition,targets,cardElement!,match,ignore,defense,defenseTarget);if(cardElement&&generates[actorAttribute]===cardElement){actor.mp=Math.min(30,actor.mp+1);battle.log.push("相生成立：MPが1増加した。")}triggerBurnAfterCard(state,side);finishIfNeeded(state);refreshPlayability(state)};
-    if(state.mode==="online"&&defenseCards(session,otherSide(side)).length){const predictions=targets.map(target=>{const targetElement=targetAttribute(state,side,target);return definition.baseDamage+(match?1:0)+(targetElement&&overcomes[cardElement!]===targetElement?2:0)});beginReaction(session,otherSide(side),card.name,side==="player"?(session.hostName??"Host"):(session.guestName??"Guest"),targets,predictions,(defense,defenseTarget)=>{resolve(defense,defenseTarget);if(!finishIfNeeded(state))battle.phase="card_use"});return {ok:true,paused:true}}
-    if(side==="cpu"&&defenseCards(session,"player").length){const predictions=targets.map(target=>{const targetElement=targetAttribute(state,side,target);return definition.baseDamage+(match?1:0)+(targetElement&&overcomes[cardElement!]===targetElement?2:0)});beginReaction(session,"player",card.name,"CPU",targets,predictions,(defense,defenseTarget)=>{resolve(defense,defenseTarget);if(!finishIfNeeded(state))continueCpuTurn(session)});return {ok:true,paused:true}}
+    const match=cardElement===actorAttribute,selectedTargets=attackTargets(state,side,definition,externalTarget),targets=selectedTargets.length===1?[redirectCover(state,side,selectedTargets[0])]:selectedTargets,ignore=match?applySelfMatchEffect(state,side,definition.attributeMatchEffect):0;consumeUsedCard(session,side,index);const resolve=(defense?:DefenseDefinition,defenseTarget?:DefenseTarget)=>{resolveCardAttack(state,side,card,definition,targets,cardElement!,match,ignore,defense,defenseTarget);if(cardElement&&generates[actorAttribute]===cardElement){actor.mp=Math.min(MAX_PLAYER_MP,actor.mp+ATTRIBUTE_GENERATION_MP);battle.log.push(`相生成立：MPが${ATTRIBUTE_GENERATION_MP}増加した。`)}triggerBurnAfterCard(state,side);finishIfNeeded(state);refreshPlayability(state)};
+    if(state.mode==="online"&&defenseCards(session,otherSide(side)).length){const predictions=targets.map(target=>{const targetElement=targetAttribute(state,side,target);return definition.baseDamage+(match?ATTRIBUTE_MATCH_BONUS:0)+(targetElement&&overcomes[cardElement!]===targetElement?ATTRIBUTE_OVERCOME_BONUS:0)});beginReaction(session,otherSide(side),card.name,side==="player"?(session.hostName??"Host"):(session.guestName??"Guest"),targets,predictions,(defense,defenseTarget)=>{resolve(defense,defenseTarget);if(!finishIfNeeded(state))battle.phase="card_use"});return {ok:true,paused:true}}
+    if(side==="cpu"&&defenseCards(session,"player").length){const predictions=targets.map(target=>{const targetElement=targetAttribute(state,side,target);return definition.baseDamage+(match?ATTRIBUTE_MATCH_BONUS:0)+(targetElement&&overcomes[cardElement!]===targetElement?ATTRIBUTE_OVERCOME_BONUS:0)});beginReaction(session,"player",card.name,"CPU",targets,predictions,(defense,defenseTarget)=>{resolve(defense,defenseTarget);if(!finishIfNeeded(state))continueCpuTurn(session)});return {ok:true,paused:true}}
     if(side==="player"){const choices=defenseCards(session,"cpu"),choice=choices.find(item=>item.definition.scope==="all"||targets.length===1);if(choice&&targets.some(target=>target.type==="player"?stateForSide(state,"cpu").hp<=definition.baseDamage+2:target.unit.hp<=definition.baseDamage+2)){const cpuIndex=session.cpuHand.findIndex(item=>item.instanceId===choice.card.instanceId);stateForSide(state,"cpu").mp-=choice.card.mpCost;consumeUsedCard(session,"cpu",cpuIndex);battle.log.push(`CPUが防御札 ${choice.card.name}を使用した。`);resolve(choice.definition,choice.definition.scope==="single"?defenseTargetId(targets[0]):undefined)}else resolve()}else resolve();return {ok:true};
   }
   battle.log.push(`${side==="player"?"プレイヤー":"CPU"}が${card.name}を使用した。`);
   resolveUtilityCard(session,side,definition,externalTarget,choice);
-  if(definition.type!=="generate"&&cardElement&&generates[actorAttribute]===cardElement){actor.mp=Math.min(30,actor.mp+1);battle.log.push("Generation bonus: MP +1.")}consumeUsedCard(session,side,index);if(definition.type==="cycle"||definition.type==="cycle_choice"){drawToLimit(handForSide(session,side),definition.draw);if(side==="player"||state.mode==="online"){battle.pendingDiscard={count:definition.discard,side};battle.phase="resolving"}else{for(let i=0;i<definition.discard&&session.cpuHand.length;i++){const discarded=session.cpuHand.splice(randomInt(session.cpuHand.length),1)[0];session.cpuDiscard.push(discarded)}}}triggerBurnAfterCard(state,side);finishIfNeeded(state);refreshPlayability(state);return {ok:true};
+  if(definition.type!=="generate"&&cardElement&&generates[actorAttribute]===cardElement){actor.mp=Math.min(MAX_PLAYER_MP,actor.mp+ATTRIBUTE_GENERATION_MP);battle.log.push(`相生成立：MPが${ATTRIBUTE_GENERATION_MP}増加した。`)}consumeUsedCard(session,side,index);if(definition.type==="cycle"||definition.type==="cycle_choice"){drawToLimit(handForSide(session,side),definition.draw);if(side==="player"||state.mode==="online"){battle.pendingDiscard={count:definition.discard,side};battle.phase="resolving"}else{for(let i=0;i<definition.discard&&session.cpuHand.length;i++){const discarded=session.cpuHand.splice(randomInt(session.cpuHand.length),1)[0];session.cpuDiscard.push(discarded)}}}triggerBurnAfterCard(state,side);finishIfNeeded(state);refreshPlayability(state);return {ok:true};
 }
 function usePlayerCard(session:StoredSession,instanceId:string,target:CardTarget,choice?:string):{ok:boolean;message?:string}{const battle=session.state.battle;if(!battle||session.state.phase!=="battle"||battle.phase!=="card_use"||battle.activePlayer!=="player")return {ok:false,message:"現在はカードを使用できません。"};const index=battle.player.hand.findIndex(card=>card.instanceId===instanceId);return executeCard(session,"player",index,target,choice)}
 function chooseUnitTarget(state:SessionState,side:Side,unit:ShikigamiState):UnitTarget{
@@ -403,7 +412,7 @@ function resolveShikigamiAttack(state:SessionState,side:Side,unit:ShikigamiState
   }
   cleanupUnits(state,opponentSide);
   if(shikigamiIsAlive(state,side,unit)){
-    if(abilityEnabled&&unit.shikigamiId==="shikigami_kanko"){actor.mp=Math.min(30,actor.mp+1);battle.log.push("霊気集めによりMPが1増加した。")}
+    if(abilityEnabled&&unit.shikigamiId==="shikigami_kanko"){actor.mp=Math.min(MAX_PLAYER_MP,actor.mp+1);battle.log.push("霊気集めによりMPが1増加した。")}
     if(abilityEnabled&&unit.shikigamiId==="shikigami_kappa"&&actor.shikigami.length){const heal=[...actor.shikigami].sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];heal.hp=Math.min(heal.maxHp,heal.hp+1);battle.log.push(`水薬により${heal.name}のHPが1回復。`)}
     if(abilityEnabled&&unit.shikigamiId==="shikigami_komainu")unit.nextDamageReduction=Math.max(unit.nextDamageReduction,1);
     const burn=unit.curses.find(curse=>curse.id==="curse_burn");if(burn){const damage=applyDamageToUnit(state,unit,1);battle.log.push(`火傷により${unit.name}へ${damage}ダメージ。`);burn.remainingTriggers=(burn.remainingTriggers??2)-1;if(burn.remainingTriggers<=0)unit.curses=unit.curses.filter(curse=>curse!==burn);cleanupUnits(state,side)}
@@ -418,7 +427,7 @@ function runOneShikigamiAction(session:StoredSession,side:Side,unit:ShikigamiSta
   const paralysis=unit.curses.find(curse=>curse.id==="curse_paralysis");if(paralysis){paralysis.remainingTriggers=(paralysis.remainingTriggers??2)-1;const failed=randomInt(100)<50;if(paralysis.remainingTriggers<=0)unit.curses=unit.curses.filter(curse=>curse!==paralysis);if(failed){battle.log.push(unit.name+" failed to act due to Paralysis.");return {paused:false}}}
   const abilityEnabled=unit.abilityDisabledUntilTurn===undefined||battle.turnNumber>unit.abilityDisabledUntilTurn;
   if(abilityEnabled&&unit.shikigamiId==="shikigami_genki"&&unit.hp<=unit.maxHp/2&&unit.shellDamageReduction<2){unit.shellDamageReduction=2;battle.log.push(`${unit.name}は甲羅籠りを行った。`);return {paused:false}}
-  const target=redirectCover(state,side,chooseUnitTarget(state,side,unit)),unitElement=cardAttributeToElement[unit.attribute]!,targetElement=targetAttribute(state,side,target);let total=unit.attack+unit.nextAttackBonus+(unitElement===attributeForSide(state,side)?1:0)+(targetElement&&overcomes[unitElement]===targetElement?2:0);unit.nextAttackBonus=0;
+  const target=redirectCover(state,side,chooseUnitTarget(state,side,unit)),unitElement=cardAttributeToElement[unit.attribute]!,targetElement=targetAttribute(state,side,target);let total=unit.attack+unit.nextAttackBonus+(unitElement===attributeForSide(state,side)?ATTRIBUTE_MATCH_BONUS:0)+(targetElement&&overcomes[unitElement]===targetElement?ATTRIBUTE_OVERCOME_BONUS:0);unit.nextAttackBonus=0;
   if(abilityEnabled&&unit.shikigamiId==="shikigami_hakuro"){const hpValues=[opponent.hp,...opponent.shikigami.map(enemy=>enemy.hp)],targetHp=target.type==="player"?opponent.hp:target.unit.hp;if(targetHp===Math.min(...hpValues))total+=1}
   const hits=unit.shikigamiId==="shikigami_kamaitachi"?[Math.ceil(total/2),Math.floor(total/2)]:[total],resolve=(defense?:DefenseDefinition,defenseTarget?:DefenseTarget)=>resolveShikigamiAttack(state,side,unit,target,hits,defense,defenseTarget);
   if(state.mode==="online"&&defenseCards(session,otherSide(side)).length){beginReaction(session,otherSide(side),"Normal attack",unit.name,[target],[hits.reduce((sum,hit)=>sum+hit,0)],(defense,defenseTarget)=>{resolve(defense,defenseTarget);if(!finishIfNeeded(state))resume?.()});return {paused:true}}
@@ -429,8 +438,8 @@ function runPlayerShikigamiPhase(session:StoredSession):void{const state=session
 function removeOneCurse(curses:CurseState[]):boolean{if(!curses.length)return false;const curse=curses[0];if(curse.stacks>1)curse.stacks-=1;else curses.shift();return true}
 function processTurnStart(state:SessionState,side:Side):void{
   const battle=state.battle!,actor=stateForSide(state,side),opponent=stateForSide(state,otherSide(side));
-  if(battle.terrain?.id==="terrain_clear_stream"){battle.player.mp=Math.min(30,battle.player.mp+1);battle.cpu.mp=Math.min(30,battle.cpu.mp+1);battle.log.push("清流により両プレイヤーのMPが1増加した。")}else if(battle.terrain?.id==="terrain_mineral_vein"){actor.cost+=1;battle.log.push(`鉱脈により${side==="player"?"プレイヤー":"CPU"}のコストが1増加した。`)}
-  if(actor.barrier?.id==="barrier_spirit_vein"){if(actor.barrier.skipNextTrigger)actor.barrier.skipNextTrigger=false;else{actor.mp=Math.min(30,actor.mp+1);battle.log.push(`霊脈結界により${side==="player"?"プレイヤー":"CPU"}のMPが1増加した。`)}}
+  if(battle.terrain?.id==="terrain_clear_stream"){battle.player.mp=Math.min(MAX_PLAYER_MP,battle.player.mp+1);battle.cpu.mp=Math.min(MAX_PLAYER_MP,battle.cpu.mp+1);battle.log.push("清流により両プレイヤーのMPが1増加した。")}else if(battle.terrain?.id==="terrain_mineral_vein"){actor.cost+=1;battle.log.push(`鉱脈により${side==="player"?"プレイヤー":"CPU"}のコストが1増加した。`)}
+  if(actor.barrier?.id==="barrier_spirit_vein"){if(actor.barrier.skipNextTrigger)actor.barrier.skipNextTrigger=false;else{actor.mp=Math.min(MAX_PLAYER_MP,actor.mp+1);battle.log.push(`霊脈結界により${side==="player"?"プレイヤー":"CPU"}のMPが1増加した。`)}}
   if(opponent.barrier?.id==="barrier_binding"){if(opponent.barrier.skipNextTrigger)opponent.barrier.skipNextTrigger=false;else{const candidates=actor.shikigami;if(candidates.length){const target=candidates[randomInt(candidates.length)],existing=target.curses.find(curse=>curse.id==="curse_binding");if(existing)existing.remainingTriggers=1;else target.curses.push({id:"curse_binding",name:"呪縛",stacks:1,remainingTriggers:1});battle.log.push(`呪縛結界により${target.name}へ呪い：呪縛を付与した。`)}opponent.barrier.triggerCount=(opponent.barrier.triggerCount??1)-1;if(opponent.barrier.triggerCount<=0){battle.log.push("呪縛結界が消滅した。");delete opponent.barrier}}}
 }
 function processTurnEnd(state:SessionState,side:Side):void{
@@ -448,12 +457,12 @@ const aiScoreById=new Map(aiScores.map(item=>[item.id,typeof item.score==="numbe
 function aiValue(id:string):number{return aiScoreById.get(id)??0}
 function cpuCardScore(session:StoredSession,card:CardView,definition:CardEffectDefinition):number{
   const state=session.state,battle=state.battle!,actor=battle.cpu,opponent=battle.player;let score=-card.mpCost*aiValue("ai_resource_penalty")*-1;
-  if(definition.type==="attack"){const damage=definition.baseDamage+(cardAttributeToElement[card.attribute]===state.cpuAttribute?1:0);if(definition.target==="opponent_any"){score+=damage*aiValue("ai_damage_player");if(damage>=opponent.hp)score+=aiValue("ai_lethal")}else{const targets=definition.target==="opponent_units"?opponent.shikigami:opponent.shikigami.slice(0,1);score+=targets.reduce((sum,unit)=>sum+Math.min(unit.hp,damage)*aiValue("ai_damage_shikigami")+(damage>=unit.hp?aiValue("ai_kill_shikigami"):0),0)}}
+  if(definition.type==="attack"){const damage=definition.baseDamage+(cardAttributeToElement[card.attribute]===state.cpuAttribute?ATTRIBUTE_MATCH_BONUS:0);if(definition.target==="opponent_any"){score+=damage*aiValue("ai_damage_player");if(damage>=opponent.hp)score+=aiValue("ai_lethal")}else{const targets=definition.target==="opponent_units"?opponent.shikigami:opponent.shikigami.slice(0,1);score+=targets.reduce((sum,unit)=>sum+Math.min(unit.hp,damage)*aiValue("ai_damage_shikigami")+(damage>=unit.hp?aiValue("ai_kill_shikigami"):0),0)}}
   else if(definition.type==="summon"||definition.type==="revive")score+=aiValue("ai_summon");
   else if(definition.type==="barrier")score+=aiValue("ai_barrier")-(actor.barrier?10:0);
   else if(definition.type==="terrain"||definition.type==="choose_terrain")score+=aiValue("ai_terrain");
   else if(definition.type==="cleanse"||definition.type==="cleanse_all_units")score+=aiValue("ai_cleanse");
-  else if(definition.type==="restore")score+=Math.min(30-actor.hp,definition.hp)*aiValue("ai_heal_player")+Math.min(30-actor.mp,definition.mp)*aiValue("ai_gain_mp");
+  else if(definition.type==="restore")score+=Math.min(MAX_PLAYER_HP-actor.hp,definition.hp)*aiValue("ai_heal_player")+Math.min(MAX_PLAYER_MP-actor.mp,definition.mp)*aiValue("ai_gain_mp");
   else if(definition.type==="generate")score+=definition.successMp*aiValue("ai_gain_mp");
   else if(definition.type==="cycle"||definition.type==="cycle_choice")score+=definition.draw*aiValue("ai_draw");
   else if(definition.type==="buff_unit")score+=aiValue("ai_summon");
@@ -485,7 +494,7 @@ function endPlayerTurn(session:StoredSession):{ok:boolean;message?:string}{
 
 
 function initializeBattle(session:StoredSession):void{
-  const hand=drawCards(5);session.cpuHand=drawCards(5);session.state.phase="battle";session.state.battle={turnNumber:1,activePlayer:"player",phase:"card_use",player:{hp:30,mp:0,cost:5,curses:[],nextDamageReduction:0,shikigami:[],retiredShikigami:[],hand,discard:[]},cpu:{hp:30,mp:0,cost:5,curses:[],nextDamageReduction:0,shikigami:[],retiredShikigami:[],handCount:session.cpuHand.length},log:["Match started. Both players drew five cards."]};refreshPlayability(session.state);if(session.mode!=="online")armPlayerTurnTimer(session);
+  const hand=drawCards(5);session.cpuHand=drawCards(5);session.state.phase="battle";session.state.battle={turnNumber:1,activePlayer:"player",phase:"card_use",player:{hp:INITIAL_PLAYER_HP,mp:INITIAL_PLAYER_MP,cost:5,curses:[],nextDamageReduction:0,shikigami:[],retiredShikigami:[],hand,discard:[]},cpu:{hp:INITIAL_PLAYER_HP,mp:INITIAL_PLAYER_MP,cost:5,curses:[],nextDamageReduction:0,shikigami:[],retiredShikigami:[],handCount:session.cpuHand.length},log:[`対戦開始。両者HP${INITIAL_PLAYER_HP}・MP${INITIAL_PLAYER_MP}で手札を5枚引いた。`]};refreshPlayability(session.state);if(session.mode!=="online")armPlayerTurnTimer(session);
 }
 function useCardForSide(session:StoredSession,side:Side,instanceId:string,target:CardTarget,choice?:string):{ok:boolean;message?:string}{
   const battle=session.state.battle;if(!battle||session.state.phase!=="battle"||battle.phase!=="card_use"||battle.activePlayer!==side)return {ok:false,message:"It is not your card-use phase."};
