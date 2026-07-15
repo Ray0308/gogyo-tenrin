@@ -19,6 +19,7 @@ import {
 import {
   FIVE_ELEMENTS,
   type BattlePlayerState,
+  type CardCatalogItem,
   type DefenseTarget,
   type CardPlayTarget,
   type CardTarget,
@@ -94,6 +95,7 @@ const barrierById=new Map(barriers.map(field=>[field.id,field]));
 const terrainById=new Map(terrains.map(field=>[field.id,field]));
 const effectByCardId=new Map(definitions.map(effect=>[effect.cardId,effect]));
 const totalCardWeight=cards.reduce((sum,card)=>sum+card.weight,0);
+const publicCardCatalog:CardCatalogItem[]=cards.map(card=>({cardId:card.id,name:card.name,category:card.category,system:card.system,attribute:card.attribute,cost:card.cost,mpCost:card.mpCost,target:card.target,timing:card.timing,effectText:card.effectText,description:card.description,flavorText:card.flavorText}));
 const sessions=new Map<string,StoredSession>();
 const socketTokens=new Map<string,string>();
 const cardAttributeToElement:Record<string,FiveElement|undefined>={"木":"wood","火":"fire","土":"earth","金":"metal","水":"water"};
@@ -544,7 +546,7 @@ function leaveOnlineRoom(session:StoredSession,leavingToken:string):void{
   if(room)rooms.delete(room.id);for(const token of [session.hostToken,session.guestToken])if(token){sessions.delete(token);tokenSides.delete(token)}
 }
 
-app.get("/health",(_request,response)=>response.json({status:"ok"}));app.use(express.static(distributionDirectory));app.get("/",(_request,response)=>response.type("html").send(rootDocument));
+app.get("/health",(_request,response)=>response.json({status:"ok"}));app.get("/api/cards",(_request,response)=>response.json({cards:publicCardCatalog}));app.use(express.static(distributionDirectory));app.get("/",(_request,response)=>response.type("html").send(rootDocument));
 io.on("connection",socket=>{
   sendState(socket.id,{phase:"title"});
   const acknowledge=(session:StoredSession,callback:(result:{ok:boolean;message?:string;state?:SessionState})=>void)=>callback({ok:true,state:publicStateForSocket(socket.id,session)});

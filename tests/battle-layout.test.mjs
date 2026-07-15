@@ -76,3 +76,20 @@ test("battle presentation locks input and gives retired shikigami a dedicated ef
   assert.match(css, /shikigami-retire-layer/);
   assert.match(css, /shikigami-dissolve/);
 });
+
+test("field attacks make each shikigami visibly tappable and cancelling fully resets selection", async () => {
+  const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
+  assert.match(source, /enemyFieldTarget/);
+  assert.match(source, /data-target="cpu_field"/);
+  assert.match(source, /function clearCardSelection/);
+  assert.match(source, /action === "cancel-target"\) \{ clearCardSelection\(\)/);
+});
+
+test("title and in-battle rules expose the shared card catalog", async () => {
+  const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
+  const css = await readFile(path.join(repositoryRoot, "client", "catalog.css"), "utf8");
+  assert.match(source, /button\("カード一覧", "catalog"/);
+  assert.match(source, /button\("カード一覧を見る", "catalog"/);
+  assert.match(source, /fetch\("\/api\/cards"\)/);
+  assert.match(css, /\.catalog-grid/);
+});

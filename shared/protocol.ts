@@ -26,6 +26,21 @@ export interface CardView {
   choiceOptions?: { value: string; label: string }[];
 }
 
+export interface CardCatalogItem {
+  cardId: string;
+  name: string;
+  category: string;
+  system: string;
+  attribute: string;
+  cost: number;
+  mpCost: number;
+  target: string;
+  timing: string;
+  effectText: string;
+  description: string;
+  flavorText: string;
+}
+
 export interface CurseState {
   id: string;
   name: string;

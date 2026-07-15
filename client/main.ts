@@ -1,5 +1,6 @@
 import {
   type ActionResult,
+  type CardCatalogItem,
   type CardPlayTarget,
   type CardTarget,
   type DefenseTarget,
@@ -42,7 +43,7 @@ const elements: Record<FiveElement, { name: string; mark: string }> = {
 };
 
 type LocalScreen = "connecting" | "title" | "cpu_setup" | "online";
-type Dialog = "rules" | "settings" | "card" | null;
+type Dialog = "rules" | "settings" | "card" | "catalog" | null;
 interface Settings { bgm: number; sound: number; vibration: boolean; speed: string; log: boolean }
 let screen: LocalScreen = "connecting";
 let dialog: Dialog = null;
@@ -53,6 +54,9 @@ let state: SessionState = { phase: "title" };
 let busy = false;
 let errorMessage = "";
 let settings: Settings = loadSettings();
+let cardCatalog: CardCatalogItem[] = [];
+let catalogLoading = true;
+let catalogError = "";
 interface BattleCue { title: string; detail?: string; side?: BattleSide; key?: string; duration?: number; onShow?: () => void }
 const battleCueQueue: BattleCue[] = [];
 let battleCuePlaying = false;
@@ -62,6 +66,28 @@ let activeBattleEffects = 0;
 function battlePresentationLocked(): boolean {
   return battleCuePlaying || battleCueQueue.length > 0 || activeBattleEffects > 0;
 }
+function clearCardSelection(): void {
+  pendingCardId = null;
+  selectedCardId = null;
+  selectedChoice = undefined;
+}
+async function loadCardCatalog(): Promise<void> {
+  catalogLoading = true;
+  catalogError = "";
+  try {
+    const response = await fetch("/api/cards");
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const payload = await response.json() as { cards?: CardCatalogItem[] };
+    if (!Array.isArray(payload.cards)) throw new Error("Invalid card catalog response");
+    cardCatalog = payload.cards;
+  } catch {
+    catalogError = "カード一覧を取得できませんでした。";
+  } finally {
+    catalogLoading = false;
+    if (dialog === "catalog") render();
+  }
+}
+void loadCardCatalog();
 function syncBattlePresentationLock(): void {
   document.body.classList.toggle("battle-presentation-locked", battlePresentationLocked());
 }
@@ -235,9 +261,7 @@ function updateState(nextState: SessionState): void {
   if (pendingCardId) {
     const pending = nextState.battle?.player.hand.find((card) => card.instanceId === pendingCardId);
     if (!pending?.playable) {
-      pendingCardId = null;
-      selectedCardId = null;
-      selectedChoice = undefined;
+      clearCardSelection();
       selectionError = pending?.unusableReason ?? "選択可能な対象がなくなりました。";
       errorMessage = selectionError;
     }
@@ -284,7 +308,7 @@ function renderConnecting(): void {
   app.innerHTML = shell(`<div class="center-card"><p class="eyebrow">SERVER CONNECTION</p><h1>五行転輪</h1><div class="loader"></div><h2>サーバーへ接続中</h2><p class="muted">起動待ちの場合も自動で再試行します。</p>${error()}${button("手動で再試行", "retry", "secondary")}</div>`);
 }
 function renderTitle(): void {
-  app.innerHTML = shell(`<header class="title-header"><div class="cycle-mark"><span>木</span><span>火</span><span>土</span><span>金</span><span>水</span></div><p class="eyebrow">GOGYO TENRIN</p><h1>五行転輪</h1><p class="subtitle">巡る霊気を読み、五行を転じよ。</p></header><nav class="menu">${button("CPU戦", "cpu")}${button("オンライン対戦", "online")}${button("ルール確認", "rules", "secondary")}${button("設定", "settings", "secondary")}</nav><p class="connection-ok"><span></span>サーバー接続済み</p>`);
+  app.innerHTML = shell(`<header class="title-header"><div class="cycle-mark"><span>木</span><span>火</span><span>土</span><span>金</span><span>水</span></div><p class="eyebrow">GOGYO TENRIN</p><h1>五行転輪</h1><p class="subtitle">巡る霊気を読み、五行を転じよ。</p></header><nav class="menu">${button("CPU戦", "cpu")}${button("オンライン対戦", "online")}${button("ルール確認", "rules", "secondary")}${button("カード一覧", "catalog", "secondary")}${button("設定", "settings", "secondary")}</nav><p class="connection-ok"><span></span>サーバー接続済み</p>`);
 }
 function renderCpuSetup(): void {
   app.innerHTML = shell(`<header class="compact-header"><p class="eyebrow">CPU MATCH</p><h1>CPU戦</h1><p>陰陽師名を入力してください。</p></header><form class="form-card" data-form="cpu"><label for="player-name">プレイヤー名</label><input id="player-name" maxlength="20" autocomplete="nickname" placeholder="名前を入力" ${busy ? "disabled" : ""}/>${error()}<button class="menu-button" type="submit" ${busy ? "disabled" : ""}>${busy ? "準備中…" : "対戦準備へ"}</button>${button("戻る", "title", "text")}</form>`);
@@ -308,7 +332,7 @@ function elementBadge(attribute?: FiveElement): string {
 function renderReveal(): void {
   app.innerHTML = shell(`<header class="compact-header"><p class="eyebrow">ATTRIBUTE REVEAL</p><h1>属性公開</h1></header><div class="versus"><div>${elementBadge(state.playerAttribute)}<strong>${escapeHtml(state.playerName ?? "あなた")}</strong></div><b>対</b><div>${elementBadge(state.cpuAttribute)}<strong>${escapeHtml(state.opponentName ?? "CPU")}</strong></div></div>${error()}<div class="menu">${button("対戦を開始", "enter-match")}</div>`);
 }
-function renderUnits(units: NonNullable<SessionState["battle"]>["player"]["shikigami"], targetMode?: CardPlayTarget, ignoreTaunt = false, owner: "cpu"|"player" = "cpu"): string {
+function renderUnits(units: NonNullable<SessionState["battle"]>["player"]["shikigami"], targetMode?: CardPlayTarget, ignoreTaunt = false, owner: "cpu"|"player" = "cpu", targetDescription = ""): string {
   const hasTaunt = units.some((unit) => unit.keywords.includes("\u6311\u767a"));
   const slots = Array.from({ length: 3 }, (_, index) => {
     const unit = units[index];
@@ -317,11 +341,13 @@ function renderUnits(units: NonNullable<SessionState["battle"]>["player"]["shiki
     const oneShotReduction = unit.nextDamageReduction > 0 ? `<span class="unit-effect">\u6b21\u56de\u8efd\u6e1b ${unit.nextDamageReduction}</span>` : "";
     const shellReduction = unit.shellDamageReduction > 0 ? `<span class="unit-effect">\u7532\u7f85\u7c60\u308a ${unit.shellDamageReduction}</span>` : "";
     const enemyTarget = owner==="cpu"&&(targetMode==="cpu_unit"||targetMode==="cpu_any")&&(!unit.keywords.includes("\u30b9\u30c6\u30eb\u30b9")||unit.keywords.includes("\u6311\u767a"))&&(ignoreTaunt||!hasTaunt||unit.keywords.includes("\u6311\u767a"));
+    const enemyFieldTarget = owner==="cpu"&&targetMode==="cpu_field";
     const allyTarget = owner==="player"&&targetMode==="player_unit";
-    const target = enemyTarget?`data-target="cpu_unit:${unit.instanceId}"`:allyTarget?`data-target="player_unit:${unit.instanceId}"`:"";
-    const targetContext = owner==="cpu"?(targetMode==="cpu_unit"||targetMode==="cpu_any"):targetMode==="player_unit";
+    const target = enemyTarget?`data-target="cpu_unit:${unit.instanceId}"`:enemyFieldTarget?'data-target="cpu_field"':allyTarget?`data-target="player_unit:${unit.instanceId}"`:"";
+    const targetContext = owner==="cpu"?(targetMode==="cpu_unit"||targetMode==="cpu_any"||targetMode==="cpu_field"):targetMode==="player_unit";
     const targetClass = targetContext?(target?"target-option":"target-blocked"):"";
-    const targetBadge = targetContext?(target?'<em class="target-badge">対象</em>':`<em class="target-reason">${unit.keywords.includes("ステルス")?"ステルス":"対象外"}</em>`):"";
+    const fieldBadge = targetDescription.includes("ランダム") ? "ランダム" : "全体";
+    const targetBadge = targetContext?(target?`<em class="target-badge">${enemyFieldTarget?fieldBadge:"対象"}</em>`:`<em class="target-reason">${unit.keywords.includes("ステルス")?"ステルス":"対象外"}</em>`):"";
     return `<article class="unit-slot ${cardAttributeClass(unit.attribute)} ${targetClass}" data-unit-id="${unit.instanceId}" data-unit-side="${owner}" ${target}><img class="unit-portrait" src="${shikigamiImagePath(unit.imageId)}" alt="" loading="lazy"><div class="unit-shade"></div>${targetBadge}<strong>${escapeHtml(unit.name)}</strong><span>${escapeHtml(unit.attribute)}</span><b>HP ${unit.hp} / ${unit.maxHp}</b><span>ATK ${unit.attack}</span>${keywords}${renderCurses(unit.curses)}${oneShotReduction}${shellReduction}</article>`;
   }).join("");
   return `<div class="unit-slots">${slots}</div>`;
@@ -362,7 +388,8 @@ function renderBattle(): void {
   const targeting = pendingCard !== undefined;
   const targetLabels: Record<CardPlayTarget, string> = { cpu_player: "相手プレイヤー", cpu_unit: "相手式神", cpu_any: "相手プレイヤーまたは相手式神", cpu_field: "相手式神エリア", cpu_barrier: "相手結界", player: "自分プレイヤー", player_unit: "味方式神", player_field: "味方式神エリア", player_barrier: "自分結界", retired_unit: "退場した式神", shared_field: "共有地形" };
   const retiredTargets = targeting && pendingTarget==="retired_unit" ? battle.player.retiredShikigami.map(unit=>`<button class="menu-button small" data-target="retired_unit:${unit.instanceId}">${escapeHtml(unit.name)} (HP ${unit.maxHp})</button>`).join("") : "";
-  const targetGuide = targeting && pendingTarget ? `<div class="target-guide"><strong>${targetLabels[pendingTarget]}を選択</strong><span>金色に光っている対象をタップしてください。</span>${button("キャンセル", "cancel-target", "small text")}</div>` : "";
+  const targetGuideText = pendingTarget==="cpu_field"&&pendingCard?.target.includes("ランダム") ? "光っている式神または相手式神エリアをタップすると、対象をランダムに決定します。" : "金色に光っている対象をタップしてください。";
+  const targetGuide = targeting && pendingTarget ? `<div class="target-guide"><strong>${escapeHtml(pendingCard.target || targetLabels[pendingTarget])}を選択</strong><span>${targetGuideText}</span>${button("キャンセル", "cancel-target", "small text")}</div>` : "";
   const opponentHasTaunt = battle.cpu.shikigami.some((unit) => unit.keywords.includes("挑発"));
   const targetAttribute = (target: CardPlayTarget): string => targeting && (pendingTarget === target || (pendingTarget === "cpu_any" && target === "cpu_player")) && !(target === "cpu_player" && opponentHasTaunt && !pendingCard?.ignoreTaunt) ? 'data-target="' + target + '"' : "";
   const log = battle.log.slice(-8).map((entry) => `<li>${escapeHtml(entry)}</li>`).join("");
@@ -384,7 +411,7 @@ function renderBattle(): void {
   app.innerHTML = `<section class="battle battle-v2">${pausedPanel}${reactionPanel}<main class="battle-board">
     <header class="battle-player opponent ${battle.cpu.hp <= MAX_PLAYER_HP * .25 ? "is-critical" : ""}" data-combatant="cpu" ${targetAttribute("cpu_player")}><div><span>${escapeHtml(state.opponentName ?? "CPU")}</span><strong>HP ${battle.cpu.hp} / ${MAX_PLAYER_HP}</strong>${hpGauge(battle.cpu.hp)}${renderCurses(battle.cpu.curses)}</div>${elementBadge(state.cpuAttribute)}<div class="resource"><span>霊気 ${battle.cpu.mp} / ${MAX_PLAYER_MP}</span><span>COST ${battle.cpu.cost}</span><span>手札 ${battle.cpu.handCount}</span></div></header>
     <section class="barrier-display ${battle.cpu.barrier ? "" : "is-empty"}" ${targetAttribute("cpu_barrier") || (targeting && pendingCard?.cardId==="card_fuin" && battle.cpu.barrier ? 'data-target="cpu_barrier"' : "")}><span>相手結界</span><strong>${battle.cpu.barrier ? escapeHtml(battle.cpu.barrier.name) : "未設置"}</strong><small>${battle.cpu.barrier ? escapeHtml(battle.cpu.barrier.effectText) : ""}</small></section>
-    <section class="field enemy" ${targetAttribute("cpu_field")}><p>相手式神</p>${renderUnits(battle.cpu.shikigami, pendingTarget, pendingCard?.ignoreTaunt, "cpu")}</section>
+    <section class="field enemy" ${targetAttribute("cpu_field")}><p>相手式神</p>${renderUnits(battle.cpu.shikigami, pendingTarget, pendingCard?.ignoreTaunt, "cpu", pendingCard?.target)}</section>
     <section class="terrain" ${targetAttribute("shared_field")}><div class="terrain-name"><span>共有地形</span><strong>${battle.terrain ? escapeHtml(battle.terrain.name) : "通常状態"}</strong></div>${elementTension()}<small>${battle.terrain ? escapeHtml(battle.terrain.effectText) : ""}</small><div class="field-ring"></div></section>
     <section class="field ally" ${targetAttribute("player_field")}><p>味方式神</p>${renderUnits(battle.player.shikigami, pendingTarget, false, "player")}</section>
     <section class="barrier-display ${battle.player.barrier ? "" : "is-empty"}" ${targetAttribute("player_barrier")}><span>自分結界</span><strong>${battle.player.barrier ? escapeHtml(battle.player.barrier.name) : "未設置"}</strong><small>${battle.player.barrier ? escapeHtml(battle.player.barrier.effectText) : ""}</small></section>
@@ -395,7 +422,10 @@ function renderBattle(): void {
 function renderDialog(): void {
   let content: string;
   if (dialog === "rules") {
-    content = `<h2>基本ルール</h2><p>木・火・土・金・水を巡らせ、カードと式神を用いて相手のHPを0にします。</p><p>ゲーム進行と判定はサーバーが管理します。</p>`;
+    content = `<h2>基本ルール</h2><p>木・火・土・金・水を巡らせ、カードと式神を用いて相手のHPを0にします。</p><p>ゲーム進行と判定はサーバーが管理します。</p>${button("カード一覧を見る", "catalog", "small secondary")}`;
+  } else if (dialog === "catalog") {
+    const entries = cardCatalog.map((card) => `<article class="catalog-card ${cardAttributeClass(card.attribute)}"><header><span>${escapeHtml(card.system)}</span><strong>${escapeHtml(card.name.split("：").at(-1) ?? card.name)}</strong><em>${escapeHtml(card.attribute)}</em></header><div class="catalog-meta"><span>COST ${card.cost}</span><span>MP ${card.mpCost}</span><span>${escapeHtml(card.category)}</span></div><p>${escapeHtml(card.effectText)}</p><small>対象：${escapeHtml(card.target)}</small></article>`).join("");
+    content = `<div class="catalog"><header><p class="eyebrow">CARD CATALOG</p><h2>カード一覧</h2><span>${cardCatalog.length}枚</span></header>${catalogLoading?'<p class="muted">読み込み中…</p>':catalogError?`<div class="catalog-error"><p>${escapeHtml(catalogError)}</p>${button("再読み込み", "catalog-retry", "small secondary")}</div>`:`<div class="catalog-grid">${entries}</div>`}</div>`;
   } else if (dialog === "card") {
     const card = state.battle?.player.hand.find((item) => item.instanceId === selectedCardId);
     if (!card) { dialog = null; return; }
@@ -451,7 +481,7 @@ app.addEventListener("click", (event) => {
     busy = true;
     render();
     socket.emit("card:use", { instanceId, target: targetType, choice: selectedChoice }, (result) => {
-      if (result.ok) { pendingCardId = null; selectedCardId = null; selectedChoice = undefined; }
+      if (result.ok) clearCardSelection();
       applyResult(result);
     });
     return;
@@ -463,10 +493,11 @@ app.addEventListener("click", (event) => {
   else if (action === "cpu") { screen = "cpu_setup"; errorMessage = ""; render(); }
   else if (action === "online") { screen = "online"; render(); }
   else if (action === "title") { screen = "title"; render(); }
-  else if (action === "rules" || action === "settings") { dialog = action; render(); }
+  else if (action === "rules" || action === "settings" || action === "catalog") { dialog = action; render(); }
+  else if (action === "catalog-retry") { void loadCardCatalog(); render(); }
   else if (action === "close-dialog") { dialog = null; selectedCardId = null; render(); }
   else if (action === "prepare-card" && selectedCardId) { const card=state.battle?.player.hand.find(item=>item.instanceId===selectedCardId); selectedChoice=(document.querySelector<HTMLSelectElement>("[data-card-choice]")?.value ?? card?.choiceOptions?.[0]?.value); pendingCardId = selectedCardId; dialog = null; render(); }
-  else if (action === "cancel-target") { pendingCardId = null; selectedCardId = null; render(); }
+  else if (action === "cancel-target") { clearCardSelection(); errorMessage = ""; render(); }
   else if (action === "room-start") { busy=true; render(); socket.emit("room:start",applyResult); }
   else if (action === "room-leave") { busy=true; localStorage.removeItem(TOKEN_KEY); socket.emit("room:leave",(result)=>{screen="title";applyResult(result);}); }
   else if (action === "rematch") { busy=true; render(); socket.emit("rematch:request",applyResult); }
