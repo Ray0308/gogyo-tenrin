@@ -32,6 +32,7 @@ test("CPU turn completes after the player ends the turn", async () => {
         assert.equal((await emit(socket, "attribute:select", { attribute: "wood" })).ok, true);
         const entered = await emit(socket, "match:enter");
         assert.equal(entered.state.battle.activePlayer, "player");
+        const openingHandIds = new Set(entered.state.battle.player.hand.map((card) => card.instanceId));
 
         let result = await emit(socket, "turn:end");
         assert.equal(result.ok, true);
@@ -44,6 +45,9 @@ test("CPU turn completes after the player ends the turn", async () => {
         assert.equal(result.state.battle.turnNumber, 2);
         assert.equal(result.state.battle.activePlayer, "player");
         assert.equal(result.state.battle.phase, "card_use");
+        assert.equal(result.state.battle.player.hand.length, 5);
+        assert.equal(result.state.battle.player.discard.length, 5);
+        assert.equal(result.state.battle.player.hand.some((card) => openingHandIds.has(card.instanceId)), false);
       } finally {
         if (socket.connected) await emit(socket, "session:reset").catch(() => undefined);
         socket.close();

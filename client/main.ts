@@ -118,11 +118,12 @@ function renderUnits(units: NonNullable<SessionState["battle"]>["player"]["shiki
     const unit = units[index];
     if (!unit) return `<div class="unit-slot empty">\u7a7a\u304d</div>`;
     const keywords = unit.keywords.length > 0 ? `<small>${unit.keywords.map(escapeHtml).join("?")}</small>` : "";
-    const reduction = unit.nextDamageReduction > 0 ? `<span class="unit-effect">\u8efd\u6e1b ${unit.nextDamageReduction}</span>` : "";
+    const oneShotReduction = unit.nextDamageReduction > 0 ? `<span class="unit-effect">\u6b21\u56de\u8efd\u6e1b ${unit.nextDamageReduction}</span>` : "";
+    const shellReduction = unit.shellDamageReduction > 0 ? `<span class="unit-effect">\u7532\u7f85\u7c60\u308a ${unit.shellDamageReduction}</span>` : "";
     const enemyTarget = owner==="cpu"&&(targetMode==="cpu_unit"||targetMode==="cpu_any")&&(!unit.keywords.includes("\u30b9\u30c6\u30eb\u30b9")||unit.keywords.includes("\u6311\u767a"))&&(ignoreTaunt||!hasTaunt||unit.keywords.includes("\u6311\u767a"));
     const allyTarget = owner==="player"&&targetMode==="player_unit";
     const target = enemyTarget?`data-target="cpu_unit:${unit.instanceId}"`:allyTarget?`data-target="player_unit:${unit.instanceId}"`:"";
-    return `<article class="unit-slot ${cardAttributeClass(unit.attribute)}" ${target}><strong>${escapeHtml(unit.name)}</strong><span>${escapeHtml(unit.attribute)}</span><b>HP ${unit.hp} / ${unit.maxHp}</b><span>ATK ${unit.attack}</span>${keywords}${renderCurses(unit.curses)}${reduction}</article>`;
+    return `<article class="unit-slot ${cardAttributeClass(unit.attribute)}" ${target}><strong>${escapeHtml(unit.name)}</strong><span>${escapeHtml(unit.attribute)}</span><b>HP ${unit.hp} / ${unit.maxHp}</b><span>ATK ${unit.attack}</span>${keywords}${renderCurses(unit.curses)}${oneShotReduction}${shellReduction}</article>`;
   }).join("");
   return `<div class="unit-slots">${slots}</div>`;
 }

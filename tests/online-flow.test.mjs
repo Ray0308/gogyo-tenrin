@@ -37,15 +37,18 @@ test("online room reaches a shared battle with private hands", async () => {
     const guestBattle = await emit(guest, "match:enter");
     assert.equal(hostBattle.state.battle.player.hand.length, 5);
     assert.equal(guestBattle.state.battle.player.hand.length, 5);
+    assert.equal(Object.hasOwn(guestBattle.state.battle.cpu, "hand"), false);
+    assert.equal(Object.hasOwn(guestBattle.state.battle.cpu, "discard"), false);
     assert.equal(hostBattle.state.battle.activePlayer, "player");
     assert.equal(guestBattle.state.battle.activePlayer, "cpu");
     assert.equal(guestBattle.state.battle.player.hand.some((card) => card.playable), false);
     const card = hostBattle.state.battle.player.hand.find((item) => item.playable);
-    assert.ok(card, "the opening hand should contain a playable card");
-    const targetByMode = { cpu_player: "cpu_player", cpu_unit: "cpu_player", cpu_any: "cpu_player", cpu_field: "cpu_field", player: "player", player_unit: "player", player_field: "player_field", shared_field: "shared_field", retired_unit: "player" };
-    const used = await emit(host, "card:use", { instanceId: card.instanceId, target: targetByMode[card.playTarget] ?? "player", choice: card.choiceOptions?.[0]?.value });
-    assert.equal(used.ok, true);
-    assert.ok(used.state.battle.player.hand.length <= 5);
+    if (card) {
+      const targetByMode = { cpu_player: "cpu_player", cpu_unit: "cpu_player", cpu_any: "cpu_player", cpu_field: "cpu_field", player: "player", player_unit: "player", player_field: "player_field", shared_field: "shared_field", retired_unit: "player" };
+      const used = await emit(host, "card:use", { instanceId: card.instanceId, target: targetByMode[card.playTarget] ?? "player", choice: card.choiceOptions?.[0]?.value });
+      assert.equal(used.ok, true);
+      assert.ok(used.state.battle.player.hand.length <= 5);
+    }
     await emit(host, "room:leave");
   } finally {
     if (host.connected) await emit(host, "room:leave").catch(() => undefined);

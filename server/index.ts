@@ -1,4 +1,5 @@
 import express from "express";
+import { beginShikigamiAction, canCounterCardAttack, reduceUnitDamage } from "./combat-rules.js";
 import { readFileSync } from "node:fs";
 import { randomInt, randomUUID } from "node:crypto";
 import { createServer } from "node:http";
@@ -134,7 +135,30 @@ function publicStateForToken(session:StoredSession,token:string):SessionState{
   result.playerName=side==="player"?session.hostName:session.guestName;result.opponentName=side==="player"?session.guestName:session.hostName;
   result.roomReady=Boolean(session.guestToken);result.roomId=session.roomId;
   if(result.phase==="attribute_selection"){if(side==="player")result.cpuAttribute=undefined;else result.playerAttribute=undefined}
-  if(side==="cpu"){const playerAttribute=result.playerAttribute;result.playerAttribute=result.cpuAttribute;result.cpuAttribute=playerAttribute;if(result.battle){const battle=result.battle,hostPlayer=battle.player,guestPlayer=battle.cpu;const guestHand=structuredClone(session.cpuHand);result.battle={...battle,activePlayer:battle.activePlayer==="player"?"cpu":"player",winner:battle.winner?battle.winner==="player"?"cpu":"player":undefined,player:{...guestPlayer,hand:guestHand,discard:structuredClone(session.cpuDiscard)},cpu:{...hostPlayer,handCount:hostPlayer.hand.length}};decorateHand(result,"player",result.battle.player.hand)}}
+  if(side==="cpu"){
+    const playerAttribute=result.playerAttribute;result.playerAttribute=result.cpuAttribute;result.cpuAttribute=playerAttribute;
+    if(result.battle){
+      const battle=result.battle,hostPlayer=battle.player,guestPlayer=battle.cpu,guestHand=structuredClone(session.cpuHand);
+      result.battle={
+        ...battle,
+        activePlayer:battle.activePlayer==="player"?"cpu":"player",
+        winner:battle.winner?battle.winner==="player"?"cpu":"player":undefined,
+        player:{...guestPlayer,hand:guestHand,discard:structuredClone(session.cpuDiscard)},
+        cpu:{
+          hp:hostPlayer.hp,
+          mp:hostPlayer.mp,
+          cost:hostPlayer.cost,
+          curses:structuredClone(hostPlayer.curses),
+          nextDamageReduction:hostPlayer.nextDamageReduction,
+          shikigami:structuredClone(hostPlayer.shikigami),
+          barrier:hostPlayer.barrier?structuredClone(hostPlayer.barrier):undefined,
+          retiredShikigami:structuredClone(hostPlayer.retiredShikigami),
+          handCount:hostPlayer.hand.length,
+        },
+      };
+      decorateHand(result,"player",result.battle.player.hand);
+    }
+  }
   return result;
 }
 function publicStateForSocket(socketId:string,session:StoredSession):SessionState{const token=socketTokens.get(socketId)??session.hostToken??session.state.reconnectToken??"";return publicStateForToken(session,token)}
@@ -156,6 +180,13 @@ function setAttributeForSide(state:SessionState,side:Side,value:FiveElement):voi
 function otherSide(side:Side):Side{return side==="player"?"cpu":"player"}
 function handForSide(session:StoredSession,side:Side):CardView[]{return side==="player"?session.state.battle!.player.hand:session.cpuHand}
 function discardForSide(session:StoredSession,side:Side):CardView[]{return side==="player"?session.state.battle!.player.discard:session.cpuDiscard}
+function refreshTurnHand(session:StoredSession,side:Side,count=5):void{
+  const hand=handForSide(session,side),discard=discardForSide(session,side),drawCount=Math.min(7,Math.max(0,count));
+  for(const card of hand){card.playable=false;card.unusableReason="Turn-start hand replacement.";card.playTarget=undefined;discard.push(card)}
+  hand.splice(0,hand.length,...drawCards(drawCount));
+  if(side==="cpu")session.state.battle!.cpu.handCount=hand.length;
+  session.state.battle!.log.push(`${side==="player"?"Player":"CPU"} replaced the hand and drew ${drawCount} cards.`);
+}
 function expectedPlayerTarget(definition:CardEffectDefinition):CardPlayTarget{
   if(definition.type==="attack"){if(definition.target==="opponent_any")return "cpu_any";if(definition.target==="opponent_unit")return "cpu_unit";return "cpu_field"}
   if(definition.type==="terrain"||definition.type==="choose_terrain")return "shared_field";
@@ -206,8 +237,8 @@ function finishIfNeeded(state:SessionState):boolean{
 function applyDamageToPlayer(state:SessionState,side:Side,amount:number,ignoreReduction=0,curseDamage=false):number{
   const target=stateForSide(state,side),barrierReduction=!curseDamage&&target.barrier?.id==="barrier_guardian"?1:0,reduction=Math.max(0,target.nextDamageReduction+barrierReduction-ignoreReduction),damage=Math.max(0,amount-reduction);if(target.nextDamageReduction>0)target.nextDamageReduction=0;target.hp=Math.max(0,target.hp-damage);return damage;
 }
-function applyDamageToUnit(state:SessionState,unit:ShikigamiState,amount:number,ignoreReduction=0):number{const terrainReduction=state.battle?.terrain?.id==="terrain_sacred_domain"?1:0,reduction=Math.max(0,unit.nextDamageReduction+terrainReduction-ignoreReduction),damage=Math.max(0,amount-reduction);if(unit.nextDamageReduction>0)unit.nextDamageReduction=0;unit.hp=Math.max(0,unit.hp-damage);return damage}
-function cleanupUnits(state:SessionState,side:Side):void{const owner=stateForSide(state,side),dead=owner.shikigami.filter(unit=>unit.hp<=0);for(const unit of dead){state.battle!.log.push(`${unit.name} retired.`);owner.retiredShikigami.push({...structuredClone(unit),curses:[],nextDamageReduction:0,nextAttackBonus:0});if(state.battle!.terrain?.id==="terrain_yomi_road"){owner.mp=Math.min(30,owner.mp+1);state.battle!.log.push(`Yomi Road granted ${side==="player"?"Player":"CPU"} 1 MP.`)}}owner.shikigami=owner.shikigami.filter(unit=>unit.hp>0)}
+function applyDamageToUnit(state:SessionState,unit:ShikigamiState,amount:number,ignoreReduction=0):number{const terrainReduction=state.battle?.terrain?.id==="terrain_sacred_domain"?1:0,damage=reduceUnitDamage(amount,unit,terrainReduction,ignoreReduction);unit.hp=Math.max(0,unit.hp-damage);return damage}
+function cleanupUnits(state:SessionState,side:Side):void{const owner=stateForSide(state,side),dead=owner.shikigami.filter(unit=>unit.hp<=0);for(const unit of dead){state.battle!.log.push(`${unit.name} retired.`);owner.retiredShikigami.push({...structuredClone(unit),curses:[],nextDamageReduction:0,shellDamageReduction:0,nextAttackBonus:0});if(state.battle!.terrain?.id==="terrain_yomi_road"){owner.mp=Math.min(30,owner.mp+1);state.battle!.log.push(`Yomi Road granted ${side==="player"?"Player":"CPU"} 1 MP.`)}}owner.shikigami=owner.shikigami.filter(unit=>unit.hp>0)}
 function applyTargetCurse(state:SessionState,side:Side,target:UnitTarget,effect:AttributeMatchEffect):void{
   if(effect.type!=="apply_curse")return;const curses=target.type==="player"?stateForSide(state,otherSide(side)).curses:target.unit.curses;addCurse(curses,effect.curseId,effect.stacks);state.battle!.log.push(`${target.type==="player"?(side==="player"?"CPU":"プレイヤー"):target.unit.name}に呪い：${effect.curseId==="curse_poison"?"毒":"火傷"}を付与した。`);
 }
@@ -259,7 +290,7 @@ function attackTargets(state:SessionState,side:Side,definition:AttackDefinition,
   const actor=stateForSide(state,side),burn=actor.curses.find(curse=>curse.id==="curse_burn");if(!burn)return;
   const damage=applyDamageToPlayer(state,side,1,0,true);state.battle!.log.push(`火傷により${side==="player"?"プレイヤー":"CPU"}へ${damage}ダメージ。`);burn.remainingTriggers=(burn.remainingTriggers??2)-1;if(burn.remainingTriggers<=0)actor.curses=actor.curses.filter(curse=>curse!==burn);
 }
-function createShikigami(master:ShikigamiMaster):ShikigamiState{return {instanceId:randomUUID(),shikigamiId:master.id,name:master.name,attribute:master.attribute,hp:master.maxHp,maxHp:master.maxHp,attack:master.attack,aiProfile:master.aiProfile,keywords:master.keywords?master.keywords.split(/[・、,]/).filter(Boolean):[],ability:master.ability,curses:[],nextDamageReduction:0,nextAttackBonus:0,cannotActTurn:undefined,abilityDisabledUntilTurn:undefined}}
+function createShikigami(master:ShikigamiMaster):ShikigamiState{return {instanceId:randomUUID(),shikigamiId:master.id,name:master.name,attribute:master.attribute,hp:master.maxHp,maxHp:master.maxHp,attack:master.attack,aiProfile:master.aiProfile,keywords:master.keywords?master.keywords.split(/[・、,]/).filter(Boolean):[],ability:master.ability,curses:[],nextDamageReduction:0,shellDamageReduction:0,nextAttackBonus:0,cannotActTurn:undefined,abilityDisabledUntilTurn:undefined}}
 function createFieldState(master:FieldMaster){return {id:master.id,name:master.name,attribute:master.attribute,effectText:master.effectText,triggerCount:master.triggerCount??undefined}}
 function defenseTargetId(target:UnitTarget):DefenseTarget{return target.type==="player"?"player":`player_unit:${target.unit.instanceId}`}
 function defenseTargetLabel(target:UnitTarget):string{return target.type==="player"?"プレイヤー":target.unit.name}
@@ -280,7 +311,16 @@ function applyDefensePostEffect(state:SessionState,defenderSide:Side,definition:
 function resolveCardAttack(state:SessionState,side:Side,card:CardView,definition:AttackDefinition,targets:UnitTarget[],cardElement:FiveElement,match:boolean,ignore:number,defense?:DefenseDefinition,selectedTarget?:DefenseTarget):void{
   const battle=state.battle!,defenderSide=otherSide(side),protectedTargets=defense?(defense.scope==="all"?targets:targets.filter(target=>defenseTargetId(target)===selectedTarget)):[],damagedTargets:UnitTarget[]=[];let prevented=0;
   for(const target of targets){const targetElement=targetAttribute(state,side,target),overcoming=Boolean(targetElement&&overcomes[cardElement]===targetElement),raw=definition.baseDamage+(match?1:0)+(overcoming?2:0),protectedTarget=protectedTargets.includes(target),adjusted=protectedTarget?(defense!.mode==="nullify"?0:Math.max(0,raw-defense!.amount)):raw;prevented+=raw-adjusted;const damage=target.type==="player"?applyDamageToPlayer(state,defenderSide,adjusted,ignore):applyDamageToUnit(state,target.unit,adjusted,ignore);if(damage>0)damagedTargets.push(target);battle.log.push(`${side==="player"?"プレイヤー":"CPU"}が${card.name}を使用し、${target.type==="player"?(side==="player"?"CPU":"プレイヤー"):target.unit.name}へ${damage}ダメージ。`);if(match&&definition.attributeMatchEffect)applyTargetCurse(state,side,target,definition.attributeMatchEffect);if(overcoming)battle.log.push("相剋成立：ダメージに＋2。");}
-  if(match)battle.log.push("属性一致：基本効果量に＋1。");if(definition.healSelf)stateForSide(state,side).hp=Math.min(30,stateForSide(state,side).hp+definition.healSelf);if(defense)applyDefensePostEffect(state,defenderSide,defense,protectedTargets,damagedTargets,prevented,side);cleanupUnits(state,defenderSide);cleanupUnits(state,side);
+  if(match)battle.log.push("属性一致：基本効果量に＋1。");
+  if(definition.healSelf)stateForSide(state,side).hp=Math.min(30,stateForSide(state,side).hp+definition.healSelf);
+  if(defense)applyDefensePostEffect(state,defenderSide,defense,protectedTargets,damagedTargets,prevented,side);
+  cleanupUnits(state,defenderSide);cleanupUnits(state,side);
+  for(const target of damagedTargets){
+    if(target.type!=="unit"||!canCounterCardAttack(true,target.unit.hp,stateForSide(state,side).hp,target.unit.keywords))continue;
+    const damage=applyDamageToPlayer(state,side,1);
+    battle.log.push(`${target.unit.name} countered the attacking player for ${damage} damage.`);
+    cleanupUnits(state,side);
+  }
 }
 function armReactionTimer(session:StoredSession,pending:PendingReaction):void{const battle=session.state.battle!;const duration=Math.max(0,pending.remainingMs);if(battle.reaction)battle.reaction.deadline=Date.now()+duration;pending.timer=setTimeout(()=>{if(session.pendingReaction!==pending)return;battle.log.push("反応受付が時間切れとなった。");finishReaction(session,pending.defenderSide);sendSessionState(session)},duration)}
 function beginReaction(session:StoredSession,defenderSide:Side,sourceName:string,attackerName:string,targets:UnitTarget[],predictions:number[],resolve:(definition?:DefenseDefinition,target?:DefenseTarget)=>void):void{
@@ -310,7 +350,7 @@ function resolveUtilityCard(session:StoredSession,side:Side,definition:Exclude<C
   else if(definition.type==="summon"){actor.shikigami.push(createShikigami(shikigamiById.get(definition.shikigamiId)!))}
   else if(definition.type==="barrier"){actor.barrier=createFieldState(barrierById.get(definition.fieldId)!)}
   else if(definition.type==="terrain"){battle.terrain=createFieldState(terrainById.get(definition.fieldId)!)}
-  else if(definition.type==="revive"){const retired=manual?findRetiredTarget(state,side,target):actor.retiredShikigami[0];if(retired){actor.retiredShikigami=actor.retiredShikigami.filter(unit=>unit.instanceId!==retired.instanceId);actor.shikigami.push({...structuredClone(retired),instanceId:randomUUID(),hp:Math.ceil(retired.maxHp*definition.hpRatio),curses:[],nextDamageReduction:0,nextAttackBonus:0,cannotActTurn:battle.turnNumber})}}
+  else if(definition.type==="revive"){const retired=manual?findRetiredTarget(state,side,target):actor.retiredShikigami[0];if(retired){actor.retiredShikigami=actor.retiredShikigami.filter(unit=>unit.instanceId!==retired.instanceId);actor.shikigami.push({...structuredClone(retired),instanceId:randomUUID(),hp:Math.ceil(retired.maxHp*definition.hpRatio),curses:[],nextDamageReduction:0,shellDamageReduction:0,nextAttackBonus:0,cannotActTurn:battle.turnNumber})}}
   else if(definition.type==="clear_fields"){if(definition.barriers){delete battle.player.barrier;delete battle.cpu.barrier}if(definition.terrain)delete battle.terrain}
   else if(definition.type==="sacrifice"){const unit=manual?findAllyUnitTarget(state,side,target):actor.shikigami[0];if(unit){actor.shikigami=actor.shikigami.filter(item=>item.instanceId!==unit.instanceId);actor.hp=Math.min(30,actor.hp+definition.heal);actor.mp=Math.min(30,actor.mp+definition.mp)}}
   else if(definition.type==="choose_terrain"){const terrainId=choice??terrains[0]?.id;if(terrainId)battle.terrain=createFieldState(terrainById.get(terrainId)!)}
@@ -369,11 +409,12 @@ function resolveShikigamiAttack(state:SessionState,side:Side,unit:ShikigamiState
 }
 function runOneShikigamiAction(session:StoredSession,side:Side,unit:ShikigamiState,resume?:()=>void):{paused:boolean}{
   const state=session.state,battle=state.battle!,opponent=stateForSide(state,otherSide(side));
+  beginShikigamiAction(unit);
   if(unit.cannotActTurn===battle.turnNumber){battle.log.push(unit.name+" cannot act on the revival turn.");return {paused:false}}
   const frozen=unit.curses.find(curse=>curse.id==="curse_freeze");if(frozen){unit.curses=unit.curses.filter(curse=>curse!==frozen);battle.log.push(unit.name+" lost its action to Freeze.");return {paused:false}}
   const paralysis=unit.curses.find(curse=>curse.id==="curse_paralysis");if(paralysis){paralysis.remainingTriggers=(paralysis.remainingTriggers??2)-1;const failed=randomInt(100)<50;if(paralysis.remainingTriggers<=0)unit.curses=unit.curses.filter(curse=>curse!==paralysis);if(failed){battle.log.push(unit.name+" failed to act due to Paralysis.");return {paused:false}}}
   const abilityEnabled=unit.abilityDisabledUntilTurn===undefined||battle.turnNumber>unit.abilityDisabledUntilTurn;
-  if(abilityEnabled&&unit.shikigamiId==="shikigami_genki"&&unit.hp<=unit.maxHp/2&&unit.nextDamageReduction<2){unit.nextDamageReduction=2;battle.log.push(`${unit.name}は甲羅籠りを行った。`);return {paused:false}}
+  if(abilityEnabled&&unit.shikigamiId==="shikigami_genki"&&unit.hp<=unit.maxHp/2&&unit.shellDamageReduction<2){unit.shellDamageReduction=2;battle.log.push(`${unit.name}は甲羅籠りを行った。`);return {paused:false}}
   const target=redirectCover(state,side,chooseUnitTarget(state,side,unit)),unitElement=cardAttributeToElement[unit.attribute]!,targetElement=targetAttribute(state,side,target);let total=unit.attack+unit.nextAttackBonus+(unitElement===attributeForSide(state,side)?1:0)+(targetElement&&overcomes[unitElement]===targetElement?2:0);unit.nextAttackBonus=0;
   if(abilityEnabled&&unit.shikigamiId==="shikigami_hakuro"){const hpValues=[opponent.hp,...opponent.shikigami.map(enemy=>enemy.hp)],targetHp=target.type==="player"?opponent.hp:target.unit.hp;if(targetHp===Math.min(...hpValues))total+=1}
   const hits=unit.shikigamiId==="shikigami_kamaitachi"?[Math.ceil(total/2),Math.floor(total/2)]:[total],resolve=(defense?:DefenseDefinition,defenseTarget?:DefenseTarget)=>resolveShikigamiAttack(state,side,unit,target,hits,defense,defenseTarget);
@@ -432,11 +473,11 @@ function continueCpuTurn(session:StoredSession):void{
   if(!session.cpuShikigamiQueue){while(session.cpuCardActions<5&&!finishIfNeeded(state)){const candidates=session.cpuHand.map((card,index)=>({card,index,definition:effectByCardId.get(card.cardId)})).filter(item=>item.definition&&item.definition.type!=="defense"&&!isDefinitionUsable(state,"cpu",item.card,item.definition));if(!candidates.length)break;const scored=candidates.map(item=>({item,value:cpuCardScore(session,item.card,item.definition!)}));const best=Math.max(...scored.map(candidate=>candidate.value)),choices=scored.filter(candidate=>candidate.value===best),chosen=choices[randomInt(choices.length)].item;session.cpuCardActions+=1;const result=executeCard(session,"cpu",chosen.index,undefined,cpuChoice(chosen.definition!));if(result.paused){battle.cpu.handCount=session.cpuHand.length;refreshPlayability(state);return}}battle.cpu.handCount=session.cpuHand.length;session.cpuShikigamiQueue=stateForSide(state,"cpu").shikigami.map(unit=>unit.instanceId);battle.phase="resolving";battle.log.push("CPUの式神行動フェーズ。")}
   while(session.cpuShikigamiQueue.length&&!finishIfNeeded(state)){const instanceId=session.cpuShikigamiQueue.shift()!,unit=stateForSide(state,"cpu").shikigami.find(candidate=>candidate.instanceId===instanceId);if(!unit)continue;const result=runOneShikigamiAction(session,"cpu",unit);if(result.paused){refreshPlayability(state);return}}
   delete session.cpuShikigamiQueue;processTurnEnd(state,"cpu");resolvePoisonAtTurnEnd(state,"cpu");if(finishIfNeeded(state)){refreshPlayability(state);return}
-  battle.turnNumber+=1;battle.activePlayer="player";battle.phase="card_use";battle.player.cost=5;processTurnStart(state,"player");drawToLimit(battle.player.hand,5);battle.log.push(`第${battle.turnNumber}ターン開始。手札とコストを更新した。`);refreshPlayability(state);armPlayerTurnTimer(session);
+  battle.turnNumber+=1;battle.activePlayer="player";battle.phase="card_use";refreshTurnHand(session,"player");battle.player.cost=5;processTurnStart(state,"player");battle.log.push(`第${battle.turnNumber}ターン開始。手札とコストを更新した。`);refreshPlayability(state);armPlayerTurnTimer(session);
 }
 function endPlayerTurn(session:StoredSession):{ok:boolean;message?:string}{
   const state=session.state,battle=state.battle;if(session.turnTimer)clearTurnTimer(session);if(!battle||battle.phase!=="card_use"||battle.activePlayer!=="player")return {ok:false,message:"現在はターンを終了できません。"};battle.phase="resolving";battle.log.push("プレイヤーの式神行動フェーズ。");runPlayerShikigamiPhase(session);processTurnEnd(state,"player");resolvePoisonAtTurnEnd(state,"player");if(finishIfNeeded(state)){refreshPlayability(state);return {ok:true}}
-  battle.activePlayer="cpu";stateForSide(state,"cpu").cost=5;processTurnStart(state,"cpu");drawToLimit(session.cpuHand,5);battle.cpu.handCount=session.cpuHand.length;battle.log.push("CPUターン開始。");session.cpuCardActions=0;delete session.cpuShikigamiQueue;continueCpuTurn(session);return {ok:true};
+  battle.activePlayer="cpu";refreshTurnHand(session,"cpu");stateForSide(state,"cpu").cost=5;processTurnStart(state,"cpu");battle.log.push("CPUターン開始。");session.cpuCardActions=0;delete session.cpuShikigamiQueue;continueCpuTurn(session);return {ok:true};
 }
 
 
@@ -470,7 +511,7 @@ function startOnlineRematch(session:StoredSession):void{
 }
 function completeOnlineTurn(session:StoredSession,side:Side):void{
   const state=session.state,battle=state.battle!;processTurnEnd(state,side);resolvePoisonAtTurnEnd(state,side);if(finishIfNeeded(state)){armRematchWindow(session);return}
-  const next=otherSide(side);if(side==="cpu")battle.turnNumber+=1;battle.activePlayer=next;battle.phase="card_use";const actor=stateForSide(state,next);actor.cost=5;processTurnStart(state,next);drawToLimit(handForSide(session,next),5);battle.cpu.handCount=session.cpuHand.length;refreshPlayability(state);armOnlineTurnTimer(session);
+  const next=otherSide(side);if(side==="cpu")battle.turnNumber+=1;battle.activePlayer=next;battle.phase="card_use";refreshTurnHand(session,next);const actor=stateForSide(state,next);actor.cost=5;processTurnStart(state,next);battle.cpu.handCount=session.cpuHand.length;refreshPlayability(state);armOnlineTurnTimer(session);
 }
 function continueOnlineTurn(session:StoredSession):void{
   const side=session.onlineTurnSide,queue=session.onlineShikigamiQueue;if(!side||!queue)return;const state=session.state;

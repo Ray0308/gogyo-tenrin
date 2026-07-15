@@ -46,6 +46,7 @@ export interface ShikigamiState {
   ability: string;
   curses: CurseState[];
   nextDamageReduction: number;
+  shellDamageReduction: number;
   nextAttackBonus: number;
   cannotActTurn?: number;
   abilityDisabledUntilTurn?: number;
