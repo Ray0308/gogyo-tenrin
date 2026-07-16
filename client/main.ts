@@ -26,6 +26,7 @@ interface BrowserSocket {
   emit(event: "card:discard", payload: { instanceId: string }, callback: Acknowledge): void;
   emit(event: "reaction:respond", payload: { instanceId?: string; target?: DefenseTarget }, callback: Acknowledge): void;
   emit(event: "turn:end" | "room:start" | "room:leave" | "rematch:request" | "rematch:cancel", callback: Acknowledge): void;
+  emit(event: "presentation:complete"): void;
   connect(): void;
   io: { on(event: "reconnect_attempt", listener: () => void): void };
 }
@@ -67,13 +68,14 @@ let cpuExperienceMode: CpuExperienceMode = "battle";
 let reactionSubmitting = false;
 let submittedReactionDeadline: number | undefined;
 let reactionRevealTimer: number | undefined;
-interface BattleCue { title: string; detail?: string; side?: BattleSide; key?: string; duration?: number; variant?: string; onShow?: () => void }
+interface BattleCue { title: string; detail?: string; side?: BattleSide; key?: string; duration?: number; variant?: string; onShow?: () => void; onComplete?: () => void }
 const battleCueQueue: BattleCue[] = [];
 let battleCuePlaying = false;
 let activeBattleCueKey: string | undefined;
 let battlePresentationGeneration = 0;
 let pendingPresentationState: SessionState | null = null;
 let presentationBlockedByReaction = false;
+let presentationCompletionPending = false;
 
 function battlePresentationLocked(): boolean {
   return battleCuePlaying || battleCueQueue.length > 0;
@@ -109,6 +111,7 @@ function cancelBattlePresentation(): void {
   battleCuePlaying = false;
   activeBattleCueKey = undefined;
   pendingPresentationState = null;
+  presentationCompletionPending = false;
   document.querySelectorAll(".battle-cue-layer,.card-effect-layer,.battle-floating-change,.shikigami-retire-layer,.reidan-projectile").forEach((element) => element.remove());
   syncBattlePresentationLock();
 }
@@ -154,11 +157,18 @@ function applyDisplayedState(nextState: SessionState): void {
   render();
   if (selectionError) enqueueBattleCue({ title: "対象を選べません", detail: selectionError, side: "player" });
 }
-function commitPendingPresentationState(): void {
+function revealPendingPresentationState(): void {
   const nextState = pendingPresentationState;
   pendingPresentationState = null;
   if (nextState) applyDisplayedState(nextState);
   syncBattlePresentationLock();
+}
+function commitPendingPresentationState(): void {
+  revealPendingPresentationState();
+  if (presentationCompletionPending) {
+    presentationCompletionPending = false;
+    socket.emit("presentation:complete");
+  }
 }
 function playNextBattleCue(): void {
   if (presentationBlockedByReaction) {
@@ -196,6 +206,7 @@ function playNextBattleCue(): void {
   window.setTimeout(() => {
     layer.remove();
     if (generation !== battlePresentationGeneration) return;
+    cue.onComplete?.();
     battleCuePlaying = false;activeBattleCueKey = undefined;
     if (battleCueQueue.length > 0) window.setTimeout(() => {
       if (generation === battlePresentationGeneration && !presentationBlockedByReaction) playNextBattleCue();
@@ -308,12 +319,21 @@ function showRetireEffect(change: Extract<BattleVisualChange, { type: "summon" |
   window.setTimeout(() => layer.remove(), duration);
 }
 function animateBattleChanges(changes: BattleVisualChange[]): void {
-  for (const change of orderBattleVisualChanges(changes)) {
+  const orderedChanges = orderBattleVisualChanges(changes);
+  const retirementReveal = orderedChanges.find((change) => change.type === "retire");
+  const resultReveal = retirementReveal ?? orderedChanges.find((change) =>
+    change.type === "summon" || change.type === "damage" || change.type === "heal" || change.type === "turn",
+  );
+  const actionReveal = resultReveal ? undefined : [...orderedChanges].reverse().find((change) => change.type === "action");
+  const revealIfNeeded = (change: BattleVisualChange): void => {
+    if (change === resultReveal) revealPendingPresentationState();
+  };
+  for (const change of orderedChanges) {
     if (change.type === "battle_start") enqueueBattleCue({ title: "対戦開始", detail: change.side === "player" ? "自分のターン" : "相手のターン", side: change.side, key: "battle-start", duration: animationDuration() + 360 });
     else if (change.type === "turn") enqueueBattleCue({ title: change.side === "player" ? "自分のターン" : "相手のターン", detail: `第${change.turnNumber}ターン・手札更新`, side: change.side, key: `turn:${change.turnNumber}:${change.side}`, duration: animationDuration() + 360 });
     else if (change.type === "action") {
       const title = actionCueTitle(change);
-      enqueueBattleCue({ title, detail: change.text, side: change.side, duration: animationDuration() + 320, onShow: () => runPresentationFrame(() => {
+      enqueueBattleCue({ title, detail: change.text, side: change.side, duration: animationDuration() + 320, onComplete: change === actionReveal ? revealPendingPresentationState : undefined, onShow: () => runPresentationFrame(() => {
           const actor = actionElement(change);
           if (actor) replayAnimation(actor, change.kind === "defense" ? "is-defending" : change.kind === "counter" ? "is-countering" : change.kind === "attack" ? "is-attacking" : "is-casting");
           showSystemEffect(change);
@@ -323,22 +343,22 @@ function animateBattleChanges(changes: BattleVisualChange[]): void {
     }
     else if (change.type === "retire") {
       const duration = retirementDuration();
-      enqueueBattleCue({ title: `${change.name} 退場`, detail: "式神が場を離れました", side: change.side, duration, variant: "retirement", onShow: () => showRetireEffect(change, duration) });
+      enqueueBattleCue({ title: `${change.name} 退場`, detail: "式神が場を離れました", side: change.side, duration, variant: "retirement", onShow: () => { revealIfNeeded(change); showRetireEffect(change, duration); } });
     }
     else if (change.type === "summon") {
-      enqueueBattleCue({ title: `${change.name} 顕現`, detail: "式神を召喚しました", side: change.side, duration: animationDuration() + 360, variant: "summon", onShow: () => runPresentationFrame(() => {
+      enqueueBattleCue({ title: `${change.name} 顕現`, detail: "式神を召喚しました", side: change.side, duration: animationDuration() + 360, variant: "summon", onShow: () => { revealIfNeeded(change); runPresentationFrame(() => {
         const target = document.querySelector<HTMLElement>(`[data-unit-id="${CSS.escape(change.unitId)}"]`);
         if (target) replayAnimation(target, "is-summoned");
-      }) });
+      }); } });
     } else if (change.type === "damage" || change.type === "heal") {
       const duration = impactDuration();
       const targetName = change.name ?? (change.side === "player" ? "自分プレイヤー" : "相手プレイヤー");
-      enqueueBattleCue({ title: change.type === "damage" ? `${change.amount} ダメージ` : `${change.amount} 回復`, detail: targetName, side: change.side, duration, variant: `impact ${change.type}`, onShow: () => runPresentationFrame(() => {
+      enqueueBattleCue({ title: change.type === "damage" ? `${change.amount} ダメージ` : `${change.amount} 回復`, detail: targetName, side: change.side, duration, variant: `impact ${change.type}`, onShow: () => { revealIfNeeded(change); runPresentationFrame(() => {
         const target = combatantElement(change);if (!target) return;
         replayAnimation(target, change.type === "damage" ? "is-hit" : "is-healed");
         showFloatingChange(target, change.type, change.amount, duration);
         if (change.type === "damage" && settings.vibration) navigator.vibrate?.(35);
-      }) });
+      }); } });
     }
   }
 }
@@ -377,10 +397,14 @@ function updateState(nextState: SessionState): void {
   }
   if (changes.length === 0) {
     if (battlePresentationLocked() || pendingPresentationState) pendingPresentationState = nextState;
-    else applyDisplayedState(nextState);
+    else {
+      applyDisplayedState(nextState);
+      socket.emit("presentation:complete");
+    }
     return;
   }
   pendingPresentationState = nextState;
+  presentationCompletionPending = true;
   animateBattleChanges(changes);
 }
 

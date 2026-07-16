@@ -57,19 +57,30 @@ test("CPU turn completes after the player ends the turn", async () => {
         assert.equal(result.state.battle.activePlayer, "cpu");
         assert.equal(result.state.battle.phase, "resolving");
         await cpuStartUpdate;
+        socket.emit("presentation:complete");
 
         const cpuStartedAt = Date.now();
         const [cpuState] = await waitFor(socket, "session:state");
         result = { ok: true, state: cpuState };
         assert.ok(Date.now() - cpuStartedAt >= 15, "CPU should pause before taking its first action");
+        if (result.state.battle.activePlayer === "cpu" && result.state.battle.phase === "resolving") {
+          await expectNoEvent(socket, "session:state", 60);
+        }
 
-        for (let reactions = 0; result.state.battle.phase === "reaction" && reactions < 20; reactions += 1) {
-          await expectNoEvent(socket, "session:state");
-          const reactionUpdate = waitFor(socket, "session:state");
-          const response = await emit(socket, "reaction:respond", {});
-          assert.equal(response.ok, true, response.message);
-          const [reactionState] = await reactionUpdate;
-          result = { ok: true, state: reactionState };
+        for (let steps = 0; result.state.battle.activePlayer === "cpu" && steps < 40; steps += 1) {
+          if (result.state.battle.phase === "reaction") {
+            await expectNoEvent(socket, "session:state");
+            const reactionUpdate = waitFor(socket, "session:state");
+            const response = await emit(socket, "reaction:respond", {});
+            assert.equal(response.ok, true, response.message);
+            const [reactionState] = await reactionUpdate;
+            result = { ok: true, state: reactionState };
+            continue;
+          }
+          const nextStep = waitFor(socket, "session:state");
+          socket.emit("presentation:complete");
+          const [nextState] = await nextStep;
+          result = { ok: true, state: nextState };
         }
 
         assert.equal(result.state.battle.turnNumber, 2);

@@ -148,6 +148,7 @@ export interface ClientToServerEvents {
   "card:discard": (payload: { instanceId: string }, callback: (result: ActionResult) => void) => void;
   "reaction:respond": (payload: { instanceId?: string; target?: DefenseTarget }, callback: (result: ActionResult) => void) => void;
   "turn:end": (callback: (result: ActionResult) => void) => void;
+  "presentation:complete": () => void;
   "session:reset": (callback: (result: ActionResult) => void) => void;
 }
 
