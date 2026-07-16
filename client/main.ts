@@ -361,7 +361,7 @@ function animateBattleChanges(changes: BattleVisualChange[]): void {
       }); } });
     } else if (change.type === "damage" || change.type === "heal") {
       const duration = impactDuration();
-      const targetName = change.name ?? (change.side === "player" ? "自分プレイヤー" : "相手プレイヤー");
+      const targetName = change.name ?? (change.side === "player" ? "自分" : "相手");
       enqueueBattleCue({ title: change.type === "damage" ? `${change.amount} ダメージ` : `${change.amount} 回復`, detail: targetName, side: change.side, duration, variant: `impact ${change.type}`, onShow: () => { revealIfNeeded(change); runPresentationFrame(() => {
         const target = combatantElement(change);if (!target) return;
         replayAnimation(target, change.type === "damage" ? "is-hit" : "is-healed");
@@ -599,7 +599,58 @@ function shikigamiImagePath(imageId: string): string {
 function cardAttributeClass(attribute: string): string {
   return ({ "木": "wood", "火": "fire", "土": "earth", "金": "metal", "水": "water", "無属性": "neutral" } as Record<string, string>)[attribute] ?? "neutral";
 }
-type CardInfo = Pick<CardView, "cardId" | "name" | "category" | "system" | "attribute" | "cost" | "mpCost" | "target" | "timing" | "effectText" | "flavorText" | "imageId">;
+type CardInfo = Pick<CardView, "cardId" | "name" | "category" | "system" | "attribute" | "cost" | "mpCost" | "target" | "timing" | "effectText" | "flavorText" | "imageId" | "baseDamage" | "choiceOptions">;
+const elementCycle: FiveElement[] = ["wood", "fire", "earth", "metal", "water"];
+function rotateElement(start: FiveElement, steps: number): FiveElement {
+  const index = elementCycle.indexOf(start);
+  return elementCycle[(index + steps % elementCycle.length + elementCycle.length) % elementCycle.length];
+}
+function turnSteps(card: CardInfo): number[] {
+  if (!card.cardId.includes("_tenrin_") && !card.cardId.includes("_junkan_")) return [];
+  if (card.effectText.includes("正方向1段階または逆方向1段階")) return [1, -1];
+  const forward = card.effectText.match(/正方向へ?(\d+)段階/);
+  if (forward) return [Number(forward[1])];
+  const reverse = card.effectText.match(/逆方向へ?(\d+)段階/);
+  return reverse ? [-Number(reverse[1])] : [];
+}
+function directionLabel(steps: number): string {
+  return steps > 0 ? `正方向へ${steps}段階` : `逆方向へ${Math.abs(steps)}段階`;
+}
+function choiceLabel(card: CardInfo, value: string, fallback: string): string {
+  const steps = Number(value);
+  if (!state.playerAttribute || !Number.isFinite(steps)) return fallback;
+  return `${fallback}（${elements[state.playerAttribute].name} → ${elements[rotateElement(state.playerAttribute, steps)].name}）`;
+}
+function cardOutcome(card: CardInfo): string {
+  const current = state.playerAttribute;
+  const steps = turnSteps(card);
+  if (steps.length > 0) {
+    if (!current) return `<section class="card-outcome"><b>転輪後の属性</b><p>対戦中は、現在属性から到達する属性をここに表示します。</p><small>札属性「${escapeHtml(card.attribute)}」へ変わる効果ではありません。</small></section>`;
+    const selected = selectedChoice !== undefined ? Number(selectedChoice) : undefined;
+    const shownSteps = selected !== undefined && steps.includes(selected) ? [selected] : steps;
+    const outcomes = shownSteps.map((amount) => `<span><i>${escapeHtml(directionLabel(amount))}</i><strong>${elements[current].name} → ${elements[rotateElement(current, amount)].name}</strong></span>`).join("");
+    return `<section class="card-outcome"><b>この場面での転輪結果</b><div>${outcomes}</div><small>札属性「${escapeHtml(card.attribute)}」は判定に使う札自身の属性で、転輪先ではありません。</small></section>`;
+  }
+  if (card.cardId.includes("_sosei_") && current) {
+    const requiredName = card.effectText.match(/現在属性が([木火土金水])の場合/)?.[1];
+    const success = requiredName === elements[current].name;
+    const next = success ? rotateElement(current, 1) : current;
+    return `<section class="card-outcome"><b>この場面で起きること</b><div><span><i>${success ? "相生成立" : "通常効果"}</i><strong>霊気 ＋${success ? 3 : 1}　属性 ${elements[current].name} → ${elements[next].name}</strong></span></div><small>札属性「${escapeHtml(card.attribute)}」そのものへ変わる効果ではありません。</small></section>`;
+  }
+  return "";
+}
+function displayCardTarget(card: CardInfo): string {
+  if (card.target === "自分プレイヤー") return "自分";
+  if (card.target === "自分の場") return card.system === "使役術" ? "自分の空き式神枠" : card.system === "結界術" ? "自分の結界枠" : "自分の場";
+  if (card.target === "共有地形") return "盤面中央の共有地形";
+  if (card.target === "全体") return "盤面全体";
+  return card.target;
+}
+function displayCardTiming(timing: string): string {
+  if (timing === "自分のカード使用フェーズ") return "自分のターン（カード使用中）";
+  if (timing === "防御受付中") return "相手の攻撃への防御受付中";
+  return timing;
+}
 const summonArt: Record<string, string> = {
   card_summon_kanko: "img_shikigami_kanko",
   card_summon_hakuro: "img_shikigami_hakuro",
@@ -711,10 +762,10 @@ function renderMechanicGuide(card: CardInfo): string {
 }
 function renderCardArt(card: CardInfo, compact = false): string {
   const summonImageId = summonArt[card.cardId];
-  if (summonImageId) return `<div class="card-art ${compact ? "compact" : ""}"><img src="${shikigamiImagePath(summonImageId)}" alt="${escapeHtml(card.name)}" loading="lazy"><i aria-hidden="true"></i><span>${escapeHtml(card.attribute)}</span></div>`;
+  if (summonImageId) return `<div class="card-art ${compact ? "compact" : ""}"><img src="${shikigamiImagePath(summonImageId)}" alt="${escapeHtml(card.name)}" loading="lazy"><i aria-hidden="true"></i><span>${compact ? "" : "札 "}${escapeHtml(card.attribute)}</span></div>`;
   const sigil = cardSigil(card);
   const shortName = card.name.split("：").at(-1) ?? card.name;
-  return `<div class="card-art card-art-sigil sigil-${sigil.key} ${compact ? "compact" : ""}" role="img" aria-label="${escapeHtml(shortName)}の術式紋"><div class="sigil-orbit" aria-hidden="true"><b class="sigil-mark">${escapeHtml(sigil.mark)}</b><small>${escapeHtml(shortName)}</small></div><i aria-hidden="true"></i><span>${escapeHtml(card.attribute)}</span></div>`;
+  return `<div class="card-art card-art-sigil sigil-${sigil.key} ${compact ? "compact" : ""}" role="img" aria-label="${escapeHtml(shortName)}の術式紋"><div class="sigil-orbit" aria-hidden="true"><b class="sigil-mark">${escapeHtml(sigil.mark)}</b><small>${escapeHtml(shortName)}</small></div><i aria-hidden="true"></i><span>${compact ? "" : "札 "}${escapeHtml(card.attribute)}</span></div>`;
 }
 function renderCardDetail(card: CardInfo, footer = ""): string {
   const showBeginnerHelp = state.mode === "cpu" && cpuExperienceMode === "tutorial";
@@ -725,10 +776,11 @@ function renderCardDetail(card: CardInfo, footer = ""): string {
   return `<div class="card-detail card-detail-rich ${cardAttributeClass(card.attribute)}">
     <div class="card-detail-frame">${renderCardArt(card)}
       <header><p class="eyebrow">${escapeHtml(card.category)} / ${escapeHtml(card.system)}</p><h2>${escapeHtml(card.name)}</h2></header>
-      <div class="card-detail-meta"><span>属性 ${escapeHtml(card.attribute)}</span><span>コスト ${card.cost}</span><span>霊気 ${card.mpCost}</span></div>
+      <div class="card-detail-meta"><span>札属性 ${escapeHtml(card.attribute)}</span><span>コスト ${card.cost}</span><span>消費霊気 ${card.mpCost}</span></div>
+      ${cardOutcome(card)}
       ${showBeginnerHelp ? `<section class="card-plain-guide"><b>かんたんに言うと</b><p>${escapeHtml(plainCardGuide(card))}</p></section>` : ""}
       <section class="card-effect-copy ${effectExpanded ? "is-expanded" : ""}"><button type="button" data-action="toggle-effect-details" aria-expanded="${effectExpanded}"><span><b>効果</b><small>${effectExpanded ? "詳しい説明を閉じる" : "タップで詳しく見る"}</small></span><i aria-hidden="true">${effectExpanded ? "−" : "＋"}</i></button><p>${escapeHtml(card.effectText)}</p>${effectExpanded ? renderMechanicGuide(card) : ""}</section>
-      <dl class="card-facts"><div><dt>対象</dt><dd>${escapeHtml(card.target)}</dd></div><div><dt>使える時</dt><dd>${escapeHtml(card.timing)}</dd></div></dl>
+      <dl class="card-facts"><div><dt>対象</dt><dd>${escapeHtml(displayCardTarget(card))}</dd></div><div><dt>使える時</dt><dd>${escapeHtml(displayCardTiming(card.timing))}</dd></div></dl>
       ${terms ? `<section class="term-help"><h3>このカードの用語</h3><ul>${terms}</ul></section>` : ""}
       ${card.flavorText ? `<p class="flavor">${escapeHtml(card.flavorText)}</p>` : ""}${footer}
     </div>
@@ -762,19 +814,19 @@ function renderBattle(): void {
     return `<button ${battle.pendingDiscard ? `data-discard-instance="${card.instanceId}"` : `data-card-instance="${card.instanceId}"`} class="hand-card hand-card-simple ${cardAttributeClass(card.attribute)} ${card.playable ? "" : "unplayable"}" aria-label="${escapeHtml(card.name)}。タップで選択、長押しで詳細">
     <span class="hand-card-system">${escapeHtml(card.system)}</span>
     <span class="hand-card-name"><i class="hand-card-mark sigil-${sigil.key}" aria-hidden="true">${escapeHtml(sigil.mark)}</i><strong>${escapeHtml(card.name.split("：").at(-1) ?? card.name)}</strong></span>
-    <span class="hand-card-attribute">${escapeHtml(card.attribute)}</span><span class="hand-card-cost">コスト ${card.cost}</span>${card.mpCost > 0 ? `<span class="hand-card-mp">霊気 ${card.mpCost}</span>` : ""}
+    <span class="hand-card-attribute">札 ${escapeHtml(card.attribute)}</span><span class="hand-card-cost">コスト ${card.cost}</span>${card.mpCost > 0 ? `<span class="hand-card-mp">霊気 ${card.mpCost}</span>` : ""}
     <small>${escapeHtml(shortCardEffect(card.effectText))}</small>
   </button>`;
   }).join("");
   const pendingCard = battle.player.hand.find((card) => card.instanceId === pendingCardId);
   const pendingTarget = pendingCard?.playTarget;
   const targeting = pendingCard !== undefined;
-  const targetLabels: Record<CardPlayTarget, string> = { cpu_player: "相手プレイヤー", cpu_unit: "相手式神", cpu_any: "相手プレイヤーまたは相手式神", cpu_field: "相手式神エリア", cpu_barrier: "相手結界", player: "自分プレイヤー", player_unit: "味方式神", player_field: "味方式神エリア", player_barrier: "自分結界", retired_unit: "退場した式神", shared_field: "共有地形" };
+  const targetLabels: Record<CardPlayTarget, string> = { cpu_player: "相手", cpu_unit: "相手式神1体", cpu_any: "相手または相手式神1体", cpu_field: "相手の式神全体・候補", cpu_barrier: "相手結界", player: "自分", player_unit: "味方式神1体", player_field: "自分の空き式神枠", player_barrier: "自分結界", retired_unit: "退場した味方式神", shared_field: "盤面中央の共有地形" };
   const retiredTargets = targeting && pendingTarget==="retired_unit" ? battle.player.retiredShikigami.map(unit=>`<button class="menu-button small" data-target="retired_unit:${unit.instanceId}">${escapeHtml(unit.name)} (HP ${unit.maxHp})</button>`).join("") : "";
   const attackPreview = pendingCard?.baseDamage !== undefined;
   const cpuPlayerPrediction = pendingTarget==="cpu_player"||pendingTarget==="cpu_any" ? predictedCardDamage(pendingCard, state.cpuAttribute ? elements[state.cpuAttribute].name : undefined) : undefined;
   const targetGuideText = pendingTarget==="cpu_field"&&pendingCard?.target.includes("ランダム") ? "光っている式神または相手式神エリアをタップすると、対象をランダムに決定します。" : attackPreview ? "各対象の「予測」は属性一致と相剋を含む防御前ダメージです。防御札などで変化する場合があります。" : "金色に光っている対象をタップしてください。";
-  const targetGuide = targeting && pendingTarget ? `<div class="target-guide"><strong>${escapeHtml(pendingCard.target || targetLabels[pendingTarget])}を選択</strong>${cpuPlayerPrediction!==undefined?`<em class="target-damage-preview">相手プレイヤー：予測 ${cpuPlayerPrediction}</em>`:""}<span>${targetGuideText}</span>${button("キャンセル", "cancel-target", "small text")}</div>` : "";
+  const targetGuide = targeting && pendingTarget ? `<div class="target-guide"><strong>${escapeHtml(targetLabels[pendingTarget] || displayCardTarget(pendingCard))}を選択</strong>${cpuPlayerPrediction!==undefined?`<em class="target-damage-preview">相手：予測 ${cpuPlayerPrediction}</em>`:""}<span>${targetGuideText}</span>${button("キャンセル", "cancel-target", "small text")}</div>` : "";
   const opponentHasTaunt = battle.cpu.shikigami.some((unit) => unit.keywords.includes("挑発"));
   const targetAttribute = (target: CardPlayTarget): string => targeting && (pendingTarget === target || (pendingTarget === "cpu_any" && target === "cpu_player")) && !(target === "cpu_player" && opponentHasTaunt && !pendingCard?.ignoreTaunt) ? 'data-target="' + target + '"' : "";
   const log = battle.log.slice(-8).map((entry) => `<li>${escapeHtml(localizeBattleLogEntry(entry))}</li>`).join("");
@@ -820,8 +872,9 @@ function renderDialog(): void {
   let content: string;
   if (dialog === "rules") {
     content = `<div class="rules-guide"><header><p class="eyebrow">遊び方</p><h2>五行転輪のルール</h2><p>カードと式神を操り、相手のHPを0にすると勝利です。</p></header><section><h3>ターンと資源</h3><ul><li>ターン開始時に手札を5枚へ入れ替え、コストを5まで回復します。</li><li>余ったコストはターン終了時に失われます。霊気（MP）は最大30まで保持できます。</li><li>カード使用を終えると、召喚順に式神が自律行動します。</li></ul></section><section><h3>五行と転輪</h3><p class="rule-cycle">木 → 火 → 土 → 金 → 水 → 木</p><ul><li><b>属性一致：</b>同じ属性のカードを使うと効果量が増加します。</li><li><b>相生：</b>生み出す関係が成立すると霊気を得ます。</li><li><b>相剋：</b>打ち克つ関係が成立すると攻撃が強化されます。</li><li><b>転輪：</b>属性を五行環に沿って進め、相生・相剋を狙います。</li></ul></section><section><h3>呪いと状態</h3><div class="rule-grid"><p><b>毒</b><span>ターン終了時、スタック数ぶんダメージ</span></p><p><b>火傷</b><span>カード使用後・式神行動後にダメージ</span></p><p><b>凍結</b><span>式神の次の行動を1回失敗させる</span></p><p><b>麻痺</b><span>行動開始時に50％で失敗する</span></p><p><b>沈黙</b><span>プレイヤーが術札を使用できない</span></p><p><b>呪縛</b><span>式神が祝詞命令を受けられない</span></p></div><p class="rule-note">呪いはバフ・デバフとは別の状態です。残り期間と重複数は対象の詳細で確認できます。</p></section><section><h3>キーワード能力</h3><div class="rule-grid"><p><b>挑発</b><span>単体攻撃の対象を自身へ制限</span></p><p><b>かばう</b><span>味方への単体攻撃を肩代わり</span></p><p><b>ステルス</b><span>通常の単体攻撃に選ばれない</span></p><p><b>反撃</b><span>生存時、攻撃主体へ固定1ダメージ</span></p><p><b>貫通</b><span>式神への余剰ダメージをプレイヤーへ与える</span></p><p><b>飛行</b><span>「飛行には適用されない」効果を受けない</span></p></div></section><section><h3>防御・反応</h3><ul><li>反応受付は1回につき10秒、使用できる防御札は最大1枚です。</li><li>防御札はコスト0で、カードによって霊気を消費します。「使用しない」も選べます。</li><li>防御札への追加反応はなく、受付終了後に元の攻撃・効果を解決します。</li></ul></section><section><h3>攻撃と反撃の順序</h3><ol class="rule-flow"><li>対象制限・かばう</li><li>防御・軽減・無効化</li><li>ダメージ・貫通</li><li>退場と退場時効果</li><li>双方が生存している場合のみ反撃</li><li>攻撃後効果・勝敗判定</li></ol><p class="rule-note">反撃から反撃は発生しません。多段攻撃への反撃は、一連の攻撃終了後に1回だけ判定します。</p></section>${button("カード一覧を見る", "catalog", "small secondary")}</div>`;
+    content = content.replace("</header>", `</header><section><h3>カードの属性表示</h3><ul><li><b>札属性</b>は、そのカード自身の木・火・土・金・水を示します。</li><li>札属性は属性一致・相生・相剋の判定に使い、使用後の自分の属性を示すものではありません。</li><li>転輪札では、カード詳細に現在属性からの到達先を表示します。</li></ul></section>`);
   } else if (dialog === "catalog") {
-    const entries = cardCatalog.map((card) => `<button class="catalog-card ${cardAttributeClass(card.attribute)}" data-catalog-card="${escapeHtml(card.cardId)}">${renderCardArt(card, true)}<header><span>${escapeHtml(card.system)}</span><strong>${escapeHtml(card.name.split("：").at(-1) ?? card.name)}</strong><em>${escapeHtml(card.attribute)}</em></header><div class="catalog-meta"><span>コスト ${card.cost}</span><span>霊気 ${card.mpCost}</span><span>${escapeHtml(card.category)}</span></div><p>${escapeHtml(shortCardEffect(card.effectText))}</p><small>タップで詳しく見る</small></button>`).join("");
+    const entries = cardCatalog.map((card) => `<button class="catalog-card ${cardAttributeClass(card.attribute)}" data-catalog-card="${escapeHtml(card.cardId)}">${renderCardArt(card, true)}<header><span>${escapeHtml(card.system)}</span><strong>${escapeHtml(card.name.split("：").at(-1) ?? card.name)}</strong><em>札属性 ${escapeHtml(card.attribute)}</em></header><div class="catalog-meta"><span>コスト ${card.cost}</span><span>消費霊気 ${card.mpCost}</span><span>${escapeHtml(card.category)}</span></div><p>${escapeHtml(shortCardEffect(card.effectText))}</p><small>タップで詳しく見る</small></button>`).join("");
     content = `<div class="catalog"><header><p class="eyebrow">収録札</p><h2>カード一覧</h2><span>${cardCatalog.length}枚</span><p>カードをタップすると、効果と用語を確認できます。</p></header>${catalogLoading?'<p class="muted">読み込み中…</p>':catalogError?`<div class="catalog-error"><p>${escapeHtml(catalogError)}</p>${button("再読み込み", "catalog-retry", "small secondary")}</div>`:`<div class="catalog-grid">${entries}</div>`}</div>`;
   } else if (dialog === "catalog_card") {
     const card = cardCatalog.find((item) => item.cardId === selectedCatalogCardId);
@@ -833,7 +886,7 @@ function renderDialog(): void {
     const useControl = state.battle?.phase === "reaction"
       ? `<p class="target-guide">反応受付パネルから防御対象を選択してください。</p>`
       : card.playable
-      ? `${card.choiceOptions?.length ? `<label>\u9078\u629e <select data-card-choice>${card.choiceOptions.map(option=>`<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`).join("")}</select></label>` : ""}<button class="menu-button" data-action="prepare-card">使用する</button>`
+      ? `${card.choiceOptions?.length ? `<label>転輪方向 <select data-card-choice>${card.choiceOptions.map(option=>`<option value="${escapeHtml(option.value)}" ${selectedChoice===option.value?"selected":""}>${escapeHtml(choiceLabel(card, option.value, option.label))}</option>`).join("")}</select></label>` : ""}<button class="menu-button" data-action="prepare-card">使用する</button>`
       : `<p class="unusable-message">使用不可：${escapeHtml(localizeUiMessage(card.unusableReason ?? "現在は使用できません。"))}</p>`;
     content = renderCardDetail(card, useControl);
   } else {
@@ -928,7 +981,7 @@ app.addEventListener("click", (event) => {
     });
     return;
   }
-  if (cardInstanceId && !busy && !pendingCardId && !battlePresentationLocked()) { selectedCardId = cardInstanceId; expandedEffectCardId = null; dialog = "card"; render(); return; }
+  if (cardInstanceId && !busy && !pendingCardId && !battlePresentationLocked()) { selectedCardId = cardInstanceId; selectedChoice = undefined; expandedEffectCardId = null; dialog = "card"; render(); return; }
   if (catalogCardId) { selectedCatalogCardId = catalogCardId; expandedEffectCardId = null; dialog = "catalog_card"; render(); return; }
   if (attribute && !busy) { busy = true; render(); socket.emit("attribute:select", { attribute }, applyResult); return; }
   if (!action || busy) return;
@@ -982,6 +1035,11 @@ app.addEventListener("submit", (event) => {
 });
 app.addEventListener("change", (event) => {
   const input = event.target as HTMLInputElement | HTMLSelectElement;
+  if (input.matches("[data-card-choice]")) {
+    selectedChoice = input.value;
+    render();
+    return;
+  }
   const key = input.dataset.setting;
   if (!key) return;
   if (key === "bgm") settings.bgm = Number(input.value);

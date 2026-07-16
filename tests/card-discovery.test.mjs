@@ -56,6 +56,19 @@ test("terrain guidance and beginner help are separated into the tutorial", async
   assert.doesNotMatch(client, /gogyo-tenrin-beginner-guide-v1/);
 });
 
+test("card attributes and turn results cannot be mistaken for one another", async () => {
+  const client = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
+  const css = await readFile(path.join(repositoryRoot, "client", "card-ui.css"), "utf8");
+  assert.match(client, /札属性/);
+  assert.match(client, /この場面での転輪結果/);
+  assert.match(client, /札自身の属性で、転輪先ではありません/);
+  assert.match(client, /function rotateElement/);
+  assert.match(client, /転輪方向/);
+  assert.match(client, /自分の空き式神枠/);
+  assert.match(client, /相手の攻撃への防御受付中/);
+  assert.match(css, /\.card-outcome/);
+});
+
 test("decorative English labels are localized without renaming formal abbreviations", async () => {
   const client = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
   for (const label of ["SERVER CONNECTION", "GOGYO TENRIN", "CPU MATCH", "ONLINE MATCH", "INITIAL ATTRIBUTE", "ATTRIBUTE REVEAL", ">REACTION<", "HOW TO PLAY", "CARD CATALOG", "COST ", "ATK "]) {

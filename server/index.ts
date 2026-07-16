@@ -344,7 +344,7 @@ function resolveCardAttack(state:SessionState,side:Side,card:CardView,definition
   for(const target of damagedTargets){
     if(target.type!=="unit"||!canCounterCardAttack(true,target.unit.hp,stateForSide(state,side).hp,target.unit.keywords))continue;
     const damage=applyDamageToPlayer(state,side,1);
-    battle.log.push(`${target.unit.name} countered the attacking player for ${damage} damage.`);
+    battle.log.push(`${target.unit.name}が攻撃したプレイヤーへ反撃し、${damage}ダメージ。`);
     cleanupUnits(state,side);
   }
 }
@@ -374,7 +374,7 @@ function finishReaction(session:StoredSession,respondingSide:Side,instanceId?:st
 
 function rotateAttribute(state:SessionState,side:Side,steps:number):void{
   const current=attributeForSide(state,side),index=FIVE_ELEMENTS.indexOf(current),next=FIVE_ELEMENTS[(index+(steps%5)+5)%5];
-  setAttributeForSide(state,side,next);state.battle!.log.push(`${side==="player"?"Player":"CPU"} rotated ${elementName[current]} to ${elementName[next]}.`);
+  setAttributeForSide(state,side,next);state.battle!.log.push(`${side==="player"?"プレイヤー":"CPU"}が${elementName[current]}から${elementName[next]}へ転輪した。`);
 }
 function resolveUtilityCard(session:StoredSession,side:Side,definition:Exclude<CardEffectDefinition,AttackDefinition|DefenseDefinition>,target:CardTarget|undefined,choice?:string):void{
   const state=session.state,battle=state.battle!,actor=stateForSide(state,side),opponent=stateForSide(state,otherSide(side)),manual=side==="player"||state.mode==="online";
@@ -451,9 +451,9 @@ function resolveShikigamiAttack(state:SessionState,side:Side,unit:ShikigamiState
 function runOneShikigamiAction(session:StoredSession,side:Side,unit:ShikigamiState,resume?:()=>void):{paused:boolean}{
   const state=session.state,battle=state.battle!,opponent=stateForSide(state,otherSide(side));
   beginShikigamiAction(unit);
-  if(unit.cannotActTurn===battle.turnNumber){battle.log.push(unit.name+" cannot act on the revival turn.");return {paused:false}}
-  const frozen=unit.curses.find(curse=>curse.id==="curse_freeze");if(frozen){unit.curses=unit.curses.filter(curse=>curse!==frozen);battle.log.push(unit.name+" lost its action to Freeze.");return {paused:false}}
-  const paralysis=unit.curses.find(curse=>curse.id==="curse_paralysis");if(paralysis){paralysis.remainingTriggers=(paralysis.remainingTriggers??2)-1;const failed=randomInt(100)<50;if(paralysis.remainingTriggers<=0)unit.curses=unit.curses.filter(curse=>curse!==paralysis);if(failed){battle.log.push(unit.name+" failed to act due to Paralysis.");return {paused:false}}}
+  if(unit.cannotActTurn===battle.turnNumber){battle.log.push(unit.name+"は復活したターンのため行動できない。");return {paused:false}}
+  const frozen=unit.curses.find(curse=>curse.id==="curse_freeze");if(frozen){unit.curses=unit.curses.filter(curse=>curse!==frozen);battle.log.push(unit.name+"は凍結により行動できなかった。");return {paused:false}}
+  const paralysis=unit.curses.find(curse=>curse.id==="curse_paralysis");if(paralysis){paralysis.remainingTriggers=(paralysis.remainingTriggers??2)-1;const failed=randomInt(100)<50;if(paralysis.remainingTriggers<=0)unit.curses=unit.curses.filter(curse=>curse!==paralysis);if(failed){battle.log.push(unit.name+"は麻痺により行動に失敗した。");return {paused:false}}}
   const abilityEnabled=unit.abilityDisabledUntilTurn===undefined||battle.turnNumber>unit.abilityDisabledUntilTurn;
   if(abilityEnabled&&unit.shikigamiId==="shikigami_genki"&&unit.hp<=unit.maxHp/2&&unit.shellDamageReduction<2){unit.shellDamageReduction=2;battle.log.push(`${unit.name}は甲羅籠りを行った。`);return {paused:false}}
   const target=redirectCover(state,side,chooseUnitTarget(state,side,unit)),unitElement=cardAttributeToElement[unit.attribute]!,targetElement=targetAttribute(state,side,target);let total=unit.attack+unit.nextAttackBonus+(unitElement===attributeForSide(state,side)?ATTRIBUTE_MATCH_BONUS:0)+(targetElement&&overcomes[unitElement]===targetElement?ATTRIBUTE_OVERCOME_BONUS:0);unit.nextAttackBonus=0;

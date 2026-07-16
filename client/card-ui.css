@@ -49,6 +49,14 @@
   font-weight: 700;
   z-index: 2;
 }
+.card-art:not(.compact) > span {
+  width: auto;
+  min-width: 32px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: .72rem;
+  letter-spacing: .06em;
+}
 .card-art-sigil {
   color: inherit;
   --sigil-tone: #d8c58e;
@@ -221,6 +229,49 @@
   border-radius: 999px;
   background: rgba(3, 11, 20, .72);
   font-size: .77rem;
+}
+.card-outcome {
+  display: grid;
+  gap: 9px;
+  margin: 0 16px 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(108, 178, 222, .34);
+  border-radius: 13px;
+  background: linear-gradient(135deg, rgba(24, 61, 86, .54), rgba(7, 22, 38, .72));
+}
+.card-outcome > b {
+  color: #bfe7ff;
+  font-size: .78rem;
+  letter-spacing: .06em;
+}
+.card-outcome > div {
+  display: grid;
+  gap: 7px;
+}
+.card-outcome span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.card-outcome i {
+  color: #aebccc;
+  font: normal 600 .72rem system-ui, sans-serif;
+}
+.card-outcome strong {
+  color: #fff0b3;
+  font-size: 1rem;
+}
+.card-outcome p,
+.card-outcome small {
+  margin: 0;
+  color: #c5d0dc;
+  font: 500 .72rem/1.55 system-ui, sans-serif;
+}
+.card-outcome small {
+  padding-top: 7px;
+  border-top: 1px solid rgba(255,255,255,.1);
+  color: #9caabd;
 }
 .card-plain-guide,
 .card-effect-copy,
