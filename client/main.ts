@@ -591,7 +591,7 @@ function renderTitle(): void {
     <nav class="title-menu" aria-label="メインメニュー">
       <div class="title-primary-actions">
         <button class="title-action title-action-primary" data-action="cpu"><span>CPU戦</span><small>一人で五行を巡る</small></button>
-        <button class="title-action title-action-primary" data-action="online"><span>オンライン対戦</span><small>陰陽師と相対する</small></button>
+        <button class="title-action title-action-primary" data-action="online"><span>オンライン対戦</span><small>基本対戦ルールで対戦</small></button>
       </div>
       <div class="title-utility-actions">
         <button class="title-action" data-action="rules"><span>ルール</span></button>
@@ -615,7 +615,7 @@ function renderCpuMode(): void {
   </div>${button("タイトルへ戻る", "title", "text")}`, "cpu-mode-screen");
 }
 function renderOnline(): void {
-  app.innerHTML = shell(`<header class="compact-header"><p class="eyebrow">オンライン対戦</p><h1>\u30aa\u30f3\u30e9\u30a4\u30f3\u5bfe\u6226</h1><p>\u90e8\u5c4b\u3092\u4f5c\u6210\u3059\u308b\u304b\u30016\u6587\u5b57\u306e\u90e8\u5c4bID\u3067\u53c2\u52a0\u3057\u307e\u3059\u3002</p></header><div class="online-grid"><form class="form-card" data-form="room-create"><h2>\u90e8\u5c4b\u3092\u4f5c\u308b</h2><label>\u30d7\u30ec\u30a4\u30e4\u30fc\u540d<input name="playerName" maxlength="20" required></label><button class="menu-button" type="submit" ${busy?"disabled":""}>\u4f5c\u6210</button></form><form class="form-card" data-form="room-join"><h2>\u90e8\u5c4b\u306b\u5165\u308b</h2><label>\u30d7\u30ec\u30a4\u30e4\u30fc\u540d<input name="playerName" maxlength="20" required></label><label>\u90e8\u5c4bID<input name="roomId" maxlength="6" autocomplete="off" required></label><button class="menu-button" type="submit" ${busy?"disabled":""}>\u53c2\u52a0</button></form></div>${error()}<nav class="menu">${button("\u623b\u308b","title","text")}</nav>`);
+  app.innerHTML = shell(`<header class="compact-header"><p class="eyebrow">オンライン対戦</p><h1>\u30aa\u30f3\u30e9\u30a4\u30f3\u5bfe\u6226</h1><p>基本対戦と同じカード構成で遊びます。部屋を作成するか、6文字の部屋IDで参加します。</p></header><div class="online-grid"><form class="form-card" data-form="room-create"><h2>\u90e8\u5c4b\u3092\u4f5c\u308b</h2><label>\u30d7\u30ec\u30a4\u30e4\u30fc\u540d<input name="playerName" maxlength="20" required></label><button class="menu-button" type="submit" ${busy?"disabled":""}>\u4f5c\u6210</button></form><form class="form-card" data-form="room-join"><h2>\u90e8\u5c4b\u306b\u5165\u308b</h2><label>\u30d7\u30ec\u30a4\u30e4\u30fc\u540d<input name="playerName" maxlength="20" required></label><label>\u90e8\u5c4bID<input name="roomId" maxlength="6" autocomplete="off" required></label><button class="menu-button" type="submit" ${busy?"disabled":""}>\u53c2\u52a0</button></form></div>${error()}<nav class="menu">${button("\u623b\u308b","title","text")}</nav>`);
 }
 function renderRoomWaiting(): void {
   const ready=Boolean(state.roomReady),host=state.role==="host",opponentText=ready?`${escapeHtml(state.opponentName??"")} \u304c\u53c2\u52a0\u3057\u307e\u3057\u305f\u3002`:`\u76f8\u624b\u306e\u53c2\u52a0\u3092\u5f85\u3063\u3066\u3044\u307e\u3059\u3002`;

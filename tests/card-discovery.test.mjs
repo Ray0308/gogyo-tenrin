@@ -92,3 +92,9 @@ test("card imagery is part of the shared client protocol", async () => {
   assert.match(server, /imageId:card\.imageId/);
   assert.match(server, /imageId:selected\.imageId/);
 });
+
+test("online battles clearly use the basic battle card pool", async () => {
+  const client = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
+  assert.match(client, /オンライン対戦<\/span><small>基本対戦ルールで対戦/);
+  assert.match(client, /基本対戦と同じカード構成で遊びます/);
+});

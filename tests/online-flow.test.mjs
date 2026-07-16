@@ -41,6 +41,9 @@ test("online room reaches a shared battle with private hands", async () => {
     assert.equal(guestBattle.state.battle.player.mp, 10);
     assert.equal(hostBattle.state.battle.player.hand.length, 5);
     assert.equal(guestBattle.state.battle.player.hand.length, 5);
+    for (const card of [...hostBattle.state.battle.player.hand, ...guestBattle.state.battle.player.hand]) {
+      assert.match(card.cardId, /^card_(reidan|zanfu|shufu|tenrin|summon)_/);
+    }
     assert.equal(Object.hasOwn(guestBattle.state.battle.cpu, "hand"), false);
     assert.equal(Object.hasOwn(guestBattle.state.battle.cpu, "discard"), false);
     assert.equal(hostBattle.state.battle.activePlayer, "player");
