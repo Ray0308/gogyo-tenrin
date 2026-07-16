@@ -94,10 +94,15 @@ test("battle state is committed only after its presentation queue finishes", asy
 test("reaction decisions preempt presentation and do not run behind animations", async () => {
   const client = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
   const server = await readFile(path.join(repositoryRoot, "server", "index.ts"), "utf8");
+  const css = await readFile(path.join(repositoryRoot, "client", "styles.css"), "utf8");
   assert.match(client, /function cancelBattlePresentation/);
   assert.match(client, /if \(enteringReaction \|\| nextState\.phase !== "battle"\) \{/);
   assert.match(client, /cancelBattlePresentation\(\);\s*applyDisplayedState\(nextState\)/);
   assert.match(client, /battlePresentationLocked\(\) && !reactionInteraction/);
+  assert.match(client, /let presentationBlockedByReaction = false/);
+  assert.match(client, /generation !== battlePresentationGeneration \|\| presentationBlockedByReaction/);
+  assert.match(client, /presentationBlockedByReaction = enteringReaction/);
+  assert.match(css, /\.reaction-panel\{z-index:120!important\}/);
   assert.match(server, /pausedTurnRemainingMs/);
   assert.match(server, /if\(pausedTurnSide\)clearTurnTimer\(session\)/);
   assert.match(server, /pending\.pausedTurnSide===battle\.activePlayer/);
