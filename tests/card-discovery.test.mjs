@@ -47,7 +47,10 @@ test("terrain guidance and beginner help are separated into the tutorial", async
   assert.match(client, /data-action="terrain-info"/);
   assert.match(client, /共有地形 · 両者に影響/);
   assert.match(client, /data-action="cpu-battle"/);
+  assert.match(client, /data-action="cpu-full"/);
   assert.match(client, /data-action="cpu-tutorial"/);
+  assert.match(client, /predictedCardDamage/);
+  assert.match(client, /防御前ダメージ/);
   assert.match(client, /cpuExperienceMode === "tutorial"/);
   assert.match(client, /次にできること/);
   assert.doesNotMatch(client, /gogyo-tenrin-beginner-guide-v1/);

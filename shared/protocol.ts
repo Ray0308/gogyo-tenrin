@@ -4,6 +4,7 @@ export type GamePhase = "title" | "room_waiting" | "attribute_selection" | "attr
 export type CardPlayTarget = "cpu_player" | "cpu_unit" | "cpu_any" | "cpu_field" | "cpu_barrier" | "player" | "player_unit" | "player_field" | "player_barrier" | "retired_unit" | "shared_field";
 export type CardTarget = "cpu_player" | "cpu_field" | "cpu_barrier" | "player" | "player_field" | "player_barrier" | "shared_field" | `cpu_unit:${string}` | `player_unit:${string}` | `retired_unit:${string}` | `terrain:${string}`;
 export type DefenseTarget = "player" | `player_unit:${string}`;
+export type CpuCardPoolMode = "core" | "full";
 
 export interface CardView {
   instanceId: string;
@@ -20,6 +21,7 @@ export interface CardView {
   description: string;
   flavorText: string;
   imageId?: string;
+  baseDamage?: number;
   playable: boolean;
   unusableReason?: string;
   playTarget?: CardPlayTarget;
@@ -135,7 +137,7 @@ export interface ActionResult {
 
 export interface ClientToServerEvents {
   "session:resume": (token: string, callback: (result: ActionResult) => void) => void;
-  "cpu:start": (payload: { playerName: string }, callback: (result: ActionResult) => void) => void;
+  "cpu:start": (payload: { playerName: string; poolMode?: CpuCardPoolMode }, callback: (result: ActionResult) => void) => void;
   "room:create": (payload: { playerName: string }, callback: (result: ActionResult) => void) => void;
   "room:join": (payload: { playerName: string; roomId: string }, callback: (result: ActionResult) => void) => void;
   "room:start": (callback: (result: ActionResult) => void) => void;

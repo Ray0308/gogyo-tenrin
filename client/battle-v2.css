@@ -398,6 +398,17 @@ body:has(.battle-v2) {
   color: #ffe8a3;
 }
 
+.battle-v2 .target-damage-preview {
+  padding: 3px 8px;
+  border: 1px solid rgba(245, 213, 110, .65);
+  border-radius: 999px;
+  color: #ffe8a3;
+  background: rgba(10, 15, 22, .72);
+  font: 800 .65rem system-ui, sans-serif;
+  font-style: normal;
+  white-space: nowrap;
+}
+
 .battle-v2 .target-guide span {
   overflow: hidden;
   text-overflow: ellipsis;

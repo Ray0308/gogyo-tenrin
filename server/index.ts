@@ -25,6 +25,7 @@ import {
   type CardTarget,
   type CardView,
   type ClientToServerEvents,
+  type CpuCardPoolMode,
   type CurseState,
   type FiveElement,
   type ServerToClientEvents,
@@ -67,7 +68,7 @@ interface PendingReaction {
   resolve:(definition?:DefenseDefinition,target?:DefenseTarget)=>void;
 }
 type PresentationContinuation = "player_resolution"|"cpu_start"|"cpu_turn"|"online_turn";
-interface StoredSession { state:SessionState; mode?:"cpu"|"online"; roomId?:string; hostToken?:string; guestToken?:string; hostName?:string; guestName?:string; cpuHand:CardView[]; cpuDiscard:CardView[]; pendingReaction?:PendingReaction; cpuCardActions:number; playerShikigamiQueue?:string[]; cpuShikigamiQueue?:string[]; cpuStartTimer?:ReturnType<typeof setTimeout>; presentationTimer?:ReturnType<typeof setTimeout>; presentationContinuation?:PresentationContinuation; presentationAwaitingTokens?:Set<string>; turnTimer?:ReturnType<typeof setTimeout>; attributeTimer?:ReturnType<typeof setTimeout>; reconnectTimer?:ReturnType<typeof setTimeout>; turnRemainingMs?:number; disconnectedAt?:number; onlineShikigamiQueue?:string[]; onlineTurnSide?:Side; disconnectedTokens?:Set<string>; onlineReconnectTimers?:Map<string,ReturnType<typeof setTimeout>>; rematchVotes?:Set<Side>; rematchTimer?:ReturnType<typeof setTimeout> }
+interface StoredSession { state:SessionState; mode?:"cpu"|"online"; cardPoolMode?:CpuCardPoolMode; roomId?:string; hostToken?:string; guestToken?:string; hostName?:string; guestName?:string; cpuHand:CardView[]; cpuDiscard:CardView[]; pendingReaction?:PendingReaction; cpuCardActions:number; playerShikigamiQueue?:string[]; cpuShikigamiQueue?:string[]; cpuStartTimer?:ReturnType<typeof setTimeout>; presentationTimer?:ReturnType<typeof setTimeout>; presentationContinuation?:PresentationContinuation; presentationAwaitingTokens?:Set<string>; turnTimer?:ReturnType<typeof setTimeout>; attributeTimer?:ReturnType<typeof setTimeout>; reconnectTimer?:ReturnType<typeof setTimeout>; turnRemainingMs?:number; disconnectedAt?:number; onlineShikigamiQueue?:string[]; onlineTurnSide?:Side; disconnectedTokens?:Set<string>; onlineReconnectTimers?:Map<string,ReturnType<typeof setTimeout>>; rematchVotes?:Set<Side>; rematchTimer?:ReturnType<typeof setTimeout> }
 type Side = "player"|"cpu";
 type UnitTarget = { type:"player" }|{ type:"unit"; unit:ShikigamiState };
 type AttackSource = { type:"player" }|{ type:"unit"; unit:ShikigamiState };
@@ -99,6 +100,9 @@ const barrierById=new Map(barriers.map(field=>[field.id,field]));
 const terrainById=new Map(terrains.map(field=>[field.id,field]));
 const effectByCardId=new Map(definitions.map(effect=>[effect.cardId,effect]));
 const totalCardWeight=cards.reduce((sum,card)=>sum+card.weight,0);
+const coreCardPrefixes=["card_reidan_","card_zanfu_","card_shufu_","card_tenrin_","card_summon_"];
+const coreCards=cards.filter(card=>coreCardPrefixes.some(prefix=>card.id.startsWith(prefix)));
+const totalCoreCardWeight=coreCards.reduce((sum,card)=>sum+card.weight,0);
 const publicCardCatalog:CardCatalogItem[]=cards.map(card=>({cardId:card.id,name:card.name,category:card.category,system:card.system,attribute:card.attribute,cost:card.cost,mpCost:card.mpCost,target:card.target,timing:card.timing,effectText:card.effectText,description:card.description,flavorText:card.flavorText,imageId:card.imageId}));
 const sessions=new Map<string,StoredSession>();
 const socketTokens=new Map<string,string>();
@@ -119,6 +123,7 @@ function validateMaster():void{
     for(const item of items){if(!/^[a-z0-9_]+$/.test(item.id)||ids.has(item.id))throw new Error(`Invalid or duplicate master ID: ${item.id}`);ids.add(item.id)}
   }
   if(cards.length===0||totalCardWeight<=0)throw new Error("No drawable cards are configured.");
+  if(coreCards.length!==30||totalCoreCardWeight<=0)throw new Error("Core battle card pool must contain 30 drawable cards.");
   const templateIds=new Set(cardTemplates.map(item=>item.id));
   const keywordIds=new Set(keywords.map(item=>item.id));
   const curseIds=new Set(curses.map(item=>item.id));
@@ -184,13 +189,16 @@ function sendSessionToSocket(socketId:string,session:StoredSession):void{io.to(s
 function currentSession(socketId:string):StoredSession|undefined{const token=socketTokens.get(socketId);return token?sessions.get(token):undefined}
 function sendState(socketId:string,state:SessionState):void{io.to(socketId).emit("session:state",publicState(state))}
 function sendSessionState(session:StoredSession):void{for(const [socketId,token] of socketTokens){if(sessions.get(token)===session)sendSessionToSocket(socketId,session)}}
-function drawCard():CardView{
-  let cursor=(randomInt(0,1_000_000_000)/1_000_000_000)*totalCardWeight;let selected=cards[cards.length-1];
-  for(const card of cards){cursor-=card.weight;if(cursor<0){selected=card;break}}
-  return {instanceId:randomUUID(),cardId:selected.id,name:selected.name,category:selected.category,system:selected.system,attribute:selected.attribute,cost:selected.cost,mpCost:selected.mpCost,target:selected.target,timing:selected.timing,effectText:selected.effectText,description:selected.description,flavorText:selected.flavorText,imageId:selected.imageId,playable:false,unusableReason:"使用可否を確認中です。"};
+function drawCard(session:StoredSession):CardView{
+  const pool=session.mode==="cpu"&&session.cardPoolMode==="core"?coreCards:cards;
+  const totalWeight=pool===coreCards?totalCoreCardWeight:totalCardWeight;
+  let cursor=(randomInt(0,1_000_000_000)/1_000_000_000)*totalWeight;let selected=pool[pool.length-1];
+  for(const card of pool){cursor-=card.weight;if(cursor<0){selected=card;break}}
+  const definition=effectByCardId.get(selected.id);
+  return {instanceId:randomUUID(),cardId:selected.id,name:selected.name,category:selected.category,system:selected.system,attribute:selected.attribute,cost:selected.cost,mpCost:selected.mpCost,target:selected.target,timing:selected.timing,effectText:selected.effectText,description:selected.description,flavorText:selected.flavorText,imageId:selected.imageId,baseDamage:definition?.type==="attack"?definition.baseDamage:undefined,playable:false,unusableReason:"使用可否を確認中です。"};
 }
-function drawCards(count:number):CardView[]{return Array.from({length:count},drawCard)}
-function drawToLimit(hand:CardView[],count:number):void{for(let i=0;i<count&&hand.length<7;i++)hand.push(drawCard())}
+function drawCards(session:StoredSession,count:number):CardView[]{return Array.from({length:count},()=>drawCard(session))}
+function drawToLimit(session:StoredSession,hand:CardView[],count:number):void{for(let i=0;i<count&&hand.length<7;i++)hand.push(drawCard(session))}
 function stateForSide(state:SessionState,side:Side):BattlePlayerState{return state.battle![side]}
 function attributeForSide(state:SessionState,side:Side):FiveElement{return (side==="player"?state.playerAttribute:state.cpuAttribute)!}
 function setAttributeForSide(state:SessionState,side:Side,value:FiveElement):void{if(side==="player")state.playerAttribute=value;else state.cpuAttribute=value}
@@ -200,7 +208,7 @@ function discardForSide(session:StoredSession,side:Side):CardView[]{return side=
 function refreshTurnHand(session:StoredSession,side:Side,count=5):void{
   const hand=handForSide(session,side),discard=discardForSide(session,side),drawCount=Math.min(7,Math.max(0,count));
   for(const card of hand){card.playable=false;card.unusableReason="ターン開始時の手札入れ替え中です。";card.playTarget=undefined;discard.push(card)}
-  hand.splice(0,hand.length,...drawCards(drawCount));
+  hand.splice(0,hand.length,...drawCards(session,drawCount));
   if(side==="cpu")session.state.battle!.cpu.handCount=hand.length;
   session.state.battle!.log.push(`${side==="player"?"プレイヤー":"CPU"}が手札を入れ替え、${drawCount}枚引いた。`);
 }
@@ -402,7 +410,7 @@ function executeCard(session:StoredSession,side:Side,index:number,externalTarget
   }
   battle.log.push(`${side==="player"?"プレイヤー":"CPU"}が${card.name}を使用した。`);
   resolveUtilityCard(session,side,definition,externalTarget,choice);
-  if(definition.type!=="generate"&&cardElement&&generates[actorAttribute]===cardElement){actor.mp=Math.min(MAX_PLAYER_MP,actor.mp+ATTRIBUTE_GENERATION_MP);battle.log.push(`相生成立：MPが${ATTRIBUTE_GENERATION_MP}増加した。`)}consumeUsedCard(session,side,index);if(definition.type==="cycle"||definition.type==="cycle_choice"){drawToLimit(handForSide(session,side),definition.draw);if(side==="player"||state.mode==="online"){battle.pendingDiscard={count:definition.discard,side};battle.phase="resolving"}else{for(let i=0;i<definition.discard&&session.cpuHand.length;i++){const discarded=session.cpuHand.splice(randomInt(session.cpuHand.length),1)[0];session.cpuDiscard.push(discarded)}}}triggerBurnAfterCard(state,side);finishIfNeeded(state);refreshPlayability(state);return {ok:true};
+  if(definition.type!=="generate"&&cardElement&&generates[actorAttribute]===cardElement){actor.mp=Math.min(MAX_PLAYER_MP,actor.mp+ATTRIBUTE_GENERATION_MP);battle.log.push(`相生成立：MPが${ATTRIBUTE_GENERATION_MP}増加した。`)}consumeUsedCard(session,side,index);if(definition.type==="cycle"||definition.type==="cycle_choice"){drawToLimit(session,handForSide(session,side),definition.draw);if(side==="player"||state.mode==="online"){battle.pendingDiscard={count:definition.discard,side};battle.phase="resolving"}else{for(let i=0;i<definition.discard&&session.cpuHand.length;i++){const discarded=session.cpuHand.splice(randomInt(session.cpuHand.length),1)[0];session.cpuDiscard.push(discarded)}}}triggerBurnAfterCard(state,side);finishIfNeeded(state);refreshPlayability(state);return {ok:true};
 }
 function usePlayerCard(session:StoredSession,instanceId:string,target:CardTarget,choice?:string):{ok:boolean;message?:string}{const battle=session.state.battle;if(!battle||session.state.phase!=="battle"||battle.phase!=="card_use"||battle.activePlayer!=="player")return {ok:false,message:"現在はカードを使用できません。"};const index=battle.player.hand.findIndex(card=>card.instanceId===instanceId);return executeCard(session,"player",index,target,choice)}
 function chooseUnitTarget(state:SessionState,side:Side,unit:ShikigamiState):UnitTarget{
@@ -579,7 +587,7 @@ function endPlayerTurn(session:StoredSession):{ok:boolean;message?:string}{
 
 
 function initializeBattle(session:StoredSession):void{
-  const hand=drawCards(5);session.cpuHand=drawCards(5);session.state.phase="battle";session.state.battle={turnNumber:1,activePlayer:"player",phase:"card_use",player:{hp:INITIAL_PLAYER_HP,mp:INITIAL_PLAYER_MP,cost:5,curses:[],nextDamageReduction:0,shikigami:[],retiredShikigami:[],hand,discard:[]},cpu:{hp:INITIAL_PLAYER_HP,mp:INITIAL_PLAYER_MP,cost:5,curses:[],nextDamageReduction:0,shikigami:[],retiredShikigami:[],handCount:session.cpuHand.length},log:[`対戦開始。両者HP${INITIAL_PLAYER_HP}・MP${INITIAL_PLAYER_MP}で手札を5枚引いた。`]};refreshPlayability(session.state);if(session.mode!=="online")armPlayerTurnTimer(session);
+  const hand=drawCards(session,5);session.cpuHand=drawCards(session,5);session.state.phase="battle";session.state.battle={turnNumber:1,activePlayer:"player",phase:"card_use",player:{hp:INITIAL_PLAYER_HP,mp:INITIAL_PLAYER_MP,cost:5,curses:[],nextDamageReduction:0,shikigami:[],retiredShikigami:[],hand,discard:[]},cpu:{hp:INITIAL_PLAYER_HP,mp:INITIAL_PLAYER_MP,cost:5,curses:[],nextDamageReduction:0,shikigami:[],retiredShikigami:[],handCount:session.cpuHand.length},log:[`対戦開始。両者HP${INITIAL_PLAYER_HP}・MP${INITIAL_PLAYER_MP}で手札を5枚引いた。`]};refreshPlayability(session.state);if(session.mode!=="online")armPlayerTurnTimer(session);
 }
 function useCardForSide(session:StoredSession,side:Side,instanceId:string,target:CardTarget,choice?:string):{ok:boolean;message?:string}{
   const battle=session.state.battle;if(!battle||session.state.phase!=="battle"||battle.phase!=="card_use"||battle.activePlayer!==side)return {ok:false,message:"現在はあなたのカード使用フェーズではありません。"};
@@ -640,7 +648,7 @@ io.on("connection",socket=>{
   const acknowledge=(session:StoredSession,callback:(result:{ok:boolean;message?:string;state?:SessionState})=>void)=>callback({ok:true,state:publicStateForSocket(socket.id,session)});
   const unavailable=(session:StoredSession|undefined):boolean=>Boolean(session?.state.connectionPaused);
   socket.on("session:resume",(token,callback)=>{const session=sessions.get(token);if(!session){callback({ok:false,message:"No resumable match was found."});return}socketTokens.set(socket.id,token);if(session.mode==="online"){session.disconnectedTokens?.delete(token);const timer=session.onlineReconnectTimers?.get(token);if(timer)clearTimeout(timer);session.onlineReconnectTimers?.delete(token);if(!session.disconnectedTokens?.size){session.state.connectionPaused=false;if(session.pendingReaction&&!session.pendingReaction.timer)armReactionTimer(session,session.pendingReaction);else if(session.presentationContinuation)waitForPresentation(session,session.presentationContinuation);else if(session.state.battle?.phase==="card_use")armOnlineTurnTimer(session,session.turnRemainingMs??60_000);session.turnRemainingMs=undefined}}else{if(session.reconnectTimer)clearTimeout(session.reconnectTimer);session.reconnectTimer=undefined;session.disconnectedAt=undefined;if(session.pendingReaction&&!session.pendingReaction.timer)armReactionTimer(session,session.pendingReaction);if(session.turnRemainingMs!==undefined){armPlayerTurnTimer(session,session.turnRemainingMs);session.turnRemainingMs=undefined}}refreshPlayability(session.state);acknowledge(session,callback);sendSessionState(session)});
-  socket.on("cpu:start",({playerName},callback)=>{const name=playerName.trim();if(!name){callback({ok:false,message:"Enter a player name."});return}const previous=socketTokens.get(socket.id);if(previous)sessions.delete(previous);const token=randomUUID(),state:SessionState={phase:"attribute_selection",mode:"cpu",reconnectToken:token,playerName:name};const created:StoredSession={state,mode:"cpu",cpuHand:[],cpuDiscard:[],cpuCardActions:0};sessions.set(token,created);socketTokens.set(socket.id,token);armAttributeSelectionTimer(created);acknowledge(created,callback);sendSessionState(created)});
+  socket.on("cpu:start",({playerName,poolMode},callback)=>{const name=playerName.trim();if(!name){callback({ok:false,message:"プレイヤー名を入力してください。"});return}const previous=socketTokens.get(socket.id);if(previous)sessions.delete(previous);const token=randomUUID(),state:SessionState={phase:"attribute_selection",mode:"cpu",reconnectToken:token,playerName:name};const created:StoredSession={state,mode:"cpu",cardPoolMode:poolMode==="full"?"full":"core",cpuHand:[],cpuDiscard:[],cpuCardActions:0};sessions.set(token,created);socketTokens.set(socket.id,token);armAttributeSelectionTimer(created);acknowledge(created,callback);sendSessionState(created)});
   socket.on("room:create",({playerName},callback)=>{const name=playerName.trim();if(!name){callback({ok:false,message:"Enter a player name."});return}const token=randomUUID(),id=roomCode(),state:SessionState={phase:"room_waiting",mode:"online",roomId:id,roomReady:false};const session:StoredSession={state,mode:"online",roomId:id,hostToken:token,hostName:name,cpuHand:[],cpuDiscard:[],cpuCardActions:0,disconnectedTokens:new Set(),onlineReconnectTimers:new Map()};sessions.set(token,session);tokenSides.set(token,"player");socketTokens.set(socket.id,token);rooms.set(id,{id,session,hostToken:token});acknowledge(session,callback);sendSessionState(session)});
   socket.on("room:join",({playerName,roomId},callback)=>{const name=playerName.trim(),id=roomId.trim().toUpperCase(),room=rooms.get(id);if(!name){callback({ok:false,message:"Enter a player name."});return}if(!room||room.guestToken||room.session.state.phase!=="room_waiting"){callback({ok:false,message:"The room is unavailable."});return}const token=randomUUID();room.guestToken=token;room.session.guestToken=token;room.session.guestName=name;room.session.state.roomReady=true;sessions.set(token,room.session);tokenSides.set(token,"cpu");socketTokens.set(socket.id,token);acknowledge(room.session,callback);sendSessionState(room.session)});
   socket.on("room:start",callback=>{const session=currentSession(socket.id),token=socketTokens.get(socket.id);if(!session||session.mode!=="online"||token!==session.hostToken||!session.guestToken||session.state.phase!=="room_waiting"){callback({ok:false,message:"The room cannot start yet."});return}session.state={phase:"attribute_selection",mode:"online",roomId:session.roomId,roomReady:true};armAttributeSelectionTimer(session);acknowledge(session,callback);sendSessionState(session)});

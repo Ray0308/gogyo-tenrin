@@ -41,7 +41,7 @@ test("CPU turn completes after the player ends the turn", async () => {
       const socket = client.io(url, { transports: ["websocket"], forceNew: true });
       try {
         await waitFor(socket, "connect");
-        assert.equal((await emit(socket, "cpu:start", { playerName: "Tester" })).ok, true);
+        assert.equal((await emit(socket, "cpu:start", { playerName: "Tester", poolMode: "core" })).ok, true);
         assert.equal((await emit(socket, "attribute:select", { attribute: "wood" })).ok, true);
         const entered = await emit(socket, "match:enter");
         assert.equal(entered.state.battle.activePlayer, "player");
@@ -50,6 +50,9 @@ test("CPU turn completes after the player ends the turn", async () => {
         assert.equal(entered.state.battle.player.mp, 10);
         assert.equal(entered.state.battle.cpu.mp, 10);
         const openingHandIds = new Set(entered.state.battle.player.hand.map((card) => card.instanceId));
+        for (const card of entered.state.battle.player.hand) {
+          assert.match(card.cardId, /^card_(reidan|zanfu|shufu|tenrin|summon)_/);
+        }
 
         const cpuStartUpdate = waitFor(socket, "session:state");
         let result = await emit(socket, "turn:end");
