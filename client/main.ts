@@ -78,9 +78,13 @@ let battlePresentationGeneration = 0;
 let pendingPresentationState: SessionState | null = null;
 let presentationBlockedByReaction = false;
 let presentationCompletionPending = false;
+let presentationRequiresAcknowledgement = false;
+let opponentAckPending = false;
+let opponentAckTimer: number | undefined;
+let opponentAckInterval: number | undefined;
 
 function battlePresentationLocked(): boolean {
-  return battleCuePlaying || battleCueQueue.length > 0;
+  return battleCuePlaying || battleCueQueue.length > 0 || opponentAckPending;
 }
 function clearCardSelection(): void {
   pendingCardId = null;
@@ -114,7 +118,14 @@ function cancelBattlePresentation(): void {
   activeBattleCueKey = undefined;
   pendingPresentationState = null;
   presentationCompletionPending = false;
+  presentationRequiresAcknowledgement = false;
+  opponentAckPending = false;
+  if (opponentAckTimer !== undefined) window.clearTimeout(opponentAckTimer);
+  if (opponentAckInterval !== undefined) window.clearInterval(opponentAckInterval);
+  opponentAckTimer = undefined;
+  opponentAckInterval = undefined;
   document.querySelectorAll(".battle-cue-layer,.card-effect-layer,.battle-floating-change,.shikigami-retire-layer,.reidan-projectile").forEach((element) => element.remove());
+  document.querySelector(".opponent-ack-layer")?.remove();
   syncBattlePresentationLock();
 }
 
@@ -172,11 +183,46 @@ function revealPendingPresentationState(): void {
   if (nextState) applyDisplayedState(nextState);
   syncBattlePresentationLock();
 }
+function completePresentationStep(): void {
+  if (!presentationCompletionPending) return;
+  presentationCompletionPending = false;
+  socket.emit("presentation:complete");
+}
+function resolveOpponentAcknowledgement(): void {
+  if (!opponentAckPending) return;
+  opponentAckPending = false;
+  if (opponentAckTimer !== undefined) window.clearTimeout(opponentAckTimer);
+  if (opponentAckInterval !== undefined) window.clearInterval(opponentAckInterval);
+  opponentAckTimer = undefined;
+  opponentAckInterval = undefined;
+  document.querySelector(".opponent-ack-layer")?.remove();
+  syncBattlePresentationLock();
+  completePresentationStep();
+}
+function showOpponentAcknowledgement(): void {
+  if (opponentAckPending) return;
+  opponentAckPending = true;
+  syncBattlePresentationLock();
+  const deadline = Date.now() + 5_000;
+  const layer = document.createElement("div");
+  layer.className = "opponent-ack-layer";
+  layer.innerHTML = `<div class="opponent-ack"><span>相手の行動結果を確認</span><button type="button">了解　次へ <b>5</b></button><small>操作しなくても5秒後に進みます</small></div>`;
+  document.body.append(layer);
+  const button = layer.querySelector<HTMLButtonElement>("button")!;
+  const countdown = layer.querySelector<HTMLElement>("b")!;
+  button.addEventListener("click", resolveOpponentAcknowledgement, { once: true });
+  opponentAckInterval = window.setInterval(() => {
+    countdown.textContent = String(Math.max(0, Math.ceil((deadline - Date.now()) / 1000)));
+  }, 200);
+  opponentAckTimer = window.setTimeout(resolveOpponentAcknowledgement, 5_000);
+}
 function commitPendingPresentationState(): void {
   revealPendingPresentationState();
   if (presentationCompletionPending) {
-    presentationCompletionPending = false;
-    socket.emit("presentation:complete");
+    if (presentationRequiresAcknowledgement) {
+      presentationRequiresAcknowledgement = false;
+      showOpponentAcknowledgement();
+    } else completePresentationStep();
   }
 }
 function playNextBattleCue(): void {
@@ -414,6 +460,9 @@ function updateState(nextState: SessionState): void {
   }
   pendingPresentationState = nextState;
   presentationCompletionPending = true;
+  presentationRequiresAcknowledgement = changes.some((change) =>
+    change.side === "cpu" && (change.type === "turn" || change.type === "action" || change.type === "summon" || change.type === "retire"),
+  );
   animateBattleChanges(changes);
 }
 
