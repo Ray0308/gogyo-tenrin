@@ -19,6 +19,7 @@ export interface CardView {
   effectText: string;
   description: string;
   flavorText: string;
+  imageId?: string;
   playable: boolean;
   unusableReason?: string;
   playTarget?: CardPlayTarget;
@@ -39,6 +40,7 @@ export interface CardCatalogItem {
   effectText: string;
   description: string;
   flavorText: string;
+  imageId?: string;
 }
 
 export interface CurseState {

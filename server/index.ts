@@ -97,7 +97,7 @@ const barrierById=new Map(barriers.map(field=>[field.id,field]));
 const terrainById=new Map(terrains.map(field=>[field.id,field]));
 const effectByCardId=new Map(definitions.map(effect=>[effect.cardId,effect]));
 const totalCardWeight=cards.reduce((sum,card)=>sum+card.weight,0);
-const publicCardCatalog:CardCatalogItem[]=cards.map(card=>({cardId:card.id,name:card.name,category:card.category,system:card.system,attribute:card.attribute,cost:card.cost,mpCost:card.mpCost,target:card.target,timing:card.timing,effectText:card.effectText,description:card.description,flavorText:card.flavorText}));
+const publicCardCatalog:CardCatalogItem[]=cards.map(card=>({cardId:card.id,name:card.name,category:card.category,system:card.system,attribute:card.attribute,cost:card.cost,mpCost:card.mpCost,target:card.target,timing:card.timing,effectText:card.effectText,description:card.description,flavorText:card.flavorText,imageId:card.imageId}));
 const sessions=new Map<string,StoredSession>();
 const socketTokens=new Map<string,string>();
 const cardAttributeToElement:Record<string,FiveElement|undefined>={"木":"wood","火":"fire","土":"earth","金":"metal","水":"water"};
@@ -185,7 +185,7 @@ function sendSessionState(session:StoredSession):void{for(const [socketId,token]
 function drawCard():CardView{
   let cursor=(randomInt(0,1_000_000_000)/1_000_000_000)*totalCardWeight;let selected=cards[cards.length-1];
   for(const card of cards){cursor-=card.weight;if(cursor<0){selected=card;break}}
-  return {instanceId:randomUUID(),cardId:selected.id,name:selected.name,category:selected.category,system:selected.system,attribute:selected.attribute,cost:selected.cost,mpCost:selected.mpCost,target:selected.target,timing:selected.timing,effectText:selected.effectText,description:selected.description,flavorText:selected.flavorText,playable:false,unusableReason:"使用可否を確認中です。"};
+  return {instanceId:randomUUID(),cardId:selected.id,name:selected.name,category:selected.category,system:selected.system,attribute:selected.attribute,cost:selected.cost,mpCost:selected.mpCost,target:selected.target,timing:selected.timing,effectText:selected.effectText,description:selected.description,flavorText:selected.flavorText,imageId:selected.imageId,playable:false,unusableReason:"使用可否を確認中です。"};
 }
 function drawCards(count:number):CardView[]{return Array.from({length:count},drawCard)}
 function drawToLimit(hand:CardView[],count:number):void{for(let i=0;i<count&&hand.length<7;i++)hand.push(drawCard())}
