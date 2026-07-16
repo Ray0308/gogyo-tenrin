@@ -63,6 +63,9 @@ let catalogError = "";
 let longPressTimer: number | undefined;
 let longPressOrigin: { x: number; y: number } | null = null;
 let tutorialStep: number | null = null;
+let reactionSubmitting = false;
+let submittedReactionDeadline: number | undefined;
+let reactionRevealTimer: number | undefined;
 interface BattleCue { title: string; detail?: string; side?: BattleSide; key?: string; duration?: number; variant?: string; onShow?: () => void }
 const battleCueQueue: BattleCue[] = [];
 let battleCuePlaying = false;
@@ -134,6 +137,10 @@ function enqueueBattleCue(cue: BattleCue): void {
 function applyDisplayedState(nextState: SessionState): void {
   let selectionError: string | undefined;
   state = nextState;
+  if (nextState.battle?.phase !== "reaction") {
+    reactionSubmitting = false;
+    submittedReactionDeadline = undefined;
+  }
   if (pendingCardId) {
     const pending = nextState.battle?.player.hand.find((card) => card.instanceId === pendingCardId);
     if (!pending?.playable) {
@@ -339,6 +346,21 @@ function updateState(nextState: SessionState): void {
   const baselineState = pendingPresentationState ?? state;
   const changes = deriveBattleVisualChanges(baselineState, nextState);
   const enteringReaction = nextState.phase === "battle" && nextState.battle?.phase === "reaction";
+  const isNextReaction = enteringReaction && reactionSubmitting
+    && nextState.battle?.reaction?.deadline !== submittedReactionDeadline;
+  if (isNextReaction) {
+    if (reactionRevealTimer !== undefined) window.clearTimeout(reactionRevealTimer);
+    reactionRevealTimer = window.setTimeout(() => {
+      reactionSubmitting = false;
+      submittedReactionDeadline = undefined;
+      reactionRevealTimer = undefined;
+      render();
+    }, 360);
+  }
+  if (!enteringReaction && baselineState.battle?.phase === "reaction") {
+    reactionSubmitting = true;
+    document.querySelector(".reaction-panel")?.remove();
+  }
   presentationBlockedByReaction = enteringReaction;
   const enteringBattle = baselineState.phase !== "battle" && nextState.phase === "battle";
   if (enteringBattle && nextState.mode === "cpu" && !localStorage.getItem(TUTORIAL_KEY)) tutorialStep = 0;
@@ -623,8 +645,9 @@ function renderBattle(): void {
     return choices;
   }).join("");
   const pausedPanel = state.connectionPaused ? `<section class="connection-pause"><h2>\u518d\u63a5\u7d9a\u5f85\u6a5f\u4e2d</h2><p>\u76f8\u624b\u306e\u5fa9\u5e30\u3092\u5f85\u3063\u3066\u3044\u307e\u3059\u3002\u5bfe\u6226\u306f\u4e00\u6642\u505c\u6b62\u4e2d\u3067\u3059\u3002</p></section>` : "";
-  const reactionPanel = reaction ? `<section class="reaction-panel"><div><p class="eyebrow">REACTION</p><h2>防御・反応受付中</h2><p class="reaction-paused-label">選択完了まで対戦処理は停止中</p><strong>${escapeHtml(reaction.attackerName)}の${escapeHtml(reaction.sourceName)}</strong><p>${reaction.targets.map((item) => `${escapeHtml(item.label)}：予測 ${item.predictedDamage}ダメージ`).join(" / ")}</p><div class="reaction-time">残り <b data-reaction-countdown>${Math.max(0, Math.ceil((reaction.deadline - Date.now()) / 1000))}</b> 秒</div></div><div class="reaction-options">${reactionOptions || '<p class="muted">使用可能な防御札はありません。</p>'}</div><button class="menu-button secondary" data-action="reaction-pass">使用しない</button></section>` : "";
-  app.innerHTML = `<section class="battle battle-v2">${pausedPanel}${reactionPanel}${tutorial}<main class="battle-board">
+  const reactionPanel = reaction && !reactionSubmitting ? `<section class="reaction-panel"><div><p class="eyebrow">REACTION</p><h2>防御・反応受付中</h2><p class="reaction-paused-label">選択完了まで対戦処理は停止中</p><strong>${escapeHtml(reaction.attackerName)}の${escapeHtml(reaction.sourceName)}</strong><p>${reaction.targets.map((item) => `${escapeHtml(item.label)}：予測 ${item.predictedDamage}ダメージ`).join(" / ")}</p><div class="reaction-time">残り <b data-reaction-countdown>${Math.max(0, Math.ceil((reaction.deadline - Date.now()) / 1000))}</b> 秒</div></div><div class="reaction-options">${reactionOptions || '<p class="muted">使用可能な防御札はありません。</p>'}</div><button class="menu-button secondary" data-action="reaction-pass">使用しない</button></section>` : "";
+  const reactionResolving = reaction && reactionSubmitting ? '<div class="reaction-resolving" role="status">防御結果を処理中…</div>' : "";
+  app.innerHTML = `<section class="battle battle-v2">${pausedPanel}${reactionPanel}${reactionResolving}${tutorial}<main class="battle-board">
     <header class="battle-player opponent ${battle.cpu.hp <= MAX_PLAYER_HP * .25 ? "is-critical" : ""}" data-combatant="cpu" ${targetAttribute("cpu_player")}><div><span>${escapeHtml(state.opponentName ?? "CPU")}</span><strong>HP ${battle.cpu.hp} / ${MAX_PLAYER_HP}</strong>${hpGauge(battle.cpu.hp)}${renderCurses(battle.cpu.curses)}</div>${elementBadge(state.cpuAttribute)}<div class="resource"><span>霊気 ${battle.cpu.mp} / ${MAX_PLAYER_MP}</span><span>COST ${battle.cpu.cost}</span><span>手札 ${battle.cpu.handCount}</span></div></header>
     <section class="barrier-display ${battle.cpu.barrier ? "" : "is-empty"}" ${targetAttribute("cpu_barrier") || (targeting && pendingCard?.cardId==="card_fuin" && battle.cpu.barrier ? 'data-target="cpu_barrier"' : "")}><span>相手結界</span><strong>${battle.cpu.barrier ? escapeHtml(battle.cpu.barrier.name) : "未設置"}</strong><small>${battle.cpu.barrier ? escapeHtml(battle.cpu.barrier.effectText) : ""}</small></section>
     <section class="field enemy" ${targetAttribute("cpu_field")}><p>相手式神</p>${renderUnits(battle.cpu.shikigami, pendingTarget, pendingCard?.ignoreTaunt, "cpu", pendingCard?.target)}</section>
@@ -663,7 +686,13 @@ function renderDialog(): void {
 
 function applyResult(result: ActionResult): void {
   busy = false;
-  if (!result.ok) { errorMessage = result.message ?? "処理に失敗しました。"; render(); return; }
+  if (!result.ok) {
+    reactionSubmitting = false;
+    submittedReactionDeadline = undefined;
+    errorMessage = result.message ?? "処理に失敗しました。";
+    render();
+    return;
+  }
   errorMessage = "";
   if (result.state) updateState(result.state); else render();
 }
@@ -728,6 +757,8 @@ app.addEventListener("click", (event) => {
   }
   if(discardInstanceId && state.battle?.pendingDiscard && !busy){busy=true;render();socket.emit("card:discard",{instanceId:discardInstanceId},applyResult);return;}
   if (reactionCard && !busy) {
+    reactionSubmitting = true;
+    submittedReactionDeadline = state.battle?.reaction?.deadline;
     busy = true; render(); socket.emit("reaction:respond", { instanceId: reactionCard, target: reactionTarget }, applyResult); return;
   }  if (targetType && pendingCardId && !busy) {
     const instanceId = pendingCardId;
@@ -771,7 +802,11 @@ app.addEventListener("click", (event) => {
   else if (action === "rematch") { busy=true; render(); socket.emit("rematch:request",applyResult); }
   else if (action === "rematch-cancel") { busy=true; render(); socket.emit("rematch:cancel",applyResult); }
   else if (action === "enter-match") { busy = true; render(); socket.emit("match:enter", applyResult); }
-  else if (action === "reaction-pass") { busy = true; render(); socket.emit("reaction:respond", {}, applyResult); }
+  else if (action === "reaction-pass") {
+    reactionSubmitting = true;
+    submittedReactionDeadline = state.battle?.reaction?.deadline;
+    busy = true; render(); socket.emit("reaction:respond", {}, applyResult);
+  }
   else if (action === "end-turn") { busy = true; pendingCardId = null; selectedCardId = null; if (state.mode === "cpu") enqueueBattleCue({ title: "相手のターン", detail: "相手が行動中", side: "cpu", key: `turn:${state.battle?.turnNumber ?? 0}:cpu` }); render(); socket.emit("turn:end", applyResult); }
   else if (action === "reset") { busy = true; pendingCardId = null; selectedCardId = null; localStorage.removeItem(TOKEN_KEY); socket.emit("session:reset", (result) => { screen = "title"; applyResult(result); }); }
 });

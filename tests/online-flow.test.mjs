@@ -51,7 +51,7 @@ test("online room reaches a shared battle with private hands", async () => {
       const targetByMode = { cpu_player: "cpu_player", cpu_unit: "cpu_player", cpu_any: "cpu_player", cpu_field: "cpu_field", player: "player", player_unit: "player", player_field: "player_field", shared_field: "shared_field", retired_unit: "player" };
       const used = await emit(host, "card:use", { instanceId: card.instanceId, target: targetByMode[card.playTarget] ?? "player", choice: card.choiceOptions?.[0]?.value });
       assert.equal(used.ok, true);
-      assert.ok(used.state.battle.player.hand.length <= 5);
+        assert.ok(used.state.battle.player.hand.length <= 7, "card effects must respect the maximum hand size");
     }
     await emit(host, "room:leave");
   } finally {

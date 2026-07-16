@@ -111,6 +111,18 @@ test("reaction decisions preempt presentation and do not run behind animations",
   assert.match(client, /選択完了まで対戦処理は停止中/);
 });
 
+test("reaction window closes immediately and separates consecutive reactions", async () => {
+  const client = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
+  const css = await readFile(path.join(repositoryRoot, "client", "card-ui.css"), "utf8");
+  assert.match(client, /let reactionSubmitting = false/);
+  assert.match(client, /reaction && !reactionSubmitting/);
+  assert.match(client, /submittedReactionDeadline = state\.battle\?\.reaction\?\.deadline/);
+  assert.match(client, /document\.querySelector\("\.reaction-panel"\)\?\.remove\(\)/);
+  assert.match(client, /防御結果を処理中/);
+  assert.match(client, /}, 360\)/);
+  assert.match(css, /\.reaction-resolving/);
+});
+
 test("field attacks make each shikigami visibly tappable and cancelling fully resets selection", async () => {
   const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
   assert.match(source, /enemyFieldTarget/);
