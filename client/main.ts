@@ -577,12 +577,15 @@ function renderCardArt(card: CardInfo, compact = false): string {
   return `<div class="card-art ${compact ? "compact" : ""}"><img src="${cardArtPath(card)}" alt="" loading="lazy"><i aria-hidden="true"></i><span>${escapeHtml(card.attribute)}</span></div>`;
 }
 function renderCardDetail(card: CardInfo, footer = ""): string {
-  const terms = cardGlossary(card).map(([term, explanation]) => `<li><b>${escapeHtml(term)}</b><span>${escapeHtml(explanation)}</span></li>`).join("");
+  const showBeginnerHelp = state.mode === "cpu" && cpuExperienceMode === "tutorial";
+  const terms = showBeginnerHelp
+    ? cardGlossary(card).map(([term, explanation]) => `<li><b>${escapeHtml(term)}</b><span>${escapeHtml(explanation)}</span></li>`).join("")
+    : "";
   return `<div class="card-detail card-detail-rich ${cardAttributeClass(card.attribute)}">
     <div class="card-detail-frame">${renderCardArt(card)}
       <header><p class="eyebrow">${escapeHtml(card.category)} / ${escapeHtml(card.system)}</p><h2>${escapeHtml(card.name)}</h2></header>
       <div class="card-detail-meta"><span>属性 ${escapeHtml(card.attribute)}</span><span>コスト ${card.cost}</span><span>霊気 ${card.mpCost}</span></div>
-      <section class="card-plain-guide"><b>かんたんに言うと</b><p>${escapeHtml(plainCardGuide(card))}</p></section>
+      ${showBeginnerHelp ? `<section class="card-plain-guide"><b>かんたんに言うと</b><p>${escapeHtml(plainCardGuide(card))}</p></section>` : ""}
       <section class="card-effect-copy"><h3>効果</h3><p>${escapeHtml(card.effectText)}</p></section>
       <dl class="card-facts"><div><dt>対象</dt><dd>${escapeHtml(card.target)}</dd></div><div><dt>使える時</dt><dd>${escapeHtml(card.timing)}</dd></div></dl>
       ${terms ? `<section class="term-help"><h3>このカードの用語</h3><ul>${terms}</ul></section>` : ""}

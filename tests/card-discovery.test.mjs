@@ -23,6 +23,8 @@ test("card details translate jargon without replacing the official terms", async
   assert.match(client, /かんたんに言うと/);
   assert.match(client, /このカードの用語/);
   assert.match(client, /plainCardGuide/);
+  assert.match(client, /showBeginnerHelp \? `<section class="card-plain-guide"/);
+  assert.match(client, /state\.mode === "cpu" && cpuExperienceMode === "tutorial"/);
 });
 
 test("terrain guidance and beginner help are separated into the tutorial", async () => {
