@@ -4,14 +4,17 @@ import path from "node:path";
 import test from "node:test";
 import { repositoryRoot } from "../scripts/lib/master-data.mjs";
 
-test("hand cards use imagery and expose a long-press detail view", async () => {
+test("hand cards use a minimal summary and expose a long-press detail view", async () => {
   const client = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
   const css = await readFile(path.join(repositoryRoot, "client", "card-ui.css"), "utf8");
+  const handTemplate = client.slice(client.indexOf("const cards = battle.player.hand"), client.indexOf("const pendingCard ="));
   assert.match(client, /function cardSigil/);
-  assert.match(client, /renderCardArt\(card, true\)/);
-  assert.match(client, /長押しで詳細/);
+  assert.match(handTemplate, /hand-card-mark/);
+  assert.doesNotMatch(handTemplate, /renderCardArt/);
+  assert.match(handTemplate, /長押しで詳細/);
   assert.match(client, /window\.setTimeout\([\s\S]*420/);
   assert.match(css, /\.hand-card-simple/);
+  assert.match(css, /\.hand-card-name/);
   assert.match(css, /\.card-detail-rich/);
 });
 

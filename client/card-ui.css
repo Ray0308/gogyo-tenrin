@@ -1,25 +1,18 @@
 /* Card discovery and beginner guidance. Kept separate so the battle layout remains easy to tune. */
 .hand-card-simple {
   position: relative;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-rows: auto auto 1fr auto;
-  min-width: 132px;
-  width: 132px;
-  min-height: 190px;
-  padding: 82px 10px 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 126px;
+  width: 126px;
+  min-height: 154px;
+  padding: 39px 10px 10px;
   overflow: hidden;
   text-align: left;
   touch-action: pan-x;
   user-select: none;
   -webkit-user-select: none;
-}
-.hand-card-simple .card-art {
-  position: absolute;
-  inset: 0 0 auto;
-  height: 78px;
-  border: 0;
-  border-radius: 0;
 }
 .card-art {
   position: relative;
@@ -117,29 +110,64 @@
 .catalog-card .sigil-orbit { gap: 0; }
 .catalog-card .sigil-orbit small { display: none; }
 .hand-card-simple .hand-card-system {
+  display: block;
+  min-height: 1em;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  color: #c9ad6a;
+  font-size: .56rem;
+  letter-spacing: .03em;
 }
-.hand-card-simple > strong {
-  grid-column: 1 / -1;
+.hand-card-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  margin: 2px 0 3px;
+}
+.hand-card-name strong {
+  display: block;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: #f4e7c3;
   font-size: 1rem;
+  line-height: 1.2;
+}
+.hand-card-mark {
+  flex: 0 0 24px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  color: #d8c58e;
+  background: rgba(4, 14, 24, .72);
+  font-size: .72rem;
+  font-style: normal;
+  line-height: 1;
+}
+.hand-card-mark.sigil-reidan {
+  font-size: .62rem;
+  text-shadow: 0 0 7px currentColor;
 }
 .hand-card-simple > small {
-  grid-column: 1 / -1;
   display: -webkit-box;
+  flex: 1;
   overflow: hidden;
-  -webkit-line-clamp: 2;
+  margin-top: 2px;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
-  line-height: 1.45;
+  color: #cbd3dc;
+  font-size: .64rem;
+  line-height: 1.42;
 }
 .hold-hint {
-  grid-column: 1 / -1;
-  justify-self: end;
-  color: #c9ad6a;
-  font-size: .65rem;
-  font-style: normal;
-  opacity: .9;
+  display: none;
 }
 .hand-card-simple.unplayable .card-art {
   filter: grayscale(.75) brightness(.55);
@@ -372,9 +400,9 @@
     min-height: clamp(190px, 38svh, 300px);
   }
   .hand-card-simple {
-    min-width: 124px;
-    width: 124px;
-    min-height: 184px;
+    min-width: 118px;
+    width: 118px;
+    min-height: 148px;
   }
   .catalog-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -541,7 +541,8 @@ const cardSigils: Record<string, string> = {
 const systemSigils: Record<string, { key: string; mark: string }> = {
   霊符術: { key: "reifu", mark: "符" }, 占事略决: { key: "senji", mark: "輪" },
   陰陽秘術: { key: "onmyo", mark: "陰" }, 結界術: { key: "barrier", mark: "界" },
-  地脈術: { key: "terrain", mark: "脈" }, 禁術: { key: "forbidden", mark: "禁" },
+  使役術: { key: "summon", mark: "役" }, 地脈術: { key: "terrain", mark: "脈" },
+  禁術: { key: "forbidden", mark: "禁" },
 };
 function cardSigil(card: Pick<CardInfo, "imageId" | "system">): { key: string; mark: string } {
   const key = card.imageId?.replace(/^img_card_/, "");
@@ -627,12 +628,15 @@ function renderBattle(): void {
     app.innerHTML = shell(`<div class="notice-card"><h2>対戦状態を取得できません</h2><p>タイトルへ戻って対戦を開始し直してください。</p>${button("タイトルへ戻る", "reset")}</div>`);
     return;
   }
-  const cards = battle.player.hand.map((card) => `<button ${battle.pendingDiscard ? `data-discard-instance="${card.instanceId}"` : `data-card-instance="${card.instanceId}"`} class="hand-card hand-card-simple ${cardAttributeClass(card.attribute)} ${card.playable ? "" : "unplayable"}" aria-label="${escapeHtml(card.name)}。タップまたは長押しで詳細">
-    ${renderCardArt(card, true)}
-    <span class="hand-card-system">${escapeHtml(card.system)}</span><strong>${escapeHtml(card.name.split("：").at(-1) ?? card.name)}</strong>
+  const cards = battle.player.hand.map((card) => {
+    const sigil = cardSigil(card);
+    return `<button ${battle.pendingDiscard ? `data-discard-instance="${card.instanceId}"` : `data-card-instance="${card.instanceId}"`} class="hand-card hand-card-simple ${cardAttributeClass(card.attribute)} ${card.playable ? "" : "unplayable"}" aria-label="${escapeHtml(card.name)}。タップで選択、長押しで詳細">
+    <span class="hand-card-system">${escapeHtml(card.system)}</span>
+    <span class="hand-card-name"><i class="hand-card-mark sigil-${sigil.key}" aria-hidden="true">${escapeHtml(sigil.mark)}</i><strong>${escapeHtml(card.name.split("：").at(-1) ?? card.name)}</strong></span>
     <span class="hand-card-attribute">${escapeHtml(card.attribute)}</span><span class="hand-card-cost">コスト ${card.cost}</span>${card.mpCost > 0 ? `<span class="hand-card-mp">霊気 ${card.mpCost}</span>` : ""}
-    <small>${escapeHtml(shortCardEffect(card.effectText))}</small><em class="hold-hint">長押しで詳細</em>
-  </button>`).join("");
+    <small>${escapeHtml(shortCardEffect(card.effectText))}</small>
+  </button>`;
+  }).join("");
   const pendingCard = battle.player.hand.find((card) => card.instanceId === pendingCardId);
   const pendingTarget = pendingCard?.playTarget;
   const targeting = pendingCard !== undefined;
