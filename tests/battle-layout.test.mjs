@@ -86,12 +86,17 @@ test("opponent actions wait for acknowledgement or advance after five seconds", 
   const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
   const css = await readFile(path.join(repositoryRoot, "client", "battle-v2.css"), "utf8");
   assert.match(source, /showOpponentAcknowledgement/);
+  assert.match(source, /buildOpponentAckDetail/);
   assert.match(source, /了解　次へ/);
+  assert.match(source, /相手が使用/);
+  assert.match(source, /usedCard\?\.effectText/);
+  assert.match(source, /change\.amount.*ダメージ/);
   assert.match(source, /Date\.now\(\) \+ 5_000/);
   assert.match(source, /setTimeout\(resolveOpponentAcknowledgement, 5_000\)/);
   assert.match(source, /change\.side === "cpu"/);
   assert.match(css, /\.opponent-ack-layer/);
   assert.match(css, /\.opponent-ack button/);
+  assert.match(css, /\.opponent-ack-summary/);
 });
 
 test("battle state is revealed at its result cue and completion unlocks the next action", async () => {

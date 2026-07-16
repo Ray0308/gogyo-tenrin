@@ -82,6 +82,8 @@ let presentationRequiresAcknowledgement = false;
 let opponentAckPending = false;
 let opponentAckTimer: number | undefined;
 let opponentAckInterval: number | undefined;
+interface OpponentAckDetail { title: string; action: string; effect?: string; results: string[] }
+let opponentAckDetail: OpponentAckDetail | undefined;
 
 function battlePresentationLocked(): boolean {
   return battleCuePlaying || battleCueQueue.length > 0 || opponentAckPending;
@@ -124,6 +126,7 @@ function cancelBattlePresentation(): void {
   if (opponentAckInterval !== undefined) window.clearInterval(opponentAckInterval);
   opponentAckTimer = undefined;
   opponentAckInterval = undefined;
+  opponentAckDetail = undefined;
   document.querySelectorAll(".battle-cue-layer,.card-effect-layer,.battle-floating-change,.shikigami-retire-layer,.reidan-projectile").forEach((element) => element.remove());
   document.querySelector(".opponent-ack-layer")?.remove();
   syncBattlePresentationLock();
@@ -188,6 +191,33 @@ function completePresentationStep(): void {
   presentationCompletionPending = false;
   socket.emit("presentation:complete");
 }
+function opponentActionText(text: string): string {
+  return text.replace(/^CPU/, "相手").replaceAll("プレイヤー", "自分").replaceAll("CPU", "相手");
+}
+function buildOpponentAckDetail(changes: BattleVisualChange[]): OpponentAckDetail | undefined {
+  const action = changes.find((change): change is Extract<BattleVisualChange, { type: "action" }> => change.type === "action" && change.side === "cpu");
+  const turn = changes.find((change): change is Extract<BattleVisualChange, { type: "turn" }> => change.type === "turn" && change.side === "cpu");
+  if (!action && !turn) return undefined;
+  const usedCardName = action?.text.match(/^(?:CPU|相手)が(?:防御札 )?(.+?)を使用/)?.[1];
+  const usedCard = usedCardName ? cardCatalog.find((card) => card.name === usedCardName) : undefined;
+  const actorName = action?.text.match(/^(.+?)が/)?.[1]?.replace("CPU", "相手");
+  const title = usedCard?.name ?? usedCardName ?? (action ? `${actorName ?? "相手"}の行動` : "相手のターン開始");
+  const results = changes.flatMap((change) => {
+    if (change.type === "damage" || change.type === "heal") {
+      const target = change.name ?? (change.side === "player" ? "自分" : "相手");
+      return [`${target}：${change.type === "damage" ? `${change.amount}ダメージ` : `${change.amount}回復`}`];
+    }
+    if (change.type === "summon") return [`${change.name}を召喚`];
+    if (change.type === "retire") return [`${change.name}が退場`];
+    return [];
+  });
+  return {
+    title,
+    action: action ? opponentActionText(action.text) : `第${turn!.turnNumber}ターンを開始。手札とコストを更新しました。`,
+    effect: usedCard?.effectText,
+    results,
+  };
+}
 function resolveOpponentAcknowledgement(): void {
   if (!opponentAckPending) return;
   opponentAckPending = false;
@@ -195,6 +225,7 @@ function resolveOpponentAcknowledgement(): void {
   if (opponentAckInterval !== undefined) window.clearInterval(opponentAckInterval);
   opponentAckTimer = undefined;
   opponentAckInterval = undefined;
+  opponentAckDetail = undefined;
   document.querySelector(".opponent-ack-layer")?.remove();
   syncBattlePresentationLock();
   completePresentationStep();
@@ -204,9 +235,11 @@ function showOpponentAcknowledgement(): void {
   opponentAckPending = true;
   syncBattlePresentationLock();
   const deadline = Date.now() + 5_000;
+  const detail = opponentAckDetail ?? { title: "相手の行動", action: "行動結果を確認してください。", results: [] };
+  const resultItems = detail.results.map((result) => `<li>${escapeHtml(result)}</li>`).join("");
   const layer = document.createElement("div");
   layer.className = "opponent-ack-layer";
-  layer.innerHTML = `<div class="opponent-ack"><span>相手の行動結果を確認</span><button type="button">了解　次へ <b>5</b></button><small>操作しなくても5秒後に進みます</small></div>`;
+  layer.innerHTML = `<div class="opponent-ack"><div class="opponent-ack-summary"><span>相手が使用</span><strong>${escapeHtml(detail.title)}</strong><p>${escapeHtml(detail.action)}</p>${detail.effect ? `<dl><dt>効果</dt><dd>${escapeHtml(detail.effect)}</dd></dl>` : ""}${resultItems ? `<ul>${resultItems}</ul>` : ""}</div><button type="button">了解　次へ <b>5</b></button><small>操作しなくても5秒後に進みます</small></div>`;
   document.body.append(layer);
   const button = layer.querySelector<HTMLButtonElement>("button")!;
   const countdown = layer.querySelector<HTMLElement>("b")!;
@@ -460,9 +493,8 @@ function updateState(nextState: SessionState): void {
   }
   pendingPresentationState = nextState;
   presentationCompletionPending = true;
-  presentationRequiresAcknowledgement = changes.some((change) =>
-    change.side === "cpu" && (change.type === "turn" || change.type === "action" || change.type === "summon" || change.type === "retire"),
-  );
+  opponentAckDetail = buildOpponentAckDetail(changes);
+  presentationRequiresAcknowledgement = opponentAckDetail !== undefined;
   animateBattleChanges(changes);
 }
 

@@ -632,9 +632,66 @@ body.battle-presentation-locked .battle-v2::after {
   pointer-events: auto;
 }
 
-.opponent-ack > span {
+.opponent-ack-summary {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.opponent-ack-summary > span {
   color: #d7c9a3;
-  font: 700 .74rem system-ui, sans-serif;
+  font: 700 .62rem system-ui, sans-serif;
+  letter-spacing: .12em;
+}
+
+.opponent-ack-summary > strong {
+  overflow: hidden;
+  color: #f5dfaa;
+  font: 700 .92rem/1.35 "Yu Mincho", "Hiragino Mincho ProN", serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.opponent-ack-summary > p {
+  margin: 0;
+  color: #d5dce5;
+  font: 500 .7rem/1.45 system-ui, sans-serif;
+}
+
+.opponent-ack-summary dl {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 5px;
+  margin: 3px 0 0;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255,255,255,.09);
+  font: 500 .66rem/1.45 system-ui, sans-serif;
+}
+
+.opponent-ack-summary dt { color: #bba875; }
+.opponent-ack-summary dd {
+  margin: 0;
+  max-height: 2.9em;
+  overflow: hidden;
+  color: #aeb9c7;
+}
+
+.opponent-ack-summary ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 3px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.opponent-ack-summary li {
+  padding: 3px 7px;
+  border: 1px solid rgba(208, 111, 97, .35);
+  border-radius: 999px;
+  color: #f0b3aa;
+  background: rgba(110, 41, 35, .22);
+  font: 700 .64rem system-ui, sans-serif;
 }
 
 .opponent-ack button {
@@ -659,6 +716,7 @@ body.battle-presentation-locked .battle-v2::after {
 }
 
 .opponent-ack small {
+  grid-column: 1;
   color: #8795a7;
   font: 500 .64rem system-ui, sans-serif;
 }
