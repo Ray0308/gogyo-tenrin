@@ -662,29 +662,43 @@ function turnSteps(card: CardInfo): number[] {
   const reverse = card.effectText.match(/逆方向へ?(\d+)段階/);
   return reverse ? [-Number(reverse[1])] : [];
 }
-function directionLabel(steps: number): string {
-  return steps > 0 ? `正方向へ${steps}段階` : `逆方向へ${Math.abs(steps)}段階`;
-}
 function choiceLabel(card: CardInfo, value: string, fallback: string): string {
   const steps = Number(value);
   if (!state.playerAttribute || !Number.isFinite(steps)) return fallback;
-  return `${fallback}（${elements[state.playerAttribute].name} → ${elements[rotateElement(state.playerAttribute, steps)].name}）`;
+  return `${elements[rotateElement(state.playerAttribute, steps)].name}になる`;
+}
+function turnResultElements(card: CardInfo, respectSelection = false): FiveElement[] {
+  if (!state.playerAttribute) return [];
+  const steps = turnSteps(card);
+  const selected = respectSelection && selectedChoice !== undefined ? Number(selectedChoice) : undefined;
+  const shownSteps = selected !== undefined && steps.includes(selected) ? [selected] : steps;
+  return shownSteps.map((amount) => rotateElement(state.playerAttribute!, amount));
+}
+function visibleCardAttribute(card: CardInfo): string {
+  const results = turnResultElements(card, true);
+  if (results.length > 0) return `使用後 ${results.map((element) => elements[element].name).join(" / ")}`;
+  return `札属性 ${card.attribute}`;
+}
+function compactCardAttribute(card: CardInfo): string {
+  const results = turnResultElements(card);
+  if (results.length > 0) return `→ ${results.map((element) => elements[element].name).join("/")}`;
+  return `札 ${card.attribute}`;
 }
 function cardOutcome(card: CardInfo): string {
   const current = state.playerAttribute;
   const steps = turnSteps(card);
   if (steps.length > 0) {
-    if (!current) return `<section class="card-outcome"><b>転輪後の属性</b><p>対戦中は、現在属性から到達する属性をここに表示します。</p><small>札属性「${escapeHtml(card.attribute)}」へ変わる効果ではありません。</small></section>`;
+    if (!current) return `<section class="card-outcome"><b>使用後の属性</b><p>対戦中は、使用後になる属性をここに表示します。</p></section>`;
     const selected = selectedChoice !== undefined ? Number(selectedChoice) : undefined;
     const shownSteps = selected !== undefined && steps.includes(selected) ? [selected] : steps;
-    const outcomes = shownSteps.map((amount) => `<span><i>${escapeHtml(directionLabel(amount))}</i><strong>${elements[current].name} → ${elements[rotateElement(current, amount)].name}</strong></span>`).join("");
-    return `<section class="card-outcome"><b>この場面での転輪結果</b><div>${outcomes}</div><small>札属性「${escapeHtml(card.attribute)}」は判定に使う札自身の属性で、転輪先ではありません。</small></section>`;
+    const outcomes = shownSteps.map((amount) => `<span><strong>${elements[rotateElement(current, amount)].name}になる</strong></span>`).join("");
+    return `<section class="card-outcome"><b>使用後の属性</b><div>${outcomes}</div></section>`;
   }
   if (card.cardId.includes("_sosei_") && current) {
     const requiredName = card.effectText.match(/現在属性が([木火土金水])の場合/)?.[1];
     const success = requiredName === elements[current].name;
     const next = success ? rotateElement(current, 1) : current;
-    return `<section class="card-outcome"><b>この場面で起きること</b><div><span><i>${success ? "相生成立" : "通常効果"}</i><strong>霊気 ＋${success ? 3 : 1}　属性 ${elements[current].name} → ${elements[next].name}</strong></span></div><small>札属性「${escapeHtml(card.attribute)}」そのものへ変わる効果ではありません。</small></section>`;
+    return `<section class="card-outcome"><b>使用結果</b><div><span><i>霊気 ＋${success ? 3 : 1}</i><strong>${elements[next].name}になる</strong></span></div></section>`;
   }
   return "";
 }
@@ -811,10 +825,10 @@ function renderMechanicGuide(card: CardInfo): string {
 }
 function renderCardArt(card: CardInfo, compact = false): string {
   const summonImageId = summonArt[card.cardId];
-  if (summonImageId) return `<div class="card-art ${compact ? "compact" : ""}"><img src="${shikigamiImagePath(summonImageId)}" alt="${escapeHtml(card.name)}" loading="lazy"><i aria-hidden="true"></i><span>${compact ? "" : "札 "}${escapeHtml(card.attribute)}</span></div>`;
+  if (summonImageId) return `<div class="card-art ${compact ? "compact" : ""}"><img src="${shikigamiImagePath(summonImageId)}" alt="${escapeHtml(card.name)}" loading="lazy"><i aria-hidden="true"></i><span>${escapeHtml(compact ? card.attribute : visibleCardAttribute(card))}</span></div>`;
   const sigil = cardSigil(card);
   const shortName = card.name.split("：").at(-1) ?? card.name;
-  return `<div class="card-art card-art-sigil sigil-${sigil.key} ${compact ? "compact" : ""}" role="img" aria-label="${escapeHtml(shortName)}の術式紋"><div class="sigil-orbit" aria-hidden="true"><b class="sigil-mark">${escapeHtml(sigil.mark)}</b><small>${escapeHtml(shortName)}</small></div><i aria-hidden="true"></i><span>${compact ? "" : "札 "}${escapeHtml(card.attribute)}</span></div>`;
+  return `<div class="card-art card-art-sigil sigil-${sigil.key} ${compact ? "compact" : ""}" role="img" aria-label="${escapeHtml(shortName)}の術式紋"><div class="sigil-orbit" aria-hidden="true"><b class="sigil-mark">${escapeHtml(sigil.mark)}</b><small>${escapeHtml(shortName)}</small></div><i aria-hidden="true"></i><span>${escapeHtml(compact ? card.attribute : visibleCardAttribute(card))}</span></div>`;
 }
 function renderCardDetail(card: CardInfo, footer = ""): string {
   const showBeginnerHelp = state.mode === "cpu" && cpuExperienceMode === "tutorial";
@@ -825,7 +839,7 @@ function renderCardDetail(card: CardInfo, footer = ""): string {
   return `<div class="card-detail card-detail-rich ${cardAttributeClass(card.attribute)}">
     <div class="card-detail-frame">${renderCardArt(card)}
       <header><p class="eyebrow">${escapeHtml(card.category)} / ${escapeHtml(card.system)}</p><h2>${escapeHtml(card.name)}</h2></header>
-      <div class="card-detail-meta"><span>札属性 ${escapeHtml(card.attribute)}</span><span>コスト ${card.cost}</span><span>消費霊気 ${card.mpCost}</span></div>
+      <div class="card-detail-meta"><span>${escapeHtml(visibleCardAttribute(card))}</span><span>コスト ${card.cost}</span><span>消費霊気 ${card.mpCost}</span></div>
       ${cardOutcome(card)}
       ${showBeginnerHelp ? `<section class="card-plain-guide"><b>かんたんに言うと</b><p>${escapeHtml(plainCardGuide(card))}</p></section>` : ""}
       <section class="card-effect-copy ${effectExpanded ? "is-expanded" : ""}"><button type="button" data-action="toggle-effect-details" aria-expanded="${effectExpanded}"><span><b>効果</b><small>${effectExpanded ? "詳しい説明を閉じる" : "タップで詳しく見る"}</small></span><i aria-hidden="true">${effectExpanded ? "−" : "＋"}</i></button><p>${escapeHtml(card.effectText)}</p>${effectExpanded ? renderMechanicGuide(card) : ""}</section>
@@ -863,7 +877,7 @@ function renderBattle(): void {
     return `<button ${battle.pendingDiscard ? `data-discard-instance="${card.instanceId}"` : `data-card-instance="${card.instanceId}"`} class="hand-card hand-card-simple ${cardAttributeClass(card.attribute)} ${card.playable ? "" : "unplayable"}" aria-label="${escapeHtml(card.name)}。タップで選択、長押しで詳細">
     <span class="hand-card-system">${escapeHtml(card.system)}</span>
     <span class="hand-card-name"><i class="hand-card-mark sigil-${sigil.key}" aria-hidden="true">${escapeHtml(sigil.mark)}</i><strong>${escapeHtml(card.name.split("：").at(-1) ?? card.name)}</strong></span>
-    <span class="hand-card-attribute">札 ${escapeHtml(card.attribute)}</span><span class="hand-card-cost">コスト ${card.cost}</span>${card.mpCost > 0 ? `<span class="hand-card-mp">霊気 ${card.mpCost}</span>` : ""}
+    <span class="hand-card-attribute">${escapeHtml(compactCardAttribute(card))}</span><span class="hand-card-cost">コスト ${card.cost}</span>${card.mpCost > 0 ? `<span class="hand-card-mp">霊気 ${card.mpCost}</span>` : ""}
     <small>${escapeHtml(shortCardEffect(card.effectText))}</small>
   </button>`;
   }).join("");
@@ -1031,7 +1045,7 @@ app.addEventListener("click", (event) => {
     return;
   }
   if (cardInstanceId && !busy && !pendingCardId && !battlePresentationLocked()) { selectedCardId = cardInstanceId; selectedChoice = undefined; expandedEffectCardId = null; dialog = "card"; render(); return; }
-  if (catalogCardId) { selectedCatalogCardId = catalogCardId; expandedEffectCardId = null; dialog = "catalog_card"; render(); return; }
+  if (catalogCardId) { selectedCatalogCardId = catalogCardId; selectedChoice = undefined; expandedEffectCardId = null; dialog = "catalog_card"; render(); return; }
   if (attribute && !busy) { busy = true; render(); socket.emit("attribute:select", { attribute }, applyResult); return; }
   if (!action || busy) return;
   if (action === "retry") socket.connect();

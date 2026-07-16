@@ -60,13 +60,15 @@ test("card attributes and turn results cannot be mistaken for one another", asyn
   const client = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
   const css = await readFile(path.join(repositoryRoot, "client", "card-ui.css"), "utf8");
   assert.match(client, /札属性/);
-  assert.match(client, /この場面での転輪結果/);
-  assert.match(client, /札自身の属性で、転輪先ではありません/);
+  assert.match(client, /使用後の属性/);
+  assert.match(client, /になる/);
   assert.match(client, /function rotateElement/);
+  assert.match(client, /function compactCardAttribute/);
   assert.match(client, /転輪方向/);
   assert.match(client, /自分の空き式神枠/);
   assert.match(client, /相手の攻撃への防御受付中/);
   assert.match(css, /\.card-outcome/);
+  assert.doesNotMatch(client, /この場面での転輪結果/);
 });
 
 test("decorative English labels are localized without renaming formal abbreviations", async () => {
