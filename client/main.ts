@@ -52,6 +52,7 @@ let screen: LocalScreen = "connecting";
 let dialog: Dialog = null;
 let selectedCardId: string | null = null;
 let selectedCatalogCardId: string | null = null;
+let expandedEffectCardId: string | null = null;
 let pendingCardId: string | null = null;
 let selectedChoice: string | undefined;
 let state: SessionState = { phase: "title" };
@@ -135,6 +136,13 @@ function retirementDuration(): number {
 function enqueueBattleCue(cue: BattleCue): void {
   if (presentationBlockedByReaction) return;
   if (cue.key && (activeBattleCueKey === cue.key || battleCueQueue.some((queued) => queued.key === cue.key))) return;
+  if (dialog === "card" || dialog === "catalog_card") {
+    dialog = null;
+    selectedCardId = null;
+    selectedCatalogCardId = null;
+    expandedEffectCardId = null;
+    document.querySelector(".modal-backdrop")?.remove();
+  }
   battleCueQueue.push(cue);
   playNextBattleCue();
 }
@@ -428,6 +436,38 @@ function shell(content: string, screenClass = ""): string {
 }
 function error(): string { return errorMessage ? `<p class="error" role="alert">${escapeHtml(errorMessage)}</p>` : ""; }
 
+const uiMessageTranslations: Record<string, string> = {
+  "Cards cannot be used now.": "現在はカードを使用できません。",
+  "Invalid target.": "その対象は選べません。",
+  "Invalid target or choice.": "対象または選択内容が無効です。",
+  "It is not your card-use phase.": "現在はあなたのカード使用フェーズではありません。",
+  "It is not your turn.": "現在はあなたのターンではありません。",
+  "No resumable match was found.": "復帰できる対戦が見つかりませんでした。",
+  "Enter a player name.": "プレイヤー名を入力してください。",
+  "The room is unavailable.": "この部屋には参加できません。",
+  "The room cannot start yet.": "まだ対戦を開始できません。",
+  "Attributes cannot be selected now.": "現在は属性を選択できません。",
+  "Invalid attribute.": "選択した属性が無効です。",
+  "The match cannot be entered.": "対戦へ進めません。",
+  "Match data is unavailable or paused.": "対戦情報を利用できないか、対戦が一時停止中です。",
+  "No discard is pending.": "現在は捨て札を選ぶ必要がありません。",
+  "The card is not in hand.": "そのカードは手札にありません。",
+  "A rematch cannot be requested now.": "現在は再戦を申し込めません。",
+  "No online room is active.": "参加中のオンライン部屋がありません。",
+};
+function localizeUiMessage(message: string): string {
+  return uiMessageTranslations[message] ?? message;
+}
+function localizeBattleLogEntry(entry: string): string {
+  return entry
+    .replaceAll("Normal attack", "通常攻撃")
+    .replaceAll("Turn time expired.", "制限時間が終了しました。")
+    .replaceAll("A player left the match.", "プレイヤーが対戦から退出しました。")
+    .replaceAll("Reconnect timeout. The connected player wins.", "再接続の制限時間を超えたため、接続中のプレイヤーが勝利しました。")
+    .replaceAll("Host", "部屋主")
+    .replaceAll("Guest", "参加者");
+}
+
 function render(): void {
   const phase = state.phase;
   if (screen === "connecting") renderConnecting();
@@ -605,6 +645,55 @@ function plainCardGuide(card: Pick<CardInfo, "system" | "category" | "effectText
   if (card.effectText.includes("相剋")) return "有利な五行関係を作り、攻撃を強くするためのカードです。";
   return "効果欄を上から順に処理します。対象と使用タイミングを確認してください。";
 }
+interface MechanicGuide { heading: string; steps: string[]; notes?: string[] }
+const terrainGuides: Record<string, MechanicGuide> = {
+  card_terrain_chinju_forest: {
+    heading: "ターンが終わるたび、すべての式神を回復",
+    steps: ["自分または相手のターンが終了する", "敵味方を問わず、場にいる式神すべてのHPを1回復する"],
+    notes: ["プレイヤーは回復しません。", "最大HPを超えて回復しません。"],
+  },
+  card_terrain_scorched_earth: {
+    heading: "ターンが終わるたび、すべての式神へダメージ",
+    steps: ["自分または相手のターンが終了する", "敵味方を問わず、場にいる式神すべてへ1ダメージを与える", "HPが0になった式神は退場する"],
+    notes: ["プレイヤーにはダメージを与えません。"],
+  },
+  card_terrain_clear_stream: {
+    heading: "ターン開始時、両者の霊気を増やす",
+    steps: ["いずれかのプレイヤーがターンを開始する", "自分と相手の霊気をそれぞれ1増やす"],
+    notes: ["霊気は最大30を超えません。"],
+  },
+  card_terrain_mineral_vein: {
+    heading: "手番プレイヤーのコストを追加で1増やす",
+    steps: ["ターン開始時、通常どおりコストを5まで回復する", "そのターンのプレイヤーだけ、現在コストをさらに1増やす"],
+    notes: ["追加分は基本コスト5を超えて保持できます。", "余ったコストはターン終了時に失われます。"],
+  },
+  card_terrain_sacred_domain: {
+    heading: "場のすべての式神が受けるダメージを1軽減",
+    steps: ["式神がダメージを受ける", "敵味方を問わず、そのダメージを1減らす"],
+    notes: ["プレイヤーが受けるダメージは軽減しません。", "ダメージは0未満になりません。"],
+  },
+  card_terrain_yomi_road: {
+    heading: "式神が退場すると、その所有者が霊気を得る",
+    steps: ["式神のHPが0以下になり退場する", "退場した式神を持っていたプレイヤーの霊気を1増やす"],
+    notes: ["消滅は退場ではないため発動しません。", "霊気は最大30を超えません。"],
+  },
+};
+function mechanicGuide(card: CardInfo): MechanicGuide {
+  const terrain = terrainGuides[card.cardId];
+  if (terrain) return { ...terrain, notes: [...(terrain.notes ?? []), "地形は盤面に1つだけです。新しい地形を置くと、古い地形は消滅します。"] };
+  const steps = card.effectText.split("。").map((step) => step.trim()).filter(Boolean);
+  const notes: string[] = [];
+  if (card.system === "結界術") notes.push("結界は自分側に1つだけです。新しい結界を置くと、古い結界は消滅します。");
+  if (card.category === "防御札") notes.push("相手の攻撃中に表示される防御・反応受付で使用します。");
+  if (card.effectText.includes("属性一致")) notes.push("属性一致は、自分の現在属性とカード属性が同じ場合に成立します。");
+  return { heading: "効果は次の順に処理されます", steps: steps.length ? steps : [card.effectText], notes };
+}
+function renderMechanicGuide(card: CardInfo): string {
+  const guide = mechanicGuide(card);
+  const steps = guide.steps.map((step) => "<li>" + escapeHtml(step) + "</li>").join("");
+  const notes = guide.notes?.length ? "<ul>" + guide.notes.map((note) => "<li>" + escapeHtml(note) + "</li>").join("") + "</ul>" : "";
+  return '<div class="mechanic-guide"><strong>' + escapeHtml(guide.heading) + "</strong><ol>" + steps + "</ol>" + notes + "</div>";
+}
 function renderCardArt(card: CardInfo, compact = false): string {
   const summonImageId = summonArt[card.cardId];
   if (summonImageId) return `<div class="card-art ${compact ? "compact" : ""}"><img src="${shikigamiImagePath(summonImageId)}" alt="${escapeHtml(card.name)}" loading="lazy"><i aria-hidden="true"></i><span>${escapeHtml(card.attribute)}</span></div>`;
@@ -614,6 +703,7 @@ function renderCardArt(card: CardInfo, compact = false): string {
 }
 function renderCardDetail(card: CardInfo, footer = ""): string {
   const showBeginnerHelp = state.mode === "cpu" && cpuExperienceMode === "tutorial";
+  const effectExpanded = expandedEffectCardId === card.cardId;
   const terms = showBeginnerHelp
     ? cardGlossary(card).map(([term, explanation]) => `<li><b>${escapeHtml(term)}</b><span>${escapeHtml(explanation)}</span></li>`).join("")
     : "";
@@ -622,7 +712,7 @@ function renderCardDetail(card: CardInfo, footer = ""): string {
       <header><p class="eyebrow">${escapeHtml(card.category)} / ${escapeHtml(card.system)}</p><h2>${escapeHtml(card.name)}</h2></header>
       <div class="card-detail-meta"><span>属性 ${escapeHtml(card.attribute)}</span><span>コスト ${card.cost}</span><span>霊気 ${card.mpCost}</span></div>
       ${showBeginnerHelp ? `<section class="card-plain-guide"><b>かんたんに言うと</b><p>${escapeHtml(plainCardGuide(card))}</p></section>` : ""}
-      <section class="card-effect-copy"><h3>効果</h3><p>${escapeHtml(card.effectText)}</p></section>
+      <section class="card-effect-copy ${effectExpanded ? "is-expanded" : ""}"><button type="button" data-action="toggle-effect-details" aria-expanded="${effectExpanded}"><span><b>効果</b><small>${effectExpanded ? "詳しい説明を閉じる" : "タップで詳しく見る"}</small></span><i aria-hidden="true">${effectExpanded ? "−" : "＋"}</i></button><p>${escapeHtml(card.effectText)}</p>${effectExpanded ? renderMechanicGuide(card) : ""}</section>
       <dl class="card-facts"><div><dt>対象</dt><dd>${escapeHtml(card.target)}</dd></div><div><dt>使える時</dt><dd>${escapeHtml(card.timing)}</dd></div></dl>
       ${terms ? `<section class="term-help"><h3>このカードの用語</h3><ul>${terms}</ul></section>` : ""}
       ${card.flavorText ? `<p class="flavor">${escapeHtml(card.flavorText)}</p>` : ""}${footer}
@@ -670,7 +760,7 @@ function renderBattle(): void {
   const targetGuide = targeting && pendingTarget ? `<div class="target-guide"><strong>${escapeHtml(pendingCard.target || targetLabels[pendingTarget])}を選択</strong><span>${targetGuideText}</span>${button("キャンセル", "cancel-target", "small text")}</div>` : "";
   const opponentHasTaunt = battle.cpu.shikigami.some((unit) => unit.keywords.includes("挑発"));
   const targetAttribute = (target: CardPlayTarget): string => targeting && (pendingTarget === target || (pendingTarget === "cpu_any" && target === "cpu_player")) && !(target === "cpu_player" && opponentHasTaunt && !pendingCard?.ignoreTaunt) ? 'data-target="' + target + '"' : "";
-  const log = battle.log.slice(-8).map((entry) => `<li>${escapeHtml(entry)}</li>`).join("");
+  const log = battle.log.slice(-8).map((entry) => `<li>${escapeHtml(localizeBattleLogEntry(entry))}</li>`).join("");
   const finished = battle.phase === "finished";
   const resultActions=state.mode==="online"?`${button("\u518d\u6226\u3092\u7533\u3057\u8fbc\u3080","rematch")}${button("\u518d\u6226\u3092\u3084\u3081\u308b","rematch-cancel","secondary")}`:button("\u518d\u6226","rematch");
   const result = finished ? `<div class="battle-result"><strong>${battle.winner === "player" ? "\u52dd\u5229" : "\u6557\u5317"}</strong><span>\u5bfe\u6226\u304c\u7d42\u4e86\u3057\u307e\u3057\u305f</span><div class="result-actions">${resultActions}</div></div>` : "";
@@ -727,7 +817,7 @@ function renderDialog(): void {
       ? `<p class="target-guide">反応受付パネルから防御対象を選択してください。</p>`
       : card.playable
       ? `${card.choiceOptions?.length ? `<label>\u9078\u629e <select data-card-choice>${card.choiceOptions.map(option=>`<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`).join("")}</select></label>` : ""}<button class="menu-button" data-action="prepare-card">使用する</button>`
-      : `<p class="unusable-message">使用不可：${escapeHtml(card.unusableReason ?? "現在は使用できません。")}</p>`;
+      : `<p class="unusable-message">使用不可：${escapeHtml(localizeUiMessage(card.unusableReason ?? "現在は使用できません。"))}</p>`;
     content = renderCardDetail(card, useControl);
   } else {
     content = `<h2>設定</h2><label>BGM音量<input type="range" min="0" max="100" value="${settings.bgm}" data-setting="bgm"></label><label>効果音音量<input type="range" min="0" max="100" value="${settings.sound}" data-setting="sound"></label><label class="check"><input type="checkbox" ${settings.vibration ? "checked" : ""} data-setting="vibration">振動</label><label>演出速度 <select data-setting="speed"><option value="slow" ${settings.speed === "slow" ? "selected" : ""}>ゆっくり</option><option value="normal" ${settings.speed === "normal" ? "selected" : ""}>標準</option><option value="fast" ${settings.speed === "fast" ? "selected" : ""}>速い</option></select></label><label class="check"><input type="checkbox" ${settings.log ? "checked" : ""} data-setting="log">対戦ログを表示</label>`;
@@ -740,7 +830,7 @@ function applyResult(result: ActionResult): void {
   if (!result.ok) {
     reactionSubmitting = false;
     submittedReactionDeadline = undefined;
-    errorMessage = result.message ?? "処理に失敗しました。";
+    errorMessage = localizeUiMessage(result.message ?? "処理に失敗しました。");
     render();
     return;
   }
@@ -821,8 +911,8 @@ app.addEventListener("click", (event) => {
     });
     return;
   }
-  if (cardInstanceId && !busy && !pendingCardId) { selectedCardId = cardInstanceId; dialog = "card"; render(); return; }
-  if (catalogCardId) { selectedCatalogCardId = catalogCardId; dialog = "catalog_card"; render(); return; }
+  if (cardInstanceId && !busy && !pendingCardId && !battlePresentationLocked()) { selectedCardId = cardInstanceId; expandedEffectCardId = null; dialog = "card"; render(); return; }
+  if (catalogCardId) { selectedCatalogCardId = catalogCardId; expandedEffectCardId = null; dialog = "catalog_card"; render(); return; }
   if (attribute && !busy) { busy = true; render(); socket.emit("attribute:select", { attribute }, applyResult); return; }
   if (!action || busy) return;
   if (action === "retry") socket.connect();
@@ -837,7 +927,7 @@ app.addEventListener("click", (event) => {
   else if (action === "terrain-info") {
     const terrainName = state.battle?.terrain?.name;
     const terrainCard = cardCatalog.find((card) => card.system === "地脈術" && (card.name === terrainName || card.name.endsWith(`：${terrainName}`)));
-    if (terrainCard) { selectedCatalogCardId = terrainCard.cardId; dialog = "catalog_card"; }
+    if (terrainCard) { selectedCatalogCardId = terrainCard.cardId; expandedEffectCardId = null; dialog = "catalog_card"; }
     else { dialog = "rules"; errorMessage = terrainName ? `${terrainName}の詳細データを読み込めませんでした。` : ""; }
     render();
   }
@@ -848,7 +938,8 @@ app.addEventListener("click", (event) => {
     render();
   }
   else if (action === "tutorial-skip") { tutorialStep = null; render(); }
-  else if (action === "close-dialog") { dialog = null; selectedCardId = null; render(); }
+  else if (action === "toggle-effect-details") { const cardId = dialog === "card" ? state.battle?.player.hand.find((item) => item.instanceId === selectedCardId)?.cardId : selectedCatalogCardId; expandedEffectCardId = expandedEffectCardId === cardId ? null : cardId ?? null; render(); }
+  else if (action === "close-dialog") { dialog = null; selectedCardId = null; expandedEffectCardId = null; render(); }
   else if (action === "prepare-card" && selectedCardId) { const card=state.battle?.player.hand.find(item=>item.instanceId===selectedCardId); selectedChoice=(document.querySelector<HTMLSelectElement>("[data-card-choice]")?.value ?? card?.choiceOptions?.[0]?.value); pendingCardId = selectedCardId; dialog = null; render(); }
   else if (action === "cancel-target") { clearCardSelection(); errorMessage = ""; render(); }
   else if (action === "room-start") { busy=true; render(); socket.emit("room:start",applyResult); }

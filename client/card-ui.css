@@ -241,6 +241,98 @@
   margin: 5px 0 0;
   line-height: 1.75;
 }
+.card-effect-copy > button {
+  appearance: none;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0;
+  color: #e8d49b;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.card-effect-copy > button span {
+  display: grid;
+  gap: 2px;
+}
+.card-effect-copy > button b {
+  font-size: .8rem;
+  letter-spacing: .08em;
+}
+.card-effect-copy > button small {
+  color: #91a1b5;
+  font: 500 .68rem system-ui, sans-serif;
+}
+.card-effect-copy > button i {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(223, 191, 113, .35);
+  border-radius: 50%;
+  color: #efd27e;
+  font: normal 1.05rem system-ui, sans-serif;
+}
+.card-effect-copy.is-expanded {
+  border-color: rgba(223, 191, 113, .42);
+  background: rgba(235, 223, 189, .085);
+}
+.mechanic-guide {
+  margin-top: 13px;
+  padding-top: 13px;
+  border-top: 1px solid rgba(223, 191, 113, .2);
+  color: #e5e8ec;
+  font-family: system-ui, sans-serif;
+}
+.mechanic-guide > strong {
+  color: #f0d58a;
+  font-size: .82rem;
+}
+.mechanic-guide ol,
+.mechanic-guide ul {
+  margin: 9px 0 0;
+  padding-left: 1.35rem;
+}
+.mechanic-guide ol {
+  display: grid;
+  gap: 8px;
+  counter-reset: mechanic-step;
+  list-style: none;
+  padding-left: 0;
+}
+.mechanic-guide ol li {
+  position: relative;
+  min-height: 26px;
+  padding-left: 34px;
+  line-height: 1.55;
+}
+.mechanic-guide ol li::before {
+  counter-increment: mechanic-step;
+  content: counter(mechanic-step);
+  position: absolute;
+  left: 0;
+  top: -1px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(223, 191, 113, .42);
+  border-radius: 50%;
+  color: #efd27e;
+  font-size: .68rem;
+}
+.mechanic-guide ul {
+  display: grid;
+  gap: 5px;
+  color: #aeb9c7;
+  font-size: .74rem;
+  line-height: 1.55;
+}
 .card-effect-copy h3,
 .term-help h3 {
   margin: 0;
@@ -388,6 +480,11 @@
   box-shadow: 0 10px 36px rgba(0,0,0,.45);
   font-size: .76rem;
   pointer-events: none;
+}
+
+/* 詳細確認は通常の盤面表示より前面に置く。自動演出開始時はクライアント側で閉じる。 */
+.modal-backdrop {
+  z-index: 140;
 }
 
 @media (max-width: 520px) {

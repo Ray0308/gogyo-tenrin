@@ -187,3 +187,26 @@ test("initial attribute selection uses a compact five-element wheel", async () =
   assert.match(css, /\.attribute-wheel[\s\S]*aspect-ratio:\s*1/);
   assert.match(css, /\.attribute-screen \.ambient-ring[\s\S]*display:\s*none/);
 });
+
+test("card effects can expand into practical Japanese guidance", async () => {
+  const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
+  const css = await readFile(path.join(repositoryRoot, "client", "card-ui.css"), "utf8");
+  for (const terrain of [
+    "card_terrain_chinju_forest",
+    "card_terrain_scorched_earth",
+    "card_terrain_clear_stream",
+    "card_terrain_mineral_vein",
+    "card_terrain_sacred_domain",
+    "card_terrain_yomi_road",
+  ]) {
+    assert.match(source, new RegExp(terrain));
+  }
+  assert.match(source, /data-action="toggle-effect-details"/);
+  assert.match(source, /タップで詳しく見る/);
+  assert.match(source, /function renderMechanicGuide/);
+  assert.match(source, /localizeUiMessage\(card\.unusableReason/);
+  assert.match(source, /document\.querySelector\("\.modal-backdrop"\)\?\.remove\(\)/);
+  assert.match(css, /\.card-effect-copy > button/);
+  assert.match(css, /\.mechanic-guide/);
+  assert.match(css, /\.modal-backdrop[\s\S]*z-index:\s*140/);
+});
