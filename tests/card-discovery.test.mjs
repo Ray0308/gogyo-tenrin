@@ -64,6 +64,8 @@ test("card attributes and turn results cannot be mistaken for one another", asyn
   assert.match(client, /になる/);
   assert.match(client, /function rotateElement/);
   assert.match(client, /function compactCardAttribute/);
+  assert.match(client, /function cardDetailVisualAttribute/);
+  assert.match(client, /cardAttributeClass\(cardDetailVisualAttribute\(card\)\)/);
   assert.match(client, /転輪方向/);
   assert.match(client, /自分の空き式神枠/);
   assert.match(client, /相手の攻撃への防御受付中/);

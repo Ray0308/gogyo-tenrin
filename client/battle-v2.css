@@ -707,12 +707,11 @@ body.battle-presentation-locked .battle-v2::after {
   cursor: pointer;
 }
 
-.opponent-ack button b {
+.opponent-ack small b {
   display: inline-grid;
   place-items: center;
   min-width: 20px;
-  margin-left: 4px;
-  color: #4d3910;
+  color: #d7c9a3;
 }
 
 .opponent-ack small {

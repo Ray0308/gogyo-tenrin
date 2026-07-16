@@ -239,10 +239,10 @@ function showOpponentAcknowledgement(): void {
   const resultItems = detail.results.map((result) => `<li>${escapeHtml(result)}</li>`).join("");
   const layer = document.createElement("div");
   layer.className = "opponent-ack-layer";
-  layer.innerHTML = `<div class="opponent-ack"><div class="opponent-ack-summary"><span>相手が使用</span><strong>${escapeHtml(detail.title)}</strong><p>${escapeHtml(detail.action)}</p>${detail.effect ? `<dl><dt>効果</dt><dd>${escapeHtml(detail.effect)}</dd></dl>` : ""}${resultItems ? `<ul>${resultItems}</ul>` : ""}</div><button type="button">了解　次へ <b>5</b></button><small>操作しなくても5秒後に進みます</small></div>`;
+  layer.innerHTML = `<div class="opponent-ack"><div class="opponent-ack-summary"><span>相手が使用</span><strong>${escapeHtml(detail.title)}</strong><p>${escapeHtml(detail.action)}</p>${detail.effect ? `<dl><dt>効果</dt><dd>${escapeHtml(detail.effect)}</dd></dl>` : ""}${resultItems ? `<ul>${resultItems}</ul>` : ""}</div><button type="button">次へ</button><small><b data-ack-countdown>5</b>秒後に自動で進みます</small></div>`;
   document.body.append(layer);
   const button = layer.querySelector<HTMLButtonElement>("button")!;
-  const countdown = layer.querySelector<HTMLElement>("b")!;
+  const countdown = layer.querySelector<HTMLElement>("[data-ack-countdown]")!;
   button.addEventListener("click", resolveOpponentAcknowledgement, { once: true });
   opponentAckInterval = window.setInterval(() => {
     countdown.textContent = String(Math.max(0, Math.ceil((deadline - Date.now()) / 1000)));
@@ -716,6 +716,10 @@ function compactCardAttribute(card: CardInfo): string {
   if (results.length > 0) return `→ ${results.map((element) => elements[element].name).join("/")}`;
   return `札 ${card.attribute}`;
 }
+function cardDetailVisualAttribute(card: CardInfo): string {
+  const results = turnResultElements(card, true);
+  return results.length === 1 ? elements[results[0]].name : card.attribute;
+}
 function cardOutcome(card: CardInfo): string {
   const current = state.playerAttribute;
   const steps = turnSteps(card);
@@ -868,7 +872,7 @@ function renderCardDetail(card: CardInfo, footer = ""): string {
   const terms = showBeginnerHelp
     ? cardGlossary(card).map(([term, explanation]) => `<li><b>${escapeHtml(term)}</b><span>${escapeHtml(explanation)}</span></li>`).join("")
     : "";
-  return `<div class="card-detail card-detail-rich ${cardAttributeClass(card.attribute)}">
+  return `<div class="card-detail card-detail-rich ${cardAttributeClass(cardDetailVisualAttribute(card))}">
     <div class="card-detail-frame">${renderCardArt(card)}
       <header><p class="eyebrow">${escapeHtml(card.category)} / ${escapeHtml(card.system)}</p><h2>${escapeHtml(card.name)}</h2></header>
       <div class="card-detail-meta"><span>${escapeHtml(visibleCardAttribute(card))}</span><span>コスト ${card.cost}</span><span>消費霊気 ${card.mpCost}</span></div>
@@ -1076,7 +1080,7 @@ app.addEventListener("click", (event) => {
     });
     return;
   }
-  if (cardInstanceId && !busy && !pendingCardId && !battlePresentationLocked()) { selectedCardId = cardInstanceId; selectedChoice = undefined; expandedEffectCardId = null; dialog = "card"; render(); return; }
+  if (cardInstanceId && !busy && !pendingCardId && !battlePresentationLocked()) { const card=state.battle?.player.hand.find((item)=>item.instanceId===cardInstanceId); selectedCardId = cardInstanceId; selectedChoice = card?.choiceOptions?.[0]?.value; expandedEffectCardId = null; dialog = "card"; render(); return; }
   if (catalogCardId) { selectedCatalogCardId = catalogCardId; selectedChoice = undefined; expandedEffectCardId = null; dialog = "catalog_card"; render(); return; }
   if (attribute && !busy) { busy = true; render(); socket.emit("attribute:select", { attribute }, applyResult); return; }
   if (!action || busy) return;

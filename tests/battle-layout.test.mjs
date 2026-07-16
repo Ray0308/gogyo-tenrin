@@ -87,7 +87,8 @@ test("opponent actions wait for acknowledgement or advance after five seconds", 
   const css = await readFile(path.join(repositoryRoot, "client", "battle-v2.css"), "utf8");
   assert.match(source, /showOpponentAcknowledgement/);
   assert.match(source, /buildOpponentAckDetail/);
-  assert.match(source, /了解　次へ/);
+  assert.match(source, /<button type="button">次へ<\/button>/);
+  assert.doesNotMatch(source, /了解　次へ/);
   assert.match(source, /相手が使用/);
   assert.match(source, /usedCard\?\.effectText/);
   assert.match(source, /change\.amount.*ダメージ/);
