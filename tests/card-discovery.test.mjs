@@ -7,12 +7,24 @@ import { repositoryRoot } from "../scripts/lib/master-data.mjs";
 test("hand cards use imagery and expose a long-press detail view", async () => {
   const client = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
   const css = await readFile(path.join(repositoryRoot, "client", "card-ui.css"), "utf8");
-  assert.match(client, /function cardArtPath/);
+  assert.match(client, /function cardSigil/);
   assert.match(client, /renderCardArt\(card, true\)/);
   assert.match(client, /長押しで詳細/);
   assert.match(client, /window\.setTimeout\([\s\S]*420/);
   assert.match(css, /\.hand-card-simple/);
   assert.match(css, /\.card-detail-rich/);
+});
+
+test("only summon cards reuse shikigami portraits", async () => {
+  const client = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
+  const css = await readFile(path.join(repositoryRoot, "client", "card-ui.css"), "utf8");
+  assert.doesNotMatch(client, /attributeArt/);
+  assert.match(client, /const summonImageId = summonArt\[card\.cardId\]/);
+  assert.match(client, /card-art-sigil/);
+  assert.match(client, /reidan:\s*"●"/);
+  assert.match(client, /sigil-\$\{sigil\.key\}/);
+  assert.match(css, /\.card-art-sigil/);
+  assert.match(css, /\.sigil-reidan \.sigil-mark/);
 });
 
 test("card details translate jargon without replacing the official terms", async () => {

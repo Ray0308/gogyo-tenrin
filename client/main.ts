@@ -533,13 +533,20 @@ const summonArt: Record<string, string> = {
   card_summon_genki: "img_shikigami_genki",
   card_summon_hinotori: "img_shikigami_hinotori",
 };
-const attributeArt: Record<string, string> = {
-  木: "img_shikigami_kanko", 火: "img_shikigami_hinotori", 土: "img_shikigami_genki",
-  金: "img_shikigami_hakuro", 水: "img_shikigami_kappa", 無属性: "img_shikigami_shirozaru",
+const cardSigils: Record<string, string> = {
+  reidan: "●", zanfu: "斬", senfu: "穿", bakufu: "爆", shokufu: "喰", shufu: "守",
+  utsusemi: "影", kekkaifu: "界", joka: "浄", kassei: "活", fuin: "封", haraekotoba: "祓",
+  tenrin: "輪", sosei: "生", sokoku: "剋", junkan: "巡",
 };
-function cardArtPath(card: Pick<CardInfo, "cardId" | "attribute">): string {
-  const imageId = summonArt[card.cardId] ?? attributeArt[card.attribute] ?? "img_shikigami_shirozaru";
-  return shikigamiImagePath(imageId);
+const systemSigils: Record<string, { key: string; mark: string }> = {
+  霊符術: { key: "reifu", mark: "符" }, 占事略决: { key: "senji", mark: "輪" },
+  陰陽秘術: { key: "onmyo", mark: "陰" }, 結界術: { key: "barrier", mark: "界" },
+  地脈術: { key: "terrain", mark: "脈" }, 禁術: { key: "forbidden", mark: "禁" },
+};
+function cardSigil(card: Pick<CardInfo, "imageId" | "system">): { key: string; mark: string } {
+  const key = card.imageId?.replace(/^img_card_/, "");
+  if (key && cardSigils[key]) return { key, mark: cardSigils[key] };
+  return systemSigils[card.system] ?? { key: "spell", mark: "術" };
 }
 function shortCardEffect(effectText: string): string {
   const first = effectText.split(/[。\n]/).find(Boolean) ?? effectText;
@@ -574,7 +581,11 @@ function plainCardGuide(card: Pick<CardInfo, "system" | "category" | "effectText
   return "効果欄を上から順に処理します。対象と使用タイミングを確認してください。";
 }
 function renderCardArt(card: CardInfo, compact = false): string {
-  return `<div class="card-art ${compact ? "compact" : ""}"><img src="${cardArtPath(card)}" alt="" loading="lazy"><i aria-hidden="true"></i><span>${escapeHtml(card.attribute)}</span></div>`;
+  const summonImageId = summonArt[card.cardId];
+  if (summonImageId) return `<div class="card-art ${compact ? "compact" : ""}"><img src="${shikigamiImagePath(summonImageId)}" alt="${escapeHtml(card.name)}" loading="lazy"><i aria-hidden="true"></i><span>${escapeHtml(card.attribute)}</span></div>`;
+  const sigil = cardSigil(card);
+  const shortName = card.name.split("：").at(-1) ?? card.name;
+  return `<div class="card-art card-art-sigil sigil-${sigil.key} ${compact ? "compact" : ""}" role="img" aria-label="${escapeHtml(shortName)}の術式紋"><div class="sigil-orbit" aria-hidden="true"><b class="sigil-mark">${escapeHtml(sigil.mark)}</b><small>${escapeHtml(shortName)}</small></div><i aria-hidden="true"></i><span>${escapeHtml(card.attribute)}</span></div>`;
 }
 function renderCardDetail(card: CardInfo, footer = ""): string {
   const showBeginnerHelp = state.mode === "cpu" && cpuExperienceMode === "tutorial";

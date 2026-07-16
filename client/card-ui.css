@@ -54,7 +54,68 @@
   color: #f1dfaa;
   background: rgba(3, 11, 20, .82);
   font-weight: 700;
+  z-index: 2;
 }
+.card-art-sigil {
+  color: inherit;
+  --sigil-tone: #d8c58e;
+  background:
+    radial-gradient(circle at 50% 44%, color-mix(in srgb, currentColor 22%, transparent) 0 5%, transparent 6% 19%, color-mix(in srgb, currentColor 18%, transparent) 20% 21%, transparent 22%),
+    radial-gradient(circle at 50% 50%, #12273a 0, #081522 58%, #040b13 100%);
+}
+.wood .card-art-sigil { --sigil-tone: #78bd7a; }
+.fire .card-art-sigil { --sigil-tone: #ef796b; }
+.earth .card-art-sigil { --sigil-tone: #d6ad61; }
+.metal .card-art-sigil { --sigil-tone: #edf0f4; }
+.water .card-art-sigil { --sigil-tone: #69aee6; }
+.neutral .card-art-sigil { --sigil-tone: #b7b8c2; }
+.card-art-sigil::before,
+.card-art-sigil::after {
+  content: "";
+  position: absolute;
+  left: 50%; top: 48%;
+  width: min(58%, 150px); aspect-ratio: 1;
+  border: 1px solid color-mix(in srgb, currentColor 52%, transparent);
+  transform: translate(-50%, -50%) rotate(45deg);
+  opacity: .62;
+}
+.card-art-sigil::after { width: min(42%, 108px); transform: translate(-50%, -50%) rotate(0deg); border-radius: 50%; }
+.sigil-orbit {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  text-shadow: 0 2px 18px #000;
+}
+.sigil-mark {
+  display: grid;
+  place-items: center;
+  width: 82px;
+  aspect-ratio: 1;
+  color: #f2e5bd;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: rgba(5, 15, 25, .72);
+  box-shadow: 0 0 30px color-mix(in srgb, currentColor 25%, transparent), inset 0 0 24px rgba(255,255,255,.04);
+  font-size: 2rem;
+  font-weight: 500;
+}
+.sigil-orbit small { color: #e7d9b1; font-size: .78rem; letter-spacing: .18em; }
+.sigil-reidan .sigil-mark {
+  font-size: 0;
+  border-color: rgba(242, 229, 189, .75);
+  background: radial-gradient(circle at 38% 34%, #fff 0 4%, var(--sigil-tone) 5% 12%, color-mix(in srgb, var(--sigil-tone) 72%, #89baff) 28%, rgba(20, 65, 102, .82) 56%, rgba(3, 12, 22, .96) 75%);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--sigil-tone) 65%, #8cbaff), 0 0 48px color-mix(in srgb, var(--sigil-tone) 28%, transparent);
+}
+.hand-card-simple .sigil-orbit { gap: 0; }
+.hand-card-simple .sigil-mark { width: 36px; font-size: 1rem; }
+.hand-card-simple .sigil-orbit small { display: none; }
+.catalog-card .sigil-mark { width: 42px; font-size: 1.15rem; }
+.catalog-card .sigil-orbit { gap: 0; }
+.catalog-card .sigil-orbit small { display: none; }
 .hand-card-simple .hand-card-system {
   overflow: hidden;
   white-space: nowrap;
