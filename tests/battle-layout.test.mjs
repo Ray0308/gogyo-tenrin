@@ -82,33 +82,41 @@ test("battle presentation locks input and gives retired shikigami a dedicated ef
   assert.match(css, /shikigami-dissolve/);
 });
 
-test("opponent actions wait for acknowledgement or advance after five seconds", async () => {
+test("opponent actions are explained before animation and advance after five seconds", async () => {
   const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
   const css = await readFile(path.join(repositoryRoot, "client", "battle-v2.css"), "utf8");
   assert.match(source, /showOpponentAcknowledgement/);
   assert.match(source, /buildOpponentAckDetail/);
   assert.match(source, /<button type="button">次へ<\/button>/);
   assert.doesNotMatch(source, /了解　次へ/);
-  assert.match(source, /相手が使用/);
+  assert.match(source, /相手の行動/);
   assert.match(source, /usedCard\?\.effectText/);
-  assert.match(source, /change\.amount.*ダメージ/);
+  assert.doesNotMatch(source, /resultItems/);
   assert.match(source, /Date\.now\(\) \+ 5_000/);
   assert.match(source, /setTimeout\(resolveOpponentAcknowledgement, 5_000\)/);
   assert.match(source, /change\.side === "cpu"/);
+  assert.match(source, /pendingPresentationChanges = changes;\s*showOpponentAcknowledgement\(\)/);
+  assert.match(source, /if \(changes\) animateBattleChanges\(changes\)/);
+  assert.match(source, /function actionPreviewText/);
+  assert.match(source, /相手が\$\{usedCardName\}を使用します/);
   assert.match(css, /\.opponent-ack-layer/);
   assert.match(css, /\.opponent-ack button/);
   assert.match(css, /\.opponent-ack-summary/);
 });
 
-test("battle state is revealed at its result cue and completion unlocks the next action", async () => {
+test("battle state is revealed after impact and before a separate retirement cue", async () => {
   const source = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
   assert.match(source, /let pendingPresentationState: SessionState \| null = null/);
   assert.match(source, /const baselineState = pendingPresentationState \?\? state/);
-  assert.match(source, /pendingPresentationState = nextState;[\s\S]*presentationCompletionPending = true;[\s\S]*animateBattleChanges\(changes\)/);
+  assert.match(source, /pendingPresentationState = nextState;[\s\S]*presentationCompletionPending = true;[\s\S]*pendingPresentationChanges = changes/);
   assert.match(source, /function revealPendingPresentationState/);
   assert.match(source, /socket\.emit\("presentation:complete"\)/);
   assert.match(source, /else commitPendingPresentationState\(\)/);
   assert.match(source, /if \(enteringReaction \|\| nextState\.phase !== "battle"\)/);
+  assert.match(source, /const impacts = orderedChanges\.filter/);
+  assert.match(source, /onComplete: change === resultReveal \? revealPendingPresentationState/);
+  assert.match(source, /type === "retire"[\s\S]*showRetireEffect/);
+  assert.match(source, /function actionCueDetail/);
 });
 
 test("reaction decisions preempt presentation and do not run behind animations", async () => {
