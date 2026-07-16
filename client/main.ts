@@ -37,14 +37,14 @@ if (!app) throw new Error("Application root not found");
 const socket = io({ autoConnect: false });
 const TOKEN_KEY = "gogyo-tenrin-reconnect-token";
 const SETTINGS_KEY = "gogyo-tenrin-settings";
-const TUTORIAL_KEY = "gogyo-tenrin-beginner-guide-v1";
 const elements: Record<FiveElement, { name: string; mark: string }> = {
   wood: { name: "木", mark: "木" }, fire: { name: "火", mark: "火" },
   earth: { name: "土", mark: "土" }, metal: { name: "金", mark: "金" },
   water: { name: "水", mark: "水" },
 };
 
-type LocalScreen = "connecting" | "title" | "cpu_setup" | "online";
+type LocalScreen = "connecting" | "title" | "cpu_mode" | "cpu_setup" | "online";
+type CpuExperienceMode = "battle" | "tutorial";
 type Dialog = "rules" | "settings" | "card" | "catalog" | "catalog_card" | null;
 interface Settings { bgm: number; sound: number; vibration: boolean; speed: string; log: boolean }
 let screen: LocalScreen = "connecting";
@@ -63,6 +63,7 @@ let catalogError = "";
 let longPressTimer: number | undefined;
 let longPressOrigin: { x: number; y: number } | null = null;
 let tutorialStep: number | null = null;
+let cpuExperienceMode: CpuExperienceMode = "battle";
 let reactionSubmitting = false;
 let submittedReactionDeadline: number | undefined;
 let reactionRevealTimer: number | undefined;
@@ -363,7 +364,7 @@ function updateState(nextState: SessionState): void {
   }
   presentationBlockedByReaction = enteringReaction;
   const enteringBattle = baselineState.phase !== "battle" && nextState.phase === "battle";
-  if (enteringBattle && nextState.mode === "cpu" && !localStorage.getItem(TUTORIAL_KEY)) tutorialStep = 0;
+  if (enteringBattle && nextState.mode === "cpu" && cpuExperienceMode === "tutorial") tutorialStep = 0;
   if (enteringReaction || nextState.phase !== "battle") {
     cancelBattlePresentation();
     applyDisplayedState(nextState);
@@ -399,7 +400,7 @@ function button(label: string, action: string, extra = ""): string {
   return `<button class="menu-button ${extra}" data-action="${action}" ${busy ? "disabled" : ""}>${label}</button>`;
 }
 function shell(content: string, screenClass = ""): string {
-  return `<section class="screen ${screenClass}"><div class="ambient-ring" aria-hidden="true"></div>${content}<footer>五行転輪 <span>●</span> MVP</footer></section>`;
+  return `<section class="screen ${screenClass}"><div class="ambient-ring" aria-hidden="true"></div>${content}<footer>五行転輪</footer></section>`;
 }
 function error(): string { return errorMessage ? `<p class="error" role="alert">${escapeHtml(errorMessage)}</p>` : ""; }
 
@@ -410,13 +411,14 @@ function render(): void {
   else if (phase === "attribute_selection") renderAttributeSelection();
   else if (phase === "attribute_reveal") renderReveal();
   else if (phase === "battle") renderBattle();
+  else if (screen === "cpu_mode") renderCpuMode();
   else if (screen === "cpu_setup") renderCpuSetup();
   else if (screen === "online") renderOnline();
   else renderTitle();
   if (dialog) renderDialog();
 }
 function renderConnecting(): void {
-  app.innerHTML = shell(`<div class="center-card"><p class="eyebrow">SERVER CONNECTION</p><h1>五行転輪</h1><div class="loader"></div><h2>サーバーへ接続中</h2><p class="muted">起動待ちの場合も自動で再試行します。</p>${error()}${button("手動で再試行", "retry", "secondary")}</div>`);
+  app.innerHTML = shell(`<div class="center-card"><p class="eyebrow">霊脈接続</p><h1>五行転輪</h1><div class="loader"></div><h2>サーバーへ接続中</h2><p class="muted">起動待ちの場合も自動で再試行します。</p>${error()}${button("手動で再試行", "retry", "secondary")}</div>`);
 }
 function renderTitle(): void {
   app.innerHTML = shell(`<div class="title-lobby">
@@ -438,7 +440,7 @@ function renderTitle(): void {
         <span class="five-node five-node-wood">木</span><span class="five-node five-node-fire">火</span><span class="five-node five-node-earth">土</span><span class="five-node five-node-metal">金</span><span class="five-node five-node-water">水</span>
         <div class="five-star-core"><small>五行</small><b>転輪</b></div>
       </div>
-      <header class="title-brand"><p class="eyebrow">GOGYO TENRIN</p><h1>五行転輪</h1><p>巡る霊気を読み、五行を転じよ。</p></header>
+      <header class="title-brand"><p class="eyebrow">五行の巡り</p><h1>五行転輪</h1><p>巡る霊気を読み、五行を転じよ。</p></header>
     </section>
     <nav class="title-menu" aria-label="メインメニュー">
       <div class="title-primary-actions">
@@ -455,20 +457,27 @@ function renderTitle(): void {
   </div>`, "title-screen");
 }
 function renderCpuSetup(): void {
-  app.innerHTML = shell(`<header class="compact-header"><p class="eyebrow">CPU MATCH</p><h1>CPU戦</h1><p>陰陽師名を入力してください。</p></header><form class="form-card" data-form="cpu"><label for="player-name">プレイヤー名</label><input id="player-name" maxlength="20" autocomplete="nickname" placeholder="名前を入力" ${busy ? "disabled" : ""}/>${error()}<button class="menu-button" type="submit" ${busy ? "disabled" : ""}>${busy ? "準備中…" : "対戦準備へ"}</button>${button("戻る", "title", "text")}</form>`);
+  const tutorial = cpuExperienceMode === "tutorial";
+  app.innerHTML = shell(`<header class="compact-header"><p class="eyebrow">${tutorial ? "指南の準備" : "対戦準備"}</p><h1>${tutorial ? "チュートリアル" : "CPU戦"}</h1><p>${tutorial ? "案内に沿って基本操作と五行を学びます。" : "説明を挟まず、CPUとの対戦を始めます。"}</p></header><form class="form-card" data-form="cpu"><label for="player-name">プレイヤー名</label><input id="player-name" maxlength="20" autocomplete="nickname" placeholder="名前を入力" ${busy ? "disabled" : ""}/>${error()}<button class="menu-button" type="submit" ${busy ? "disabled" : ""}>${busy ? "準備中…" : tutorial ? "指南を始める" : "対戦を始める"}</button>${button("戻る", "cpu-mode", "text")}</form>`);
+}
+function renderCpuMode(): void {
+  app.innerHTML = shell(`<header class="compact-header cpu-mode-heading"><p class="eyebrow">一人用</p><h1>CPU戦</h1><p>遊び方を選んでください。</p></header><div class="cpu-mode-menu">
+    <button class="cpu-mode-card" data-action="cpu-battle"><span>通常対戦</span><strong>CPU戦</strong><p>案内を挟まず、対戦へ集中して遊びます。</p></button>
+    <button class="cpu-mode-card tutorial" data-action="cpu-tutorial"><span>初めての方へ</span><strong>チュートリアル</strong><p>カード操作、五行、式神と地形を順番に学びます。</p></button>
+  </div>${button("タイトルへ戻る", "title", "text")}`, "cpu-mode-screen");
 }
 function renderOnline(): void {
-  app.innerHTML = shell(`<header class="compact-header"><p class="eyebrow">ONLINE MATCH</p><h1>\u30aa\u30f3\u30e9\u30a4\u30f3\u5bfe\u6226</h1><p>\u90e8\u5c4b\u3092\u4f5c\u6210\u3059\u308b\u304b\u30016\u6587\u5b57\u306e\u90e8\u5c4bID\u3067\u53c2\u52a0\u3057\u307e\u3059\u3002</p></header><div class="online-grid"><form class="form-card" data-form="room-create"><h2>\u90e8\u5c4b\u3092\u4f5c\u308b</h2><label>\u30d7\u30ec\u30a4\u30e4\u30fc\u540d<input name="playerName" maxlength="20" required></label><button class="menu-button" type="submit" ${busy?"disabled":""}>\u4f5c\u6210</button></form><form class="form-card" data-form="room-join"><h2>\u90e8\u5c4b\u306b\u5165\u308b</h2><label>\u30d7\u30ec\u30a4\u30e4\u30fc\u540d<input name="playerName" maxlength="20" required></label><label>\u90e8\u5c4bID<input name="roomId" maxlength="6" autocomplete="off" required></label><button class="menu-button" type="submit" ${busy?"disabled":""}>\u53c2\u52a0</button></form></div>${error()}<nav class="menu">${button("\u623b\u308b","title","text")}</nav>`);
+  app.innerHTML = shell(`<header class="compact-header"><p class="eyebrow">オンライン対戦</p><h1>\u30aa\u30f3\u30e9\u30a4\u30f3\u5bfe\u6226</h1><p>\u90e8\u5c4b\u3092\u4f5c\u6210\u3059\u308b\u304b\u30016\u6587\u5b57\u306e\u90e8\u5c4bID\u3067\u53c2\u52a0\u3057\u307e\u3059\u3002</p></header><div class="online-grid"><form class="form-card" data-form="room-create"><h2>\u90e8\u5c4b\u3092\u4f5c\u308b</h2><label>\u30d7\u30ec\u30a4\u30e4\u30fc\u540d<input name="playerName" maxlength="20" required></label><button class="menu-button" type="submit" ${busy?"disabled":""}>\u4f5c\u6210</button></form><form class="form-card" data-form="room-join"><h2>\u90e8\u5c4b\u306b\u5165\u308b</h2><label>\u30d7\u30ec\u30a4\u30e4\u30fc\u540d<input name="playerName" maxlength="20" required></label><label>\u90e8\u5c4bID<input name="roomId" maxlength="6" autocomplete="off" required></label><button class="menu-button" type="submit" ${busy?"disabled":""}>\u53c2\u52a0</button></form></div>${error()}<nav class="menu">${button("\u623b\u308b","title","text")}</nav>`);
 }
 function renderRoomWaiting(): void {
   const ready=Boolean(state.roomReady),host=state.role==="host",opponentText=ready?`${escapeHtml(state.opponentName??"")} \u304c\u53c2\u52a0\u3057\u307e\u3057\u305f\u3002`:`\u76f8\u624b\u306e\u53c2\u52a0\u3092\u5f85\u3063\u3066\u3044\u307e\u3059\u3002`;
   const startControl=host?button("\u5bfe\u6226\u958b\u59cb","room-start",ready?"":"disabled"):`<p class="muted center">\u30db\u30b9\u30c8\u306e\u958b\u59cb\u64cd\u4f5c\u3092\u5f85\u3063\u3066\u3044\u307e\u3059\u3002</p>`;
-  app.innerHTML=shell(`<header class="compact-header"><p class="eyebrow">ROOM</p><h1>\u5bfe\u6226\u5f85\u6a5f</h1></header><div class="notice-card"><p>\u90e8\u5c4bID</p><h2>${escapeHtml(state.roomId??"")}</h2><p>${opponentText}</p></div>${error()}<div class="menu">${startControl}${button("\u90e8\u5c4b\u3092\u9000\u51fa","room-leave","text")}</div>`);
+  app.innerHTML=shell(`<header class="compact-header"><p class="eyebrow">対戦待機</p><h1>\u5bfe\u6226\u5f85\u6a5f</h1></header><div class="notice-card"><p>\u90e8\u5c4bID</p><h2>${escapeHtml(state.roomId??"")}</h2><p>${opponentText}</p></div>${error()}<div class="menu">${startControl}${button("\u90e8\u5c4b\u3092\u9000\u51fa","room-leave","text")}</div>`);
 }
 function renderAttributeSelection(): void {
   const choices = Object.entries(elements).map(([key, value]) => `<button class="attribute-choice attribute-choice-${key} ${key}" data-element="${key}" aria-label="${value.name}属性を選択" ${busy ? "disabled" : ""}><span>${value.mark}</span></button>`).join("");
   app.innerHTML = shell(`<div class="attribute-lobby">
-    <header class="attribute-heading"><p class="eyebrow">INITIAL ATTRIBUTE</p><h1>初期属性を選択</h1><p>五行から、あなたの最初の属性を選んでください。</p></header>
+    <header class="attribute-heading"><p class="eyebrow">五行選択</p><h1>初期属性を選択</h1><p>五行から、あなたの最初の属性を選んでください。</p></header>
     <div class="attribute-wheel" aria-label="五行属性選択">
       <svg viewBox="0 0 300 300" aria-hidden="true"><circle cx="150" cy="150" r="112"></circle><polyline points="150,38 216,241 43,107 257,107 84,241 150,38"></polyline><circle cx="150" cy="150" r="48"></circle></svg>
       ${choices}
@@ -482,7 +491,7 @@ function elementBadge(attribute?: FiveElement): string {
   return `<span class="attribute ${attribute}">${elements[attribute].mark}</span>`;
 }
 function renderReveal(): void {
-  app.innerHTML = shell(`<header class="compact-header"><p class="eyebrow">ATTRIBUTE REVEAL</p><h1>属性公開</h1></header><div class="versus"><div>${elementBadge(state.playerAttribute)}<strong>${escapeHtml(state.playerName ?? "あなた")}</strong></div><b>対</b><div>${elementBadge(state.cpuAttribute)}<strong>${escapeHtml(state.opponentName ?? "CPU")}</strong></div></div>${error()}<div class="menu">${button("対戦を開始", "enter-match")}</div>`);
+  app.innerHTML = shell(`<header class="compact-header"><p class="eyebrow">属性公開</p><h1>属性公開</h1></header><div class="versus"><div>${elementBadge(state.playerAttribute)}<strong>${escapeHtml(state.playerName ?? "あなた")}</strong></div><b>対</b><div>${elementBadge(state.cpuAttribute)}<strong>${escapeHtml(state.opponentName ?? "CPU")}</strong></div></div>${error()}<div class="menu">${button("対戦を開始", "enter-match")}</div>`);
 }
 function renderUnits(units: NonNullable<SessionState["battle"]>["player"]["shikigami"], targetMode?: CardPlayTarget, ignoreTaunt = false, owner: "cpu"|"player" = "cpu", targetDescription = ""): string {
   const hasTaunt = units.some((unit) => unit.keywords.includes("\u6311\u767a"));
@@ -500,7 +509,7 @@ function renderUnits(units: NonNullable<SessionState["battle"]>["player"]["shiki
     const targetClass = targetContext?(target?"target-option":"target-blocked"):"";
     const fieldBadge = targetDescription.includes("ランダム") ? "ランダム" : "全体";
     const targetBadge = targetContext?(target?`<em class="target-badge">${enemyFieldTarget?fieldBadge:"対象"}</em>`:`<em class="target-reason">${unit.keywords.includes("ステルス")?"ステルス":"対象外"}</em>`):"";
-    return `<article class="unit-slot ${cardAttributeClass(unit.attribute)} ${targetClass}" data-unit-id="${unit.instanceId}" data-unit-side="${owner}" ${target}><img class="unit-portrait" src="${shikigamiImagePath(unit.imageId)}" alt="" loading="lazy"><div class="unit-shade"></div>${targetBadge}<strong>${escapeHtml(unit.name)}</strong><span>${escapeHtml(unit.attribute)}</span><b>HP ${unit.hp} / ${unit.maxHp}</b><span>ATK ${unit.attack}</span>${keywords}${renderCurses(unit.curses)}${oneShotReduction}${shellReduction}</article>`;
+    return `<article class="unit-slot ${cardAttributeClass(unit.attribute)} ${targetClass}" data-unit-id="${unit.instanceId}" data-unit-side="${owner}" ${target}><img class="unit-portrait" src="${shikigamiImagePath(unit.imageId)}" alt="" loading="lazy"><div class="unit-shade"></div>${targetBadge}<strong>${escapeHtml(unit.name)}</strong><span>${escapeHtml(unit.attribute)}</span><b>HP ${unit.hp} / ${unit.maxHp}</b><span>攻 ${unit.attack}</span>${keywords}${renderCurses(unit.curses)}${oneShotReduction}${shellReduction}</article>`;
   }).join("");
   return `<div class="unit-slots">${slots}</div>`;
 }
@@ -572,7 +581,7 @@ function renderCardDetail(card: CardInfo, footer = ""): string {
   return `<div class="card-detail card-detail-rich ${cardAttributeClass(card.attribute)}">
     <div class="card-detail-frame">${renderCardArt(card)}
       <header><p class="eyebrow">${escapeHtml(card.category)} / ${escapeHtml(card.system)}</p><h2>${escapeHtml(card.name)}</h2></header>
-      <div class="card-detail-meta"><span>属性 ${escapeHtml(card.attribute)}</span><span>COST ${card.cost}</span><span>霊気 ${card.mpCost}</span></div>
+      <div class="card-detail-meta"><span>属性 ${escapeHtml(card.attribute)}</span><span>コスト ${card.cost}</span><span>霊気 ${card.mpCost}</span></div>
       <section class="card-plain-guide"><b>かんたんに言うと</b><p>${escapeHtml(plainCardGuide(card))}</p></section>
       <section class="card-effect-copy"><h3>効果</h3><p>${escapeHtml(card.effectText)}</p></section>
       <dl class="card-facts"><div><dt>対象</dt><dd>${escapeHtml(card.target)}</dd></div><div><dt>使える時</dt><dd>${escapeHtml(card.timing)}</dd></div></dl>
@@ -607,7 +616,7 @@ function renderBattle(): void {
   const cards = battle.player.hand.map((card) => `<button ${battle.pendingDiscard ? `data-discard-instance="${card.instanceId}"` : `data-card-instance="${card.instanceId}"`} class="hand-card hand-card-simple ${cardAttributeClass(card.attribute)} ${card.playable ? "" : "unplayable"}" aria-label="${escapeHtml(card.name)}。タップまたは長押しで詳細">
     ${renderCardArt(card, true)}
     <span class="hand-card-system">${escapeHtml(card.system)}</span><strong>${escapeHtml(card.name.split("：").at(-1) ?? card.name)}</strong>
-    <span class="hand-card-attribute">${escapeHtml(card.attribute)}</span><span class="hand-card-cost">C ${card.cost}</span>${card.mpCost > 0 ? `<span class="hand-card-mp">霊気 ${card.mpCost}</span>` : ""}
+    <span class="hand-card-attribute">${escapeHtml(card.attribute)}</span><span class="hand-card-cost">コスト ${card.cost}</span>${card.mpCost > 0 ? `<span class="hand-card-mp">霊気 ${card.mpCost}</span>` : ""}
     <small>${escapeHtml(shortCardEffect(card.effectText))}</small><em class="hold-hint">長押しで詳細</em>
   </button>`).join("");
   const pendingCard = battle.player.hand.find((card) => card.instanceId === pendingCardId);
@@ -625,16 +634,16 @@ function renderBattle(): void {
   const result = finished ? `<div class="battle-result"><strong>${battle.winner === "player" ? "\u52dd\u5229" : "\u6557\u5317"}</strong><span>\u5bfe\u6226\u304c\u7d42\u4e86\u3057\u307e\u3057\u305f</span><div class="result-actions">${resultActions}</div></div>` : "";
   const canEndTurn = !finished && battle.phase === "card_use" && battle.activePlayer === "player";
   const playableCount = battle.player.hand.filter((card) => card.playable).length;
-  const beginnerHint = !finished && battle.activePlayer === "player" && battle.phase === "card_use"
+  const beginnerHint = state.mode === "cpu" && cpuExperienceMode === "tutorial" && !finished && battle.activePlayer === "player" && battle.phase === "card_use"
     ? `<aside class="beginner-hint"><b>次にできること</b><span>${playableCount > 0 ? `明るいカードが ${playableCount} 枚あります。タップで確認、長押しで詳しく読めます。` : "今使えるカードがありません。ターン終了で式神を行動させましょう。"}</span></aside>`
     : "";
   const tutorialCopy = [
     ["勝ち方", "相手のHPを0にすれば勝利です。まずは自分のHP・相手のHPと、黄色い手番表示を確認しましょう。"],
-    ["カードの読み方", "明るいカードは使用可能です。タップで確認、長押しで画像付き詳細を開けます。COSTは毎ターン回復し、霊気は持ち越せます。"],
+    ["カードの読み方", "明るいカードは使用可能です。タップで確認、長押しで画像付き詳細を開けます。コストは毎ターン回復し、霊気は持ち越せます。"],
     ["五行の狙い", "属性一致でカードが強まり、相剋で有利な属性へ大きなダメージを狙えます。転輪は自分の属性を動かす手段です。"],
     ["地形と式神", "中央の地形は両者に影響します。タップで詳細を確認できます。式神はターン終了後、召喚順に自動行動します。"],
   ] as const;
-  const tutorial = tutorialStep !== null && battle.activePlayer === "player" && battle.phase === "card_use" ? `<section class="battle-tutorial" aria-live="polite"><span>はじめての対戦 ${tutorialStep + 1} / ${tutorialCopy.length}</span><h2>${tutorialCopy[tutorialStep][0]}</h2><p>${tutorialCopy[tutorialStep][1]}</p><div><button class="menu-button small text" data-action="tutorial-skip">スキップ</button><button class="menu-button small" data-action="tutorial-next">${tutorialStep === tutorialCopy.length - 1 ? "対戦を始める" : "次へ"}</button></div></section>` : "";
+  const tutorial = state.mode === "cpu" && cpuExperienceMode === "tutorial" && tutorialStep !== null && battle.activePlayer === "player" && battle.phase === "card_use" ? `<section class="battle-tutorial" aria-live="polite"><span>指南 ${tutorialStep + 1} / ${tutorialCopy.length}</span><h2>${tutorialCopy[tutorialStep][0]}</h2><p>${tutorialCopy[tutorialStep][1]}</p><div><button class="menu-button small text" data-action="tutorial-skip">案内を閉じる</button><button class="menu-button small" data-action="tutorial-next">${tutorialStep === tutorialCopy.length - 1 ? "対戦を始める" : "次へ"}</button></div></section>` : "";
   const reaction = battle.reaction;
   const reactionCards = reaction ? battle.player.hand.filter((card) => reaction.eligibleCardIds.includes(card.instanceId)) : [];
   const reactionOptions = reactionCards.map((card) => {
@@ -645,26 +654,26 @@ function renderBattle(): void {
     return choices;
   }).join("");
   const pausedPanel = state.connectionPaused ? `<section class="connection-pause"><h2>\u518d\u63a5\u7d9a\u5f85\u6a5f\u4e2d</h2><p>\u76f8\u624b\u306e\u5fa9\u5e30\u3092\u5f85\u3063\u3066\u3044\u307e\u3059\u3002\u5bfe\u6226\u306f\u4e00\u6642\u505c\u6b62\u4e2d\u3067\u3059\u3002</p></section>` : "";
-  const reactionPanel = reaction && !reactionSubmitting ? `<section class="reaction-panel"><div><p class="eyebrow">REACTION</p><h2>防御・反応受付中</h2><p class="reaction-paused-label">選択完了まで対戦処理は停止中</p><strong>${escapeHtml(reaction.attackerName)}の${escapeHtml(reaction.sourceName)}</strong><p>${reaction.targets.map((item) => `${escapeHtml(item.label)}：予測 ${item.predictedDamage}ダメージ`).join(" / ")}</p><div class="reaction-time">残り <b data-reaction-countdown>${Math.max(0, Math.ceil((reaction.deadline - Date.now()) / 1000))}</b> 秒</div></div><div class="reaction-options">${reactionOptions || '<p class="muted">使用可能な防御札はありません。</p>'}</div><button class="menu-button secondary" data-action="reaction-pass">使用しない</button></section>` : "";
+  const reactionPanel = reaction && !reactionSubmitting ? `<section class="reaction-panel"><div><p class="eyebrow">防御判断</p><h2>防御・反応受付中</h2><p class="reaction-paused-label">選択完了まで対戦処理は停止中</p><strong>${escapeHtml(reaction.attackerName)}の${escapeHtml(reaction.sourceName)}</strong><p>${reaction.targets.map((item) => `${escapeHtml(item.label)}：予測 ${item.predictedDamage}ダメージ`).join(" / ")}</p><div class="reaction-time">残り <b data-reaction-countdown>${Math.max(0, Math.ceil((reaction.deadline - Date.now()) / 1000))}</b> 秒</div></div><div class="reaction-options">${reactionOptions || '<p class="muted">使用可能な防御札はありません。</p>'}</div><button class="menu-button secondary" data-action="reaction-pass">使用しない</button></section>` : "";
   const reactionResolving = reaction && reactionSubmitting ? '<div class="reaction-resolving" role="status">防御結果を処理中…</div>' : "";
   app.innerHTML = `<section class="battle battle-v2">${pausedPanel}${reactionPanel}${reactionResolving}${tutorial}<main class="battle-board">
-    <header class="battle-player opponent ${battle.cpu.hp <= MAX_PLAYER_HP * .25 ? "is-critical" : ""}" data-combatant="cpu" ${targetAttribute("cpu_player")}><div><span>${escapeHtml(state.opponentName ?? "CPU")}</span><strong>HP ${battle.cpu.hp} / ${MAX_PLAYER_HP}</strong>${hpGauge(battle.cpu.hp)}${renderCurses(battle.cpu.curses)}</div>${elementBadge(state.cpuAttribute)}<div class="resource"><span>霊気 ${battle.cpu.mp} / ${MAX_PLAYER_MP}</span><span>COST ${battle.cpu.cost}</span><span>手札 ${battle.cpu.handCount}</span></div></header>
+    <header class="battle-player opponent ${battle.cpu.hp <= MAX_PLAYER_HP * .25 ? "is-critical" : ""}" data-combatant="cpu" ${targetAttribute("cpu_player")}><div><span>${escapeHtml(state.opponentName ?? "CPU")}</span><strong>HP ${battle.cpu.hp} / ${MAX_PLAYER_HP}</strong>${hpGauge(battle.cpu.hp)}${renderCurses(battle.cpu.curses)}</div>${elementBadge(state.cpuAttribute)}<div class="resource"><span>霊気 ${battle.cpu.mp} / ${MAX_PLAYER_MP}</span><span>コスト ${battle.cpu.cost}</span><span>手札 ${battle.cpu.handCount}</span></div></header>
     <section class="barrier-display ${battle.cpu.barrier ? "" : "is-empty"}" ${targetAttribute("cpu_barrier") || (targeting && pendingCard?.cardId==="card_fuin" && battle.cpu.barrier ? 'data-target="cpu_barrier"' : "")}><span>相手結界</span><strong>${battle.cpu.barrier ? escapeHtml(battle.cpu.barrier.name) : "未設置"}</strong><small>${battle.cpu.barrier ? escapeHtml(battle.cpu.barrier.effectText) : ""}</small></section>
     <section class="field enemy" ${targetAttribute("cpu_field")}><p>相手式神</p>${renderUnits(battle.cpu.shikigami, pendingTarget, pendingCard?.ignoreTaunt, "cpu", pendingCard?.target)}</section>
     <section class="terrain ${battle.terrain ? "has-detail" : ""}" ${targetAttribute("shared_field")} ${battle.terrain && !targeting ? 'data-action="terrain-info"' : ""}><div class="terrain-name"><span>共有地形 · 両者に影響</span><strong>${battle.terrain ? escapeHtml(battle.terrain.name) : "通常状態"}</strong></div>${elementTension()}<small>${battle.terrain ? escapeHtml(battle.terrain.effectText) : "現在、共有効果はありません。"}</small>${battle.terrain ? '<em class="terrain-more">タップで詳細</em>' : ""}<div class="field-ring"></div></section>
     <section class="field ally" ${targetAttribute("player_field")}><p>味方式神</p>${renderUnits(battle.player.shikigami, pendingTarget, false, "player")}</section>
     <section class="barrier-display ${battle.player.barrier ? "" : "is-empty"}" ${targetAttribute("player_barrier")}><span>自分結界</span><strong>${battle.player.barrier ? escapeHtml(battle.player.barrier.name) : "未設置"}</strong><small>${battle.player.barrier ? escapeHtml(battle.player.barrier.effectText) : ""}</small></section>
-    <header class="battle-player ${battle.player.hp <= MAX_PLAYER_HP * .25 ? "is-critical" : ""}" data-combatant="player" ${targetAttribute("player") || (targeting && pendingCard?.cardId==="card_joka" ? 'data-target="player"' : "")}><div><span>${escapeHtml(state.playerName ?? "あなた")}</span><strong>HP ${battle.player.hp} / ${MAX_PLAYER_HP}</strong>${hpGauge(battle.player.hp)}${renderCurses(battle.player.curses)}</div>${elementBadge(state.playerAttribute)}<div class="resource"><span>霊気 ${battle.player.mp} / ${MAX_PLAYER_MP}</span><span>COST ${battle.player.cost}</span><span>捨て札 ${battle.player.discard.length}</span></div></header>
+    <header class="battle-player ${battle.player.hp <= MAX_PLAYER_HP * .25 ? "is-critical" : ""}" data-combatant="player" ${targetAttribute("player") || (targeting && pendingCard?.cardId==="card_joka" ? 'data-target="player"' : "")}><div><span>${escapeHtml(state.playerName ?? "あなた")}</span><strong>HP ${battle.player.hp} / ${MAX_PLAYER_HP}</strong>${hpGauge(battle.player.hp)}${renderCurses(battle.player.curses)}</div>${elementBadge(state.playerAttribute)}<div class="resource"><span>霊気 ${battle.player.mp} / ${MAX_PLAYER_MP}</span><span>コスト ${battle.player.cost}</span><span>捨て札 ${battle.player.discard.length}</span></div></header>
     </main><section class="hand battle-console"><div class="battle-command-row"><div class="phase-label">${finished ? "対戦終了" : `第${battle.turnNumber}ターン・${battle.activePlayer === "player" ? "自分" : "相手"}・${battle.phase === "reaction" ? "反応受付" : battle.phase === "resolving" ? "処理中" : "カード使用"}`} ${battle.turnDeadline&&!finished?`<span>残り <b data-turn-countdown>${Math.max(0,Math.ceil((battle.turnDeadline-Date.now())/1000))}</b>秒</span>`:""}</div><button class="menu-button end-turn" data-action="end-turn" ${!canEndTurn || busy ? "disabled" : ""}>ターン終了</button></div>${result}${targetGuide}${beginnerHint}<div class="hand-cards" aria-label="自分の手札">${cards || '<p class="empty-hand">手札がありません。</p>'}</div><div class="battle-utility"><details class="battle-log"><summary>対戦ログ</summary><ol>${log}</ol></details><div class="battle-actions">${button("ルール", "rules", "small secondary")}${button("設定", "settings", "small secondary")}${button("退出", "reset", "small text")}</div></div></section>
   </section>`;
 }
 function renderDialog(): void {
   let content: string;
   if (dialog === "rules") {
-    content = `<div class="rules-guide"><header><p class="eyebrow">HOW TO PLAY</p><h2>五行転輪のルール</h2><p>カードと式神を操り、相手のHPを0にすると勝利です。</p></header><section><h3>ターンと資源</h3><ul><li>ターン開始時に手札を5枚へ入れ替え、コストを5まで回復します。</li><li>余ったコストはターン終了時に失われます。霊気（MP）は最大30まで保持できます。</li><li>カード使用を終えると、召喚順に式神が自律行動します。</li></ul></section><section><h3>五行と転輪</h3><p class="rule-cycle">木 → 火 → 土 → 金 → 水 → 木</p><ul><li><b>属性一致：</b>同じ属性のカードを使うと効果量が増加します。</li><li><b>相生：</b>生み出す関係が成立すると霊気を得ます。</li><li><b>相剋：</b>打ち克つ関係が成立すると攻撃が強化されます。</li><li><b>転輪：</b>属性を五行環に沿って進め、相生・相剋を狙います。</li></ul></section><section><h3>呪いと状態</h3><div class="rule-grid"><p><b>毒</b><span>ターン終了時、スタック数ぶんダメージ</span></p><p><b>火傷</b><span>カード使用後・式神行動後にダメージ</span></p><p><b>凍結</b><span>式神の次の行動を1回失敗させる</span></p><p><b>麻痺</b><span>行動開始時に50％で失敗する</span></p><p><b>沈黙</b><span>プレイヤーが術札を使用できない</span></p><p><b>呪縛</b><span>式神が祝詞命令を受けられない</span></p></div><p class="rule-note">呪いはバフ・デバフとは別の状態です。残り期間と重複数は対象の詳細で確認できます。</p></section><section><h3>キーワード能力</h3><div class="rule-grid"><p><b>挑発</b><span>単体攻撃の対象を自身へ制限</span></p><p><b>かばう</b><span>味方への単体攻撃を肩代わり</span></p><p><b>ステルス</b><span>通常の単体攻撃に選ばれない</span></p><p><b>反撃</b><span>生存時、攻撃主体へ固定1ダメージ</span></p><p><b>貫通</b><span>式神への余剰ダメージをプレイヤーへ与える</span></p><p><b>飛行</b><span>「飛行には適用されない」効果を受けない</span></p></div></section><section><h3>防御・反応</h3><ul><li>反応受付は1回につき10秒、使用できる防御札は最大1枚です。</li><li>防御札はコスト0で、カードによって霊気を消費します。「使用しない」も選べます。</li><li>防御札への追加反応はなく、受付終了後に元の攻撃・効果を解決します。</li></ul></section><section><h3>攻撃と反撃の順序</h3><ol class="rule-flow"><li>対象制限・かばう</li><li>防御・軽減・無効化</li><li>ダメージ・貫通</li><li>退場と退場時効果</li><li>双方が生存している場合のみ反撃</li><li>攻撃後効果・勝敗判定</li></ol><p class="rule-note">反撃から反撃は発生しません。多段攻撃への反撃は、一連の攻撃終了後に1回だけ判定します。</p></section>${button("カード一覧を見る", "catalog", "small secondary")}</div>`;
+    content = `<div class="rules-guide"><header><p class="eyebrow">遊び方</p><h2>五行転輪のルール</h2><p>カードと式神を操り、相手のHPを0にすると勝利です。</p></header><section><h3>ターンと資源</h3><ul><li>ターン開始時に手札を5枚へ入れ替え、コストを5まで回復します。</li><li>余ったコストはターン終了時に失われます。霊気（MP）は最大30まで保持できます。</li><li>カード使用を終えると、召喚順に式神が自律行動します。</li></ul></section><section><h3>五行と転輪</h3><p class="rule-cycle">木 → 火 → 土 → 金 → 水 → 木</p><ul><li><b>属性一致：</b>同じ属性のカードを使うと効果量が増加します。</li><li><b>相生：</b>生み出す関係が成立すると霊気を得ます。</li><li><b>相剋：</b>打ち克つ関係が成立すると攻撃が強化されます。</li><li><b>転輪：</b>属性を五行環に沿って進め、相生・相剋を狙います。</li></ul></section><section><h3>呪いと状態</h3><div class="rule-grid"><p><b>毒</b><span>ターン終了時、スタック数ぶんダメージ</span></p><p><b>火傷</b><span>カード使用後・式神行動後にダメージ</span></p><p><b>凍結</b><span>式神の次の行動を1回失敗させる</span></p><p><b>麻痺</b><span>行動開始時に50％で失敗する</span></p><p><b>沈黙</b><span>プレイヤーが術札を使用できない</span></p><p><b>呪縛</b><span>式神が祝詞命令を受けられない</span></p></div><p class="rule-note">呪いはバフ・デバフとは別の状態です。残り期間と重複数は対象の詳細で確認できます。</p></section><section><h3>キーワード能力</h3><div class="rule-grid"><p><b>挑発</b><span>単体攻撃の対象を自身へ制限</span></p><p><b>かばう</b><span>味方への単体攻撃を肩代わり</span></p><p><b>ステルス</b><span>通常の単体攻撃に選ばれない</span></p><p><b>反撃</b><span>生存時、攻撃主体へ固定1ダメージ</span></p><p><b>貫通</b><span>式神への余剰ダメージをプレイヤーへ与える</span></p><p><b>飛行</b><span>「飛行には適用されない」効果を受けない</span></p></div></section><section><h3>防御・反応</h3><ul><li>反応受付は1回につき10秒、使用できる防御札は最大1枚です。</li><li>防御札はコスト0で、カードによって霊気を消費します。「使用しない」も選べます。</li><li>防御札への追加反応はなく、受付終了後に元の攻撃・効果を解決します。</li></ul></section><section><h3>攻撃と反撃の順序</h3><ol class="rule-flow"><li>対象制限・かばう</li><li>防御・軽減・無効化</li><li>ダメージ・貫通</li><li>退場と退場時効果</li><li>双方が生存している場合のみ反撃</li><li>攻撃後効果・勝敗判定</li></ol><p class="rule-note">反撃から反撃は発生しません。多段攻撃への反撃は、一連の攻撃終了後に1回だけ判定します。</p></section>${button("カード一覧を見る", "catalog", "small secondary")}</div>`;
   } else if (dialog === "catalog") {
-    const entries = cardCatalog.map((card) => `<button class="catalog-card ${cardAttributeClass(card.attribute)}" data-catalog-card="${escapeHtml(card.cardId)}">${renderCardArt(card, true)}<header><span>${escapeHtml(card.system)}</span><strong>${escapeHtml(card.name.split("：").at(-1) ?? card.name)}</strong><em>${escapeHtml(card.attribute)}</em></header><div class="catalog-meta"><span>COST ${card.cost}</span><span>霊気 ${card.mpCost}</span><span>${escapeHtml(card.category)}</span></div><p>${escapeHtml(shortCardEffect(card.effectText))}</p><small>タップで詳しく見る</small></button>`).join("");
-    content = `<div class="catalog"><header><p class="eyebrow">CARD CATALOG</p><h2>カード一覧</h2><span>${cardCatalog.length}枚</span><p>カードをタップすると、効果と用語を確認できます。</p></header>${catalogLoading?'<p class="muted">読み込み中…</p>':catalogError?`<div class="catalog-error"><p>${escapeHtml(catalogError)}</p>${button("再読み込み", "catalog-retry", "small secondary")}</div>`:`<div class="catalog-grid">${entries}</div>`}</div>`;
+    const entries = cardCatalog.map((card) => `<button class="catalog-card ${cardAttributeClass(card.attribute)}" data-catalog-card="${escapeHtml(card.cardId)}">${renderCardArt(card, true)}<header><span>${escapeHtml(card.system)}</span><strong>${escapeHtml(card.name.split("：").at(-1) ?? card.name)}</strong><em>${escapeHtml(card.attribute)}</em></header><div class="catalog-meta"><span>コスト ${card.cost}</span><span>霊気 ${card.mpCost}</span><span>${escapeHtml(card.category)}</span></div><p>${escapeHtml(shortCardEffect(card.effectText))}</p><small>タップで詳しく見る</small></button>`).join("");
+    content = `<div class="catalog"><header><p class="eyebrow">収録札</p><h2>カード一覧</h2><span>${cardCatalog.length}枚</span><p>カードをタップすると、効果と用語を確認できます。</p></header>${catalogLoading?'<p class="muted">読み込み中…</p>':catalogError?`<div class="catalog-error"><p>${escapeHtml(catalogError)}</p>${button("再読み込み", "catalog-retry", "small secondary")}</div>`:`<div class="catalog-grid">${entries}</div>`}</div>`;
   } else if (dialog === "catalog_card") {
     const card = cardCatalog.find((item) => item.cardId === selectedCatalogCardId);
     if (!card) { dialog = "catalog"; render(); return; }
@@ -775,7 +784,10 @@ app.addEventListener("click", (event) => {
   if (attribute && !busy) { busy = true; render(); socket.emit("attribute:select", { attribute }, applyResult); return; }
   if (!action || busy) return;
   if (action === "retry") socket.connect();
-  else if (action === "cpu") { screen = "cpu_setup"; errorMessage = ""; render(); }
+  else if (action === "cpu") { screen = "cpu_mode"; errorMessage = ""; render(); }
+  else if (action === "cpu-mode") { screen = "cpu_mode"; errorMessage = ""; render(); }
+  else if (action === "cpu-battle") { cpuExperienceMode = "battle"; tutorialStep = null; screen = "cpu_setup"; errorMessage = ""; render(); }
+  else if (action === "cpu-tutorial") { cpuExperienceMode = "tutorial"; tutorialStep = null; screen = "cpu_setup"; errorMessage = ""; render(); }
   else if (action === "online") { screen = "online"; render(); }
   else if (action === "title") { screen = "title"; render(); }
   else if (action === "rules" || action === "settings" || action === "catalog") { dialog = action; render(); }
@@ -789,11 +801,11 @@ app.addEventListener("click", (event) => {
   }
   else if (action === "tutorial-next") {
     if (tutorialStep === null) return;
-    if (tutorialStep >= 3) { tutorialStep = null; localStorage.setItem(TUTORIAL_KEY, "seen"); }
+    if (tutorialStep >= 3) { tutorialStep = null; }
     else tutorialStep += 1;
     render();
   }
-  else if (action === "tutorial-skip") { tutorialStep = null; localStorage.setItem(TUTORIAL_KEY, "seen"); render(); }
+  else if (action === "tutorial-skip") { tutorialStep = null; render(); }
   else if (action === "close-dialog") { dialog = null; selectedCardId = null; render(); }
   else if (action === "prepare-card" && selectedCardId) { const card=state.battle?.player.hand.find(item=>item.instanceId===selectedCardId); selectedChoice=(document.querySelector<HTMLSelectElement>("[data-card-choice]")?.value ?? card?.choiceOptions?.[0]?.value); pendingCardId = selectedCardId; dialog = null; render(); }
   else if (action === "cancel-target") { clearCardSelection(); errorMessage = ""; render(); }

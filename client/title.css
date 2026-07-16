@@ -427,6 +427,30 @@
   .attribute-choice { width: 58px; }
 }
 
+.cpu-mode-screen { justify-content: center; gap: 18px; }
+.cpu-mode-heading { margin: 0; }
+.cpu-mode-menu { width: min(100%, 460px); display: grid; gap: 12px; }
+.cpu-mode-card {
+  position: relative; min-height: 132px; padding: 22px; overflow: hidden;
+  color: var(--cream); text-align: left; border: 1px solid rgba(214, 190, 126, .34);
+  border-radius: 20px; background: linear-gradient(135deg, rgba(22, 39, 61, .96), rgba(8, 19, 34, .96));
+  box-shadow: 0 16px 42px rgba(0, 0, 0, .28); cursor: pointer;
+}
+.cpu-mode-card::after {
+  content: ""; position: absolute; width: 150px; aspect-ratio: 1; right: -52px; top: -58px;
+  border: 1px solid rgba(214, 190, 126, .18); border-radius: 50%;
+  box-shadow: 0 0 0 24px rgba(214, 190, 126, .035);
+}
+.cpu-mode-card.tutorial {
+  border-color: rgba(112, 174, 143, .5);
+  background: linear-gradient(135deg, rgba(21, 54, 53, .96), rgba(8, 25, 35, .96));
+}
+.cpu-mode-card span, .cpu-mode-card strong, .cpu-mode-card p { position: relative; z-index: 1; display: block; }
+.cpu-mode-card span { margin-bottom: 7px; color: var(--gold); font: 700 .68rem system-ui, sans-serif; letter-spacing: .18em; }
+.cpu-mode-card strong { font-size: 1.32rem; letter-spacing: .08em; }
+.cpu-mode-card p { max-width: 82%; margin: 9px 0 0; color: #aeb8c7; font: 500 .76rem/1.7 system-ui, sans-serif; }
+.cpu-mode-card:hover, .cpu-mode-card:focus-visible { border-color: rgba(232, 207, 141, .72); transform: translateY(-2px); }
+
 @media (prefers-reduced-motion: reduce) {
   .five-star-cycle,
   .five-star-overcome,

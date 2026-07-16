@@ -25,13 +25,27 @@ test("card details translate jargon without replacing the official terms", async
   assert.match(client, /plainCardGuide/);
 });
 
-test("terrain and the first CPU battle provide contextual guidance", async () => {
+test("terrain guidance and beginner help are separated into the tutorial", async () => {
   const client = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
   assert.match(client, /data-action="terrain-info"/);
   assert.match(client, /共有地形 · 両者に影響/);
-  assert.match(client, /gogyo-tenrin-beginner-guide-v1/);
-  assert.match(client, /はじめての対戦/);
+  assert.match(client, /data-action="cpu-battle"/);
+  assert.match(client, /data-action="cpu-tutorial"/);
+  assert.match(client, /cpuExperienceMode === "tutorial"/);
   assert.match(client, /次にできること/);
+  assert.doesNotMatch(client, /gogyo-tenrin-beginner-guide-v1/);
+});
+
+test("decorative English labels are localized without renaming formal abbreviations", async () => {
+  const client = await readFile(path.join(repositoryRoot, "client", "main.ts"), "utf8");
+  for (const label of ["SERVER CONNECTION", "GOGYO TENRIN", "CPU MATCH", "ONLINE MATCH", "INITIAL ATTRIBUTE", "ATTRIBUTE REVEAL", ">REACTION<", "HOW TO PLAY", "CARD CATALOG", "COST ", "ATK "]) {
+    assert.doesNotMatch(client, new RegExp(label));
+  }
+  for (const label of ["霊脈接続", "五行の巡り", "五行選択", "防御判断", "遊び方", "収録札", "コスト ", "攻 "]) {
+    assert.match(client, new RegExp(label));
+  }
+  assert.match(client, /HP /);
+  assert.match(client, /霊気/);
 });
 
 test("card imagery is part of the shared client protocol", async () => {
